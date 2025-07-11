@@ -29,9 +29,9 @@ impl Deref for Hub {
 }
 
 impl Hub {
-    pub async fn new(auth: Auth) -> Hub {
+    pub async fn new(auth: Auth) -> io::Result<Hub> {
         let connector = HttpsConnectorBuilder::new()
-            .with_native_roots()
+            .with_native_roots()?
             .https_or_http()
             .enable_http1()
             .enable_http2()
@@ -39,7 +39,7 @@ impl Hub {
 
         let http_client = hyper::Client::builder().build(connector);
 
-        Hub(google_drive3::DriveHub::new(http_client, auth.0))
+        Ok(Hub(google_drive3::DriveHub::new(http_client, auth.0)))
     }
 }
 

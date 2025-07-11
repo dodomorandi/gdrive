@@ -29,7 +29,7 @@ pub async fn add() -> Result<(), Error> {
     .await
     .map_err(Error::AccessToken)?;
 
-    let hub = hub::Hub::new(auth).await;
+    let hub = hub::Hub::new(auth).await.map_err(Error::HubCreation)?;
     let (_, about) = hub
         .about()
         .get()
@@ -62,6 +62,7 @@ pub async fn add() -> Result<(), Error> {
 
 #[derive(Debug)]
 pub enum Error {
+    HubCreation(io::Error),
     Prompt(io::Error),
     Tempdir(io::Error),
     Auth(io::Error),
@@ -70,11 +71,20 @@ pub enum Error {
     About(google_drive3::Error),
 }
 
-impl error::Error for Error {}
+impl error::Error for Error {
+    fn source(&self) -> Option<&(dyn error::Error + 'static)> {
+        match self {
+            Error::HubCreation(error) => Some(error),
+            // TODO: fix display and put sources here
+            _ => None,
+        }
+    }
+}
 
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
+            Error::HubCreation(_) => f.write_str("unable to create a Google Drive hub"),
             Error::Prompt(e) => write!(f, "Failed to get input from user: {}", e),
             Error::Tempdir(e) => write!(f, "Failed to create temporary directory: {}", e),
             Error::Auth(e) => write!(f, "Failed to authenticate: {}", e),

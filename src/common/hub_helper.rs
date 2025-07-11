@@ -15,7 +15,7 @@ pub async fn get_hub() -> Result<Hub, Error> {
         .await
         .map_err(Error::Auth)?;
 
-    let hub = Hub::new(auth).await;
+    let hub = Hub::new(auth).await.map_err(Error::Hub)?;
 
     Ok(hub)
 }
@@ -24,15 +24,25 @@ pub async fn get_hub() -> Result<Hub, Error> {
 pub enum Error {
     AppConfig(app_config::Error),
     Auth(io::Error),
+    Hub(io::Error),
 }
 
-impl error::Error for Error {}
+impl error::Error for Error {
+    fn source(&self) -> Option<&(dyn error::Error + 'static)> {
+        match self {
+            Error::Hub(error) => Some(error),
+            // TODO: fix display and put sources here
+            _ => None,
+        }
+    }
+}
 
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         match self {
             Error::AppConfig(err) => write!(f, "{}", err),
             Error::Auth(err) => write!(f, "Auth error: {}", err),
+            Error::Hub(_) => f.write_str("unable to create Google Drive hub"),
         }
     }
 }
