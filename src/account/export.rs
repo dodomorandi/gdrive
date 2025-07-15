@@ -55,10 +55,10 @@ impl Display for Error {
 }
 
 fn err_if_account_not_found(accounts: &[String], account_name: &str) -> Result<(), Error> {
-    if !accounts.contains(&account_name.to_string()) {
-        Err(Error::AccountNotFound(account_name.to_string()))
-    } else {
+    if accounts.contains(&account_name.to_string()) {
         Ok(())
+    } else {
+        Err(Error::AccountNotFound(account_name.to_string()))
     }
 }
 

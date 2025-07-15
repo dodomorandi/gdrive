@@ -145,18 +145,18 @@ impl Display for Error {
 }
 
 fn err_if_not_exists(path: &Path) -> Result<(), Error> {
-    if !path.exists() {
-        Err(Error::PathDoesNotExist(path.to_owned()))
-    } else {
+    if path.exists() {
         Ok(())
+    } else {
+        Err(Error::PathDoesNotExist(path.to_owned()))
     }
 }
 
 fn err_if_not_dir(path: &Path) -> Result<(), Error> {
-    if !path.is_dir() {
-        Err(Error::PathNotDir(path.to_owned()))
-    } else {
+    if path.is_dir() {
         Ok(())
+    } else {
+        Err(Error::PathNotDir(path.to_owned()))
     }
 }
 

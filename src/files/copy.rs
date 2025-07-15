@@ -125,9 +125,9 @@ fn err_if_directory(file: &google_drive3::api::File) -> Result<(), Error> {
 }
 
 fn err_if_not_directory(file: &google_drive3::api::File) -> Result<(), Error> {
-    if !drive_file::is_directory(file) {
-        Err(Error::DestinationNotADirectory)
-    } else {
+    if drive_file::is_directory(file) {
         Ok(())
+    } else {
+        Err(Error::DestinationNotADirectory)
     }
 }

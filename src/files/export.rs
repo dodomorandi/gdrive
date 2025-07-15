@@ -149,9 +149,9 @@ fn err_if_file_exists(config: &Config) -> Result<(), Error> {
 }
 
 fn err_if_unsupported(doc_type: &DocType, extension: &FileExtension) -> Result<(), Error> {
-    if !doc_type.can_export_to(extension) {
-        Err(Error::UnsupportedExportExtension(doc_type.clone()))
-    } else {
+    if doc_type.can_export_to(extension) {
         Ok(())
+    } else {
+        Err(Error::UnsupportedExportExtension(doc_type.clone()))
     }
 }

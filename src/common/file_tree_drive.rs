@@ -276,14 +276,14 @@ fn get_ancestors(f: &Folder) -> Vec<Folder> {
 }
 
 fn err_if_not_directory(file: &google_drive3::api::File) -> Result<(), Error> {
-    if !drive_file::is_directory(file) {
+    if drive_file::is_directory(file) {
+        Ok(())
+    } else {
         let name = file
             .name
             .as_ref()
             .map(|s| s.to_string())
             .unwrap_or_default();
         Err(Error::NotADirectory(name))
-    } else {
-        Ok(())
     }
 }

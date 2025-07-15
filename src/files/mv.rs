@@ -142,9 +142,9 @@ fn get_old_parent_id(file: &google_drive3::api::File) -> Result<String, Error> {
 }
 
 fn err_if_not_directory(file: &google_drive3::api::File) -> Result<(), Error> {
-    if !drive_file::is_directory(file) {
-        Err(Error::NotADirectory)
-    } else {
+    if drive_file::is_directory(file) {
         Ok(())
+    } else {
+        Err(Error::NotADirectory)
     }
 }
