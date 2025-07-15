@@ -4,7 +4,7 @@ use std::path::PathBuf;
 fn main() {
     let git_hash = read_git_hash().unwrap_or_else(|| String::from("unknown"));
 
-    println!("cargo:rustc-env=GIT_HASH={}", git_hash);
+    println!("cargo:rustc-env=GIT_HASH={git_hash}");
 }
 
 fn read_git_hash() -> Option<String> {

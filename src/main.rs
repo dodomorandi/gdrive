@@ -722,6 +722,6 @@ async fn main() {
 }
 
 fn handle_error(err: impl Error) {
-    eprintln!("Error: {}", err);
+    eprintln!("Error: {err}");
     std::process::exit(1);
 }

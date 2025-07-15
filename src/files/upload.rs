@@ -20,6 +20,7 @@ use std::fmt::Display;
 use std::fmt::Formatter;
 use std::fs;
 use std::io;
+use std::path::Path;
 use std::path::PathBuf;
 use std::time::Duration;
 
@@ -50,7 +51,7 @@ pub async fn upload(config: Config) -> Result<(), Error> {
 
     match &config.file_path {
         Some(path) => {
-            err_if_directory(&path, &config)?;
+            err_if_directory(path, &config)?;
 
             if path.is_dir() {
                 upload_directory(&hub, &config, delegate_config).await?;
@@ -101,9 +102,9 @@ pub async fn upload_regular(
         println!("Uploading {}", file_path.display());
     }
 
-    let file = upload_file(&hub, reader, None, file_info, delegate_config)
+    let file = upload_file(hub, reader, None, file_info, delegate_config)
         .await
-        .map_err(Error::Upload)?;
+        .map_err(|err| Error::Upload(Box::new(err)))?;
 
     if config.print_only_id {
         print!("{}", file.id.unwrap_or_default())
@@ -163,7 +164,7 @@ pub async fn upload_directory(
             delegate_config.clone(),
         )
         .await
-        .map_err(Error::Mkdir)?;
+        .map_err(|err| Error::Mkdir(Box::new(err)))?;
 
         if config.print_only_id {
             println!("{}: {}", folder.relative_path().display(), folder.drive_id);
@@ -194,7 +195,7 @@ pub async fn upload_directory(
                 delegate_config.clone(),
             )
             .await
-            .map_err(Error::Upload)?;
+            .map_err(|err| Error::Upload(Box::new(err)))?;
 
             if config.print_only_id {
                 println!("{}: {}", file.relative_path().display(), file.drive_id);
@@ -257,11 +258,11 @@ pub enum Error {
     Hub(hub_helper::Error),
     FileInfo(file_info::Error),
     OpenFile(PathBuf, io::Error),
-    Upload(google_drive3::Error),
+    Upload(Box<google_drive3::Error>),
     IsDirectory(PathBuf),
     DriveFolderMissingId,
     CreateFileTree(file_tree::Error),
-    Mkdir(google_drive3::Error),
+    Mkdir(Box<google_drive3::Error>),
 }
 
 impl error::Error for Error {}
@@ -269,27 +270,27 @@ impl error::Error for Error {}
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            Error::Hub(err) => write!(f, "{}", err),
-            Error::FileInfo(err) => write!(f, "{}", err),
+            Error::Hub(err) => write!(f, "{err}"),
+            Error::FileInfo(err) => write!(f, "{err}"),
             Error::OpenFile(path, err) => {
                 write!(f, "Failed to open file '{}': {}", path.display(), err)
             }
-            Error::Upload(err) => write!(f, "Failed to upload file: {}", err),
+            Error::Upload(err) => write!(f, "Failed to upload file: {err}"),
             Error::IsDirectory(path) => write!(
                 f,
                 "'{}' is a directory, use --recursive to upload directories",
                 path.display()
             ),
             Error::DriveFolderMissingId => write!(f, "Folder created on drive does not have an id"),
-            Error::CreateFileTree(err) => write!(f, "Failed to create file tree: {}", err),
-            Error::Mkdir(err) => write!(f, "Failed to create directory: {}", err),
+            Error::CreateFileTree(err) => write!(f, "Failed to create file tree: {err}"),
+            Error::Mkdir(err) => write!(f, "Failed to create directory: {err}"),
         }
     }
 }
 
-fn err_if_directory(path: &PathBuf, config: &Config) -> Result<(), Error> {
+fn err_if_directory(path: &Path, config: &Config) -> Result<(), Error> {
     if path.is_dir() && !config.upload_directories {
-        Err(Error::IsDirectory(path.clone()))
+        Err(Error::IsDirectory(path.to_owned()))
     } else {
         Ok(())
     }

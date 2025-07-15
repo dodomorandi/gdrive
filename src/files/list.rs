@@ -108,7 +108,7 @@ pub async fn list_files(
             )
             .doit()
             .await
-            .map_err(Error::ListFiles)?;
+            .map_err(|err| Error::ListFiles(Box::new(err)))?;
 
         if let Some(mut files) = file_list.files {
             collected_files.append(&mut files);
@@ -159,15 +159,15 @@ impl Display for ListQuery {
             }
 
             ListQuery::FilesOnDrive { drive_id } => {
-                write!(f, "'{}' in parents and trashed = false", drive_id)
+                write!(f, "'{drive_id}' in parents and trashed = false")
             }
 
             ListQuery::FilesInFolder { folder_id } => {
-                write!(f, "'{}' in parents and trashed = false", folder_id)
+                write!(f, "'{folder_id}' in parents and trashed = false")
             }
 
             ListQuery::Custom(query) => {
-                write!(f, "{}", query)
+                write!(f, "{query}")
             }
 
             ListQuery::None => {
@@ -204,7 +204,7 @@ impl fmt::Display for ListSortOrder {
             }
 
             ListSortOrder::Custom(query) => {
-                write!(f, "{}", query)
+                write!(f, "{query}")
             }
         }
     }
@@ -213,7 +213,7 @@ impl fmt::Display for ListSortOrder {
 #[derive(Debug)]
 pub enum Error {
     Hub(hub_helper::Error),
-    ListFiles(google_drive3::Error),
+    ListFiles(Box<google_drive3::Error>),
 }
 
 impl error::Error for Error {}
@@ -221,8 +221,8 @@ impl error::Error for Error {}
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            Error::Hub(e) => write!(f, "{}", e),
-            Error::ListFiles(e) => write!(f, "Failed to list files: {}", e),
+            Error::Hub(e) => write!(f, "{e}"),
+            Error::ListFiles(e) => write!(f, "Failed to list files: {e}"),
         }
     }
 }
@@ -244,7 +244,7 @@ fn format_file_name(config: &Config, file: &google_drive3::api::File) -> String 
 
     if config.truncate_name {
         file_name
-            .map(|s| truncate_middle(&s, 41))
+            .map(|s| truncate_middle(s, 41))
             .unwrap_or_default()
     } else {
         file_name.map(|s| s.to_string()).unwrap_or_default()
@@ -266,5 +266,5 @@ fn truncate_middle(s: &str, max_length: usize) -> String {
     let head: String = chars[0..head_count].iter().collect();
     let tail: String = chars[chars.len() - tail_count..].iter().collect();
 
-    vec![head, tail].join("…")
+    [head, tail].join("…")
 }

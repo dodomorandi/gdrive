@@ -7,6 +7,7 @@ use std::fmt::Display;
 use std::fmt::Formatter;
 use std::fs;
 use std::io;
+use std::path::Path;
 use std::path::PathBuf;
 
 #[derive(Debug, Clone)]
@@ -15,10 +16,10 @@ pub struct FileTree {
 }
 
 impl FileTree {
-    pub async fn from_path<'a>(path: &PathBuf, ids: &mut IdGen<'a>) -> Result<FileTree, Error> {
+    pub async fn from_path<'a>(path: &Path, ids: &mut IdGen<'a>) -> Result<FileTree, Error> {
         let canonical_path = path
             .canonicalize()
-            .map_err(|err| Error::CanonicalizePath(path.clone(), err))?;
+            .map_err(|err| Error::CanonicalizePath(path.to_owned(), err))?;
 
         let root = Folder::from_path(&canonical_path, None, ids).await?;
         Ok(FileTree { root })
@@ -122,12 +123,12 @@ impl Folder {
                 let folder = Folder::from_path(&path, Some(&folder), ids).await?;
                 let node = Node::FolderNode(folder);
                 children.push(node);
+            } else if path.is_symlink() {
+                return Err(Error::IsSymlink(path.clone()));
             } else if path.is_file() {
                 let file = File::from_path(&path, &folder, ids).await?;
                 let node = Node::FileNode(file);
                 children.push(node);
-            } else if path.is_file() {
-                return Err(Error::IsSymlink(path.clone()));
             } else {
                 return Err(Error::UnknownFileType(path.clone()));
             }
@@ -159,7 +160,7 @@ impl Folder {
     }
 
     pub fn folders_recursive(&self) -> Vec<Folder> {
-        Folder::collect_folders_recursive(&self)
+        Folder::collect_folders_recursive(self)
     }
 
     pub fn ancestor_count(&self) -> usize {
@@ -268,12 +269,12 @@ impl Display for Error {
                 path.display(),
                 e
             ),
-            Error::ReadDir(e) => write!(f, "Error reading directory: '{}'", e),
-            Error::ReadDirEntry(e) => write!(f, "Error reading directory entry: {}", e),
+            Error::ReadDir(e) => write!(f, "Error reading directory: '{e}'"),
+            Error::ReadDirEntry(e) => write!(f, "Error reading directory entry: {e}"),
             Error::OpenFile(path, e) => {
                 write!(f, "Failed to open file '{}': {}", path.display(), e)
             }
-            Error::GetId(e) => write!(f, "Error getting id: {}", e),
+            Error::GetId(e) => write!(f, "Error getting id: {e}"),
             Error::InvalidPath(path) => write!(f, "Invalid path: {}", path.display()),
             Error::IsSymlink(path) => write!(f, "Path is symlink: {}", path.display()),
             Error::UnknownFileType(path) => write!(f, "Unknown file type: {}", path.display()),

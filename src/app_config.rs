@@ -105,8 +105,7 @@ impl AppConfig {
 
         if let Err(err) = set_file_permissions(&path) {
             eprintln!(
-                "Warning: Failed to set file permissions on secrets file: {}",
-                err
+                "Warning: Failed to set file permissions on secrets file: {err}"
             );
         }
 
@@ -114,7 +113,7 @@ impl AppConfig {
     }
 
     pub fn load_secret(&self) -> Result<Secret, Error> {
-        let content = fs::read_to_string(&self.secret_path()).map_err(Error::ReadSecret)?;
+        let content = fs::read_to_string(self.secret_path()).map_err(Error::ReadSecret)?;
         serde_json::from_str(&content).map_err(Error::DeserializeSecret)
     }
 
@@ -238,12 +237,12 @@ impl Display for Error {
 
             Error::CreateConfigDir(err) => {
                 // fmt
-                write!(f, "Failed to create config directory: {}", err)
+                write!(f, "Failed to create config directory: {err}")
             }
 
             Error::ReadAccountConfig(err) => {
                 // fmt
-                write!(f, "Failed to read account config: {}", err)
+                write!(f, "Failed to read account config: {err}")
             }
 
             Error::AccountConfigMissing => {
@@ -255,62 +254,62 @@ impl Display for Error {
 
             Error::ParseAccountConfig(err) => {
                 // fmt
-                write!(f, "Failed to parse account config: {}", err)
+                write!(f, "Failed to parse account config: {err}")
             }
 
             Error::SerializeAccountConfig(err) => {
                 // fmt
-                write!(f, "Failed to serialize account config: {}", err)
+                write!(f, "Failed to serialize account config: {err}")
             }
 
             Error::WriteAccountConfig(err) => {
                 // fmt
-                write!(f, "Failed to write account config: {}", err)
+                write!(f, "Failed to write account config: {err}")
             }
 
             Error::SerializeSecret(err) => {
                 // fmt
-                write!(f, "Failed to serialize secret: {}", err)
+                write!(f, "Failed to serialize secret: {err}")
             }
 
             Error::WriteSecret(err) => {
                 // fmt
-                write!(f, "Failed to write secret: {}", err)
+                write!(f, "Failed to write secret: {err}")
             }
 
             Error::ReadSecret(err) => {
                 // fmt
-                write!(f, "Failed to read secret: {}", err)
+                write!(f, "Failed to read secret: {err}")
             }
 
             Error::DeserializeSecret(err) => {
                 // fmt
-                write!(f, "Failed to deserialize secret: {}", err)
+                write!(f, "Failed to deserialize secret: {err}")
             }
 
             Error::DeserializeAccountConfig(err) => {
                 // fmt
-                write!(f, "Failed to deserialize account config: {}", err)
+                write!(f, "Failed to deserialize account config: {err}")
             }
 
             Error::CopyTokens(err) => {
                 // fmt
-                write!(f, "Failed to copy tokens: {}", err)
+                write!(f, "Failed to copy tokens: {err}")
             }
 
             Error::ListFiles(err) => {
                 // fmt
-                write!(f, "Failed to list files: {}", err)
+                write!(f, "Failed to list files: {err}")
             }
 
             Error::RemoveAccountDir(err) => {
                 // fmt
-                write!(f, "Failed to remove account directory: {}", err)
+                write!(f, "Failed to remove account directory: {err}")
             }
 
             Error::RemoveAccountConfig(err) => {
                 // fmt
-                write!(f, "Failed to remove account config: {}", err)
+                write!(f, "Failed to remove account config: {err}")
             }
 
             Error::CreateBaseDir(path, err) => {

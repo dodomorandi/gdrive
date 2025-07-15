@@ -16,7 +16,7 @@ pub async fn delete(config: Config) -> Result<(), Error> {
 
     let file = files::info::get_file(&hub, &config.file_id)
         .await
-        .map_err(Error::GetFile)?;
+        .map_err(|err| Error::GetFile(Box::new(err)))?;
 
     err_if_directory(&file, &config)?;
 
@@ -26,7 +26,7 @@ pub async fn delete(config: Config) -> Result<(), Error> {
         .add_scope(google_drive3::api::Scope::Full)
         .doit()
         .await
-        .map_err(Error::DeleteFile)?;
+        .map_err(|err| Error::DeleteFile(Box::new(err)))?;
 
     println!("Deleted '{}'", file.name.unwrap_or_default());
 
@@ -36,8 +36,8 @@ pub async fn delete(config: Config) -> Result<(), Error> {
 #[derive(Debug)]
 pub enum Error {
     Hub(hub_helper::Error),
-    GetFile(google_drive3::Error),
-    DeleteFile(google_drive3::Error),
+    GetFile(Box<google_drive3::Error>),
+    DeleteFile(Box<google_drive3::Error>),
     IsDirectory(String),
 }
 
@@ -46,13 +46,12 @@ impl error::Error for Error {}
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            Error::Hub(err) => write!(f, "{}", err),
-            Error::GetFile(err) => write!(f, "Failed getting file: {}", err),
-            Error::DeleteFile(err) => write!(f, "Failed to delete file: {}", err),
+            Error::Hub(err) => write!(f, "{err}"),
+            Error::GetFile(err) => write!(f, "Failed getting file: {err}"),
+            Error::DeleteFile(err) => write!(f, "Failed to delete file: {err}"),
             Error::IsDirectory(name) => write!(
                 f,
-                "'{}' is a directory, use --recursive to delete directories",
-                name
+                "'{name}' is a directory, use --recursive to delete directories"
             ),
         }
     }

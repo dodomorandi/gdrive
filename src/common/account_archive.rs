@@ -3,6 +3,7 @@ use std::fmt::Display;
 use std::fmt::Formatter;
 use std::fs::File;
 use std::io;
+use std::path::Path;
 use std::path::PathBuf;
 
 pub fn create(src_path: &PathBuf, archive_path: &PathBuf) -> Result<(), Error> {
@@ -87,7 +88,7 @@ impl Display for Error {
         match self {
             Error::CreateFile(err) => {
                 // fmt
-                write!(f, "Failed to create file: {}", err)
+                write!(f, "Failed to create file: {err}")
             }
 
             Error::PathDoesNotExist(path) => {
@@ -117,12 +118,12 @@ impl Display for Error {
 
             Error::OpenFile(err) => {
                 // fmt
-                write!(f, "Failed to open archive: {}", err)
+                write!(f, "Failed to open archive: {err}")
             }
 
             Error::ReadEntries(err) => {
                 // fmt
-                write!(f, "Failed to read archive entries: {}", err)
+                write!(f, "Failed to read archive entries: {err}")
             }
 
             Error::NoDirectories => {
@@ -137,31 +138,31 @@ impl Display for Error {
 
             Error::Unpack(err) => {
                 // fmt
-                write!(f, "Failed to unpack archive: {}", err)
+                write!(f, "Failed to unpack archive: {err}")
             }
         }
     }
 }
 
-fn err_if_not_exists(path: &PathBuf) -> Result<(), Error> {
+fn err_if_not_exists(path: &Path) -> Result<(), Error> {
     if !path.exists() {
-        Err(Error::PathDoesNotExist(path.clone()))
+        Err(Error::PathDoesNotExist(path.to_owned()))
     } else {
         Ok(())
     }
 }
 
-fn err_if_not_dir(path: &PathBuf) -> Result<(), Error> {
+fn err_if_not_dir(path: &Path) -> Result<(), Error> {
     if !path.is_dir() {
-        Err(Error::PathNotDir(path.clone()))
+        Err(Error::PathNotDir(path.to_owned()))
     } else {
         Ok(())
     }
 }
 
-fn err_if_exists(path: &PathBuf) -> Result<(), Error> {
+fn err_if_exists(path: &Path) -> Result<(), Error> {
     if path.exists() {
-        Err(Error::PathAlreadyExists(path.clone()))
+        Err(Error::PathAlreadyExists(path.to_owned()))
     } else {
         Ok(())
     }

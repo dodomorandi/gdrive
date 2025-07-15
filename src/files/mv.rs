@@ -20,17 +20,17 @@ pub async fn mv(config: Config) -> Result<(), Error> {
 
     let old_file = files::info::get_file(&hub, &config.file_id)
         .await
-        .map_err(Error::GetFile)?;
+        .map_err(|err| Error::GetFile(Box::new(err)))?;
 
     let old_parent_id = get_old_parent_id(&old_file)?;
 
     let old_parent = files::info::get_file(&hub, &old_parent_id)
         .await
-        .map_err(|err| Error::GetOldParent(old_parent_id.clone(), err))?;
+        .map_err(|err| Error::GetOldParent(old_parent_id.clone(), Box::new(err)))?;
 
     let new_parent = files::info::get_file(&hub, &config.to_folder_id)
         .await
-        .map_err(Error::GetNewParent)?;
+        .map_err(|err| Error::GetNewParent(Box::new(err)))?;
 
     err_if_not_directory(&new_parent)?;
 
@@ -49,7 +49,7 @@ pub async fn mv(config: Config) -> Result<(), Error> {
 
     change_parent(&hub, delegate_config, &change_parent_config)
         .await
-        .map_err(Error::Move)?;
+        .map_err(|err| Error::Move(Box::new(err)))?;
 
     Ok(())
 }
@@ -86,13 +86,13 @@ pub async fn change_parent(
 #[derive(Debug)]
 pub enum Error {
     Hub(hub_helper::Error),
-    GetFile(google_drive3::Error),
-    GetOldParent(String, google_drive3::Error),
-    GetNewParent(google_drive3::Error),
+    GetFile(Box<google_drive3::Error>),
+    GetOldParent(String, Box<google_drive3::Error>),
+    GetNewParent(Box<google_drive3::Error>),
     NoParents,
     MultipleParents,
     NotADirectory,
-    Move(google_drive3::Error),
+    Move(Box<google_drive3::Error>),
 }
 
 impl error::Error for Error {}
@@ -100,15 +100,15 @@ impl error::Error for Error {}
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         match self {
-            Error::Hub(err) => write!(f, "{}", err),
+            Error::Hub(err) => write!(f, "{err}"),
             Error::GetFile(err) => {
-                write!(f, "Failed to get file: {}", err)
+                write!(f, "Failed to get file: {err}")
             }
             Error::GetNewParent(err) => {
-                write!(f, "Failed to get new parent: {}", err)
+                write!(f, "Failed to get new parent: {err}")
             }
             Error::GetOldParent(id, err) => {
-                write!(f, "Failed to get old parent '{}': {}", id, err)
+                write!(f, "Failed to get old parent '{id}': {err}")
             }
             Error::NoParents => {
                 write!(f, "File has no parents")
@@ -120,7 +120,7 @@ impl Display for Error {
                 write!(f, "New parent is not a directory")
             }
             Error::Move(err) => {
-                write!(f, "Failed to move file: {}", err)
+                write!(f, "Failed to move file: {err}")
             }
         }
     }

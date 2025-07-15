@@ -98,12 +98,12 @@ impl error::Error for Error {}
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         match self {
-            Error::Hub(err) => write!(f, "{}", err),
+            Error::Hub(err) => write!(f, "{err}"),
             Error::GetFile(err) => {
-                write!(f, "Failed to get file: {}", err)
+                write!(f, "Failed to get file: {err}")
             }
             Error::ListPermissions(err) => {
-                write!(f, "Failed to list permissions: {}", err)
+                write!(f, "Failed to list permissions: {err}")
             }
         }
     }

@@ -6,6 +6,7 @@ use std::str::FromStr;
 use std::time::Duration;
 
 #[derive(Debug, Clone)]
+#[derive(Default)]
 pub struct UploadDelegateConfig {
     pub chunk_size: ChunkSize,
     pub backoff_config: BackoffConfig,
@@ -13,16 +14,6 @@ pub struct UploadDelegateConfig {
     pub print_chunk_info: bool,
 }
 
-impl Default for UploadDelegateConfig {
-    fn default() -> Self {
-        UploadDelegateConfig {
-            chunk_size: ChunkSize::default(),
-            backoff_config: BackoffConfig::default(),
-            print_chunk_errors: false,
-            print_chunk_info: false,
-        }
-    }
-}
 
 pub struct UploadDelegate {
     config: UploadDelegateConfig,
@@ -89,7 +80,7 @@ impl google_drive3::client::Delegate for UploadDelegate {
 
     fn http_error(&mut self, err: &hyper::Error) -> google_drive3::client::Retry {
         if self.config.print_chunk_errors {
-            eprintln!("Warning: Failed attempt to upload chunk: {}", err);
+            eprintln!("Warning: Failed attempt to upload chunk: {err}");
         }
         self.backoff.retry()
     }

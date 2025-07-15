@@ -25,7 +25,7 @@ impl error::Error for Error {}
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            Error::AppConfig(e) => write!(f, "{}", e),
+            Error::AppConfig(e) => write!(f, "{e}"),
             Error::NoAccounts => {
                 writeln!(f, "No accounts found")?;
                 write!(f, "Use `gdrive account add` to add an account.")

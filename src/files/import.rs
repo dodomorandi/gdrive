@@ -77,13 +77,13 @@ impl error::Error for Error {}
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            Error::Hub(err) => write!(f, "{}", err),
+            Error::Hub(err) => write!(f, "{err}"),
             Error::OpenFile(path, err) => {
                 write!(f, "Failed to open file '{}': {}", path.display(), err)
             }
-            Error::FileInfo(err) => write!(f, "Failed to get file info: {}", err),
+            Error::FileInfo(err) => write!(f, "Failed to get file info: {err}"),
             Error::UploadFile(err) => {
-                write!(f, "Failed to upload file: {}", err)
+                write!(f, "Failed to upload file: {err}")
             }
             Error::UnsupportedFileType => write!(
                 f,
@@ -92,8 +92,7 @@ impl Display for Error {
             ),
             Error::GetMime(doc_type) => write!(
                 f,
-                "Failed to get mime type from document type: {}",
-                doc_type
+                "Failed to get mime type from document type: {doc_type}"
             ),
         }
     }

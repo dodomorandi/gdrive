@@ -77,7 +77,7 @@ pub async fn download(config: Config) -> Result<(), Error> {
 
     let file = files::info::get_file(&hub, &config.file_id)
         .await
-        .map_err(Error::GetFile)?;
+        .map_err(|err| Error::GetFile(Box::new(err)))?;
 
     err_if_file_exists(&file, &config)?;
     err_if_directory(&file, &config)?;
@@ -107,9 +107,9 @@ pub async fn download_regular(
     file: &google_drive3::api::File,
     config: &Config,
 ) -> Result<(), Error> {
-    let body = download_file(&hub, &config.file_id)
+    let body = download_file(hub, &config.file_id)
         .await
-        .map_err(Error::DownloadFile)?;
+        .map_err(|err| Error::DownloadFile(Box::new(err)))?;
 
     match &config.destination {
         Destination::Stdout => {
@@ -122,9 +122,9 @@ pub async fn download_regular(
             let root_path = config.canonical_destination_root()?;
             let abs_file_path = root_path.join(&file_name);
 
-            println!("Downloading {}", file_name);
+            println!("Downloading {file_name}");
             save_body_to_file(body, &abs_file_path, file.md5_checksum.clone()).await?;
-            println!("Successfully downloaded {}", file_name);
+            println!("Successfully downloaded {file_name}");
         }
     }
 
@@ -136,7 +136,7 @@ pub async fn download_directory(
     file: &google_drive3::api::File,
     config: &Config,
 ) -> Result<(), Error> {
-    let tree = FileTreeDrive::from_file(&hub, &file)
+    let tree = FileTreeDrive::from_file(hub, file)
         .await
         .map_err(Error::CreateFileTree)?;
 
@@ -167,9 +167,9 @@ pub async fn download_directory(
                 continue;
             }
 
-            let body = download_file(&hub, &file.drive_id)
+            let body = download_file(hub, &file.drive_id)
                 .await
-                .map_err(Error::DownloadFile)?;
+                .map_err(|err| Error::DownloadFile(Box::new(err)))?;
 
             println!("Downloading file '{}'", file_path.display());
             save_body_to_file(body, &abs_file_path, file.md5.clone()).await?;
@@ -202,8 +202,8 @@ pub async fn download_file(hub: &Hub, file_id: &str) -> Result<hyper::Body, goog
 #[derive(Debug)]
 pub enum Error {
     Hub(hub_helper::Error),
-    GetFile(google_drive3::Error),
-    DownloadFile(google_drive3::Error),
+    GetFile(Box<google_drive3::Error>),
+    DownloadFile(Box<google_drive3::Error>),
     MissingFileName,
     FileExists(PathBuf),
     IsDirectory(String),
@@ -228,9 +228,9 @@ impl error::Error for Error {}
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            Error::Hub(err) => write!(f, "{}", err),
-            Error::GetFile(err) => write!(f, "Failed getting file: {}", err),
-            Error::DownloadFile(err) => write!(f, "Failed to download file: {}", err),
+            Error::Hub(err) => write!(f, "{err}"),
+            Error::GetFile(err) => write!(f, "Failed getting file: {err}"),
+            Error::DownloadFile(err) => write!(f, "Failed to download file: {err}"),
             Error::MissingFileName => write!(f, "File does not have a name"),
             Error::FileExists(path) => write!(
                 f,
@@ -239,29 +239,24 @@ impl Display for Error {
             ),
             Error::IsDirectory(name) => write!(
                 f,
-                "'{}' is a directory, use --recursive to download directories",
-                name
+                "'{name}' is a directory, use --recursive to download directories"
             ),
             Error::Md5Mismatch { expected, actual } => {
                 // fmt
-                write!(
-                    f,
-                    "MD5 mismatch, expected: {}, actual: {}",
-                    expected, actual
-                )
+                write!(f, "MD5 mismatch, expected: {expected}, actual: {actual}")
             }
-            Error::CreateFile(err) => write!(f, "Failed to create file: {}", err),
+            Error::CreateFile(err) => write!(f, "Failed to create file: {err}"),
             Error::CreateDirectory(path, err) => write!(
                 f,
                 "Failed to create directory '{}': {}",
                 path.display(),
                 err
             ),
-            Error::CopyFile(err) => write!(f, "Failed to copy file: {}", err),
-            Error::RenameFile(err) => write!(f, "Failed to rename file: {}", err),
-            Error::ReadChunk(err) => write!(f, "Failed read from stream: {}", err),
-            Error::WriteChunk(err) => write!(f, "Failed write to file: {}", err),
-            Error::CreateFileTree(err) => write!(f, "Failed to create file tree: {}", err),
+            Error::CopyFile(err) => write!(f, "Failed to copy file: {err}"),
+            Error::RenameFile(err) => write!(f, "Failed to rename file: {err}"),
+            Error::ReadChunk(err) => write!(f, "Failed read from stream: {err}"),
+            Error::WriteChunk(err) => write!(f, "Failed write to file: {err}"),
+            Error::CreateFileTree(err) => write!(f, "Failed to create file tree: {err}"),
             Error::DestinationPathDoesNotExist(path) => {
                 write!(f, "Destination path '{}' does not exist", path.display())
             }
@@ -281,8 +276,7 @@ impl Display for Error {
             Error::MissingShortcutTarget => write!(f, "Shortcut does not have a target"),
             Error::IsShortcut(name) => write!(
                 f,
-                "'{}' is a shortcut, use --follow-shortcuts to download the file it points to",
-                name
+                "'{name}' is a shortcut, use --follow-shortcuts to download the file it points to"
             ),
             Error::StdoutNotValidDestination => write!(
                 f,
@@ -315,7 +309,7 @@ pub async fn save_body_to_file(
     err_if_md5_mismatch(expected_md5, writer.md5())?;
 
     // Rename temporary file to final file
-    fs::rename(&tmp_file_path, &file_path).map_err(Error::RenameFile)
+    fs::rename(&tmp_file_path, file_path).map_err(Error::RenameFile)
 }
 
 // TODO: move to common

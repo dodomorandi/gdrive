@@ -36,7 +36,7 @@ impl FromStr for Role {
             "writer" => Ok(Role::Writer),
             "commenter" => Ok(Role::Commenter),
             "reader" => Ok(Role::Reader),
-            _ => Err(format!("'{}' is not a valid role, valid roles are: owner, organizer, fileOrganizer, writer, commenter, reader", s)),
+            _ => Err(format!("'{s}' is not a valid role, valid roles are: owner, organizer, fileOrganizer, writer, commenter, reader")),
         }
     }
 }
@@ -100,8 +100,7 @@ impl FromStr for Type {
             "domain" => Ok(Type::Domain),
             "anyone" => Ok(Type::Anyone),
             _ => Err(format!(
-                "'{}' is not a valid type, valid types are: user, group, domain, anyone",
-                s
+                "'{s}' is not a valid type, valid types are: user, group, domain, anyone"
             )),
         }
     }

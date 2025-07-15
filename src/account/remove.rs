@@ -31,8 +31,8 @@ impl error::Error for Error {}
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            Error::AppConfig(e) => write!(f, "{}", e),
-            Error::AccountNotFound(name) => write!(f, "Account '{}' not found", name),
+            Error::AppConfig(e) => write!(f, "{e}"),
+            Error::AccountNotFound(name) => write!(f, "Account '{name}' not found"),
         }
     }
 }

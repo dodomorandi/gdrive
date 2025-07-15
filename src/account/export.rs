@@ -24,7 +24,7 @@ pub fn export(config: Config) -> Result<(), Error> {
     account_archive::create(&account_path, &archive_path).map_err(Error::CreateArchive)?;
 
     if let Err(err) = set_file_permissions(&archive_path) {
-        eprintln!("Warning: Failed to set permissions on archive: {}", err);
+        eprintln!("Warning: Failed to set permissions on archive: {err}");
     }
 
     println!(
@@ -47,9 +47,9 @@ impl error::Error for Error {}
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            Error::AppConfig(e) => write!(f, "{}", e),
-            Error::AccountNotFound(name) => write!(f, "Account '{}' not found", name),
-            Error::CreateArchive(e) => write!(f, "{}", e),
+            Error::AppConfig(e) => write!(f, "{e}"),
+            Error::AccountNotFound(name) => write!(f, "Account '{name}' not found"),
+            Error::CreateArchive(e) => write!(f, "{e}"),
         }
     }
 }

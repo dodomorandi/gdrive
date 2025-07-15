@@ -41,13 +41,13 @@ pub async fn share(config: Config) -> Result<(), Error> {
 
     let file = files::info::get_file(&hub, &config.file_id)
         .await
-        .map_err(Error::GetFile)?;
+        .map_err(|err| Error::GetFile(Box::new(err)))?;
 
     print_grant_details(&file, &config);
 
     create_permission(&hub, delegate_config, &config)
         .await
-        .map_err(Error::CreatePermission)?;
+        .map_err(|err| Error::CreatePermission(Box::new(err)))?;
 
     Ok(())
 }
@@ -88,8 +88,8 @@ pub async fn create_permission(
 #[derive(Debug)]
 pub enum Error {
     Hub(hub_helper::Error),
-    GetFile(google_drive3::Error),
-    CreatePermission(google_drive3::Error),
+    GetFile(Box<google_drive3::Error>),
+    CreatePermission(Box<google_drive3::Error>),
     MissingEmail(permission::Type),
     MissingDomain(permission::Type),
 }
@@ -99,25 +99,23 @@ impl error::Error for Error {}
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         match self {
-            Error::Hub(err) => write!(f, "{}", err),
+            Error::Hub(err) => write!(f, "{err}"),
             Error::GetFile(err) => {
-                write!(f, "Failed to get file: {}", err)
+                write!(f, "Failed to get file: {err}")
             }
             Error::CreatePermission(err) => {
-                write!(f, "Failed to share file: {}", err)
+                write!(f, "Failed to share file: {err}")
             }
             Error::MissingEmail(type_) => {
                 write!(
                     f,
-                    "Email is required for permission type '{}'. Use the --email option",
-                    type_
+                    "Email is required for permission type '{type_}'. Use the --email option"
                 )
             }
             Error::MissingDomain(type_) => {
                 write!(
                     f,
-                    "Domain is required for permission type '{}'. Use the --domain option",
-                    type_
+                    "Domain is required for permission type '{type_}'. Use the --domain option"
                 )
             }
         }

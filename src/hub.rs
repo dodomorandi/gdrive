@@ -107,6 +107,6 @@ async fn present_user_url(url: &str) -> Result<String, String> {
     println!();
     println!("Gdrive requires permissions to manage your files on Google Drive.");
     println!("Open the url in your browser and follow the instructions:");
-    println!("{}", url);
+    println!("{url}");
     Ok(String::new())
 }

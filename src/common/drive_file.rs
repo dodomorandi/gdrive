@@ -1,6 +1,6 @@
 use mime::Mime;
 use std::fmt;
-use std::path::PathBuf;
+use std::path::Path;
 
 pub const MIME_TYPE_DRIVE_FOLDER: &str = "application/vnd.google-apps.folder";
 pub const MIME_TYPE_DRIVE_DOCUMENT: &str = "application/vnd.google-apps.document";
@@ -82,7 +82,7 @@ impl DocType {
         (FileExtension::Odp, DocType::Presentation),
     ];
 
-    pub fn from_file_path(path: &PathBuf) -> Option<DocType> {
+    pub fn from_file_path(path: &Path) -> Option<DocType> {
         let extension = FileExtension::from_path(path)?;
 
         Self::IMPORT_EXTENSION_MAP
@@ -199,32 +199,32 @@ pub enum FileExtension {
 impl fmt::Display for FileExtension {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            FileExtension::Doc => write!(f, "{}", EXTENSION_DOC),
-            FileExtension::Docx => write!(f, "{}", EXTENSION_DOCX),
-            FileExtension::Odt => write!(f, "{}", EXTENSION_ODT),
-            FileExtension::Jpg => write!(f, "{}", EXTENSION_JPG),
-            FileExtension::Jpeg => write!(f, "{}", EXTENSION_JPEG),
-            FileExtension::Gif => write!(f, "{}", EXTENSION_GIF),
-            FileExtension::Png => write!(f, "{}", EXTENSION_PNG),
-            FileExtension::Rtf => write!(f, "{}", EXTENSION_RTF),
-            FileExtension::Pdf => write!(f, "{}", EXTENSION_PDF),
-            FileExtension::Html => write!(f, "{}", EXTENSION_HTML),
-            FileExtension::Xls => write!(f, "{}", EXTENSION_XLS),
-            FileExtension::Xlsx => write!(f, "{}", EXTENSION_XLSX),
-            FileExtension::Csv => write!(f, "{}", EXTENSION_CSV),
-            FileExtension::Tsv => write!(f, "{}", EXTENSION_TSV),
-            FileExtension::Ods => write!(f, "{}", EXTENSION_ODS),
-            FileExtension::Ppt => write!(f, "{}", EXTENSION_PPT),
-            FileExtension::Pptx => write!(f, "{}", EXTENSION_PPTX),
-            FileExtension::Odp => write!(f, "{}", EXTENSION_ODP),
-            FileExtension::Epub => write!(f, "{}", EXTENSION_EPUB),
-            FileExtension::Txt => write!(f, "{}", EXTENSION_TXT),
+            FileExtension::Doc => write!(f, "{EXTENSION_DOC}"),
+            FileExtension::Docx => write!(f, "{EXTENSION_DOCX}"),
+            FileExtension::Odt => write!(f, "{EXTENSION_ODT}"),
+            FileExtension::Jpg => write!(f, "{EXTENSION_JPG}"),
+            FileExtension::Jpeg => write!(f, "{EXTENSION_JPEG}"),
+            FileExtension::Gif => write!(f, "{EXTENSION_GIF}"),
+            FileExtension::Png => write!(f, "{EXTENSION_PNG}"),
+            FileExtension::Rtf => write!(f, "{EXTENSION_RTF}"),
+            FileExtension::Pdf => write!(f, "{EXTENSION_PDF}"),
+            FileExtension::Html => write!(f, "{EXTENSION_HTML}"),
+            FileExtension::Xls => write!(f, "{EXTENSION_XLS}"),
+            FileExtension::Xlsx => write!(f, "{EXTENSION_XLSX}"),
+            FileExtension::Csv => write!(f, "{EXTENSION_CSV}"),
+            FileExtension::Tsv => write!(f, "{EXTENSION_TSV}"),
+            FileExtension::Ods => write!(f, "{EXTENSION_ODS}"),
+            FileExtension::Ppt => write!(f, "{EXTENSION_PPT}"),
+            FileExtension::Pptx => write!(f, "{EXTENSION_PPTX}"),
+            FileExtension::Odp => write!(f, "{EXTENSION_ODP}"),
+            FileExtension::Epub => write!(f, "{EXTENSION_EPUB}"),
+            FileExtension::Txt => write!(f, "{EXTENSION_TXT}"),
         }
     }
 }
 
 impl FileExtension {
-    pub fn from_path(path: &PathBuf) -> Option<FileExtension> {
+    pub fn from_path(path: &Path) -> Option<FileExtension> {
         let extension = path.extension()?.to_str()?;
 
         match extension {
@@ -283,7 +283,7 @@ pub fn is_directory(file: &google_drive3::api::File) -> bool {
 }
 
 pub fn is_binary(file: &google_drive3::api::File) -> bool {
-    file.md5_checksum != None
+    file.md5_checksum.is_some()
 }
 
 pub fn is_shortcut(file: &google_drive3::api::File) -> bool {

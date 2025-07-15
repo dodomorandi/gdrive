@@ -40,8 +40,8 @@ impl error::Error for Error {
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         match self {
-            Error::AppConfig(err) => write!(f, "{}", err),
-            Error::Auth(err) => write!(f, "Auth error: {}", err),
+            Error::AppConfig(err) => write!(f, "{err}"),
+            Error::Auth(err) => write!(f, "Auth error: {err}"),
             Error::Hub(_) => f.write_str("unable to create Google Drive hub"),
         }
     }

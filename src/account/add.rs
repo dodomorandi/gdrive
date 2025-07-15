@@ -85,12 +85,12 @@ impl Display for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             Error::HubCreation(_) => f.write_str("unable to create a Google Drive hub"),
-            Error::Prompt(e) => write!(f, "Failed to get input from user: {}", e),
-            Error::Tempdir(e) => write!(f, "Failed to create temporary directory: {}", e),
-            Error::Auth(e) => write!(f, "Failed to authenticate: {}", e),
-            Error::AppConfig(e) => write!(f, "{}", e),
-            Error::AccessToken(e) => write!(f, "Failed to get access token: {}", e),
-            Error::About(e) => write!(f, "Failed to get user info: {}", e),
+            Error::Prompt(e) => write!(f, "Failed to get input from user: {e}"),
+            Error::Tempdir(e) => write!(f, "Failed to create temporary directory: {e}"),
+            Error::Auth(e) => write!(f, "Failed to authenticate: {e}"),
+            Error::AppConfig(e) => write!(f, "{e}"),
+            Error::AccessToken(e) => write!(f, "Failed to get access token: {e}"),
+            Error::About(e) => write!(f, "Failed to get user info: {e}"),
         }
     }
 }
@@ -106,7 +106,7 @@ fn secret_prompt() -> Result<app_config::Secret, io::Error> {
 }
 
 fn prompt_input(msg: &str) -> Result<String, io::Error> {
-    print!("{}: ", msg);
+    print!("{msg}: ");
     let _ = io::stdout().flush();
 
     let mut input = String::new();

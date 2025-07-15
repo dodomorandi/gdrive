@@ -93,7 +93,7 @@ impl Folder {
         file: &google_drive3::api::File,
         parent: Option<&'async_recursion Folder>,
     ) -> Result<Folder, Error> {
-        err_if_not_directory(&file)?;
+        err_if_not_directory(file)?;
 
         let name = file.name.clone().ok_or(Error::MissingFileName)?;
         let file_id = file.id.clone().ok_or(Error::MissingFileId)?;
@@ -162,7 +162,7 @@ impl Folder {
     }
 
     pub fn folders_recursive(&self) -> Vec<Folder> {
-        Folder::collect_folders_recursive(&self)
+        Folder::collect_folders_recursive(self)
     }
 
     pub fn ancestor_count(&self) -> usize {
@@ -241,11 +241,11 @@ impl error::Error for Error {}
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            Error::NotADirectory(name) => write!(f, "'{}' is not a directory", name),
+            Error::NotADirectory(name) => write!(f, "'{name}' is not a directory"),
             Error::MissingFileName => write!(f, "Drive file is missing file name"),
             Error::MissingFileId => write!(f, "Drive file is missing file id"),
             Error::MissingFileSize => write!(f, "Drive file is missing file size"),
-            Error::ListFiles(err) => write!(f, "Failed to list files: {}", err),
+            Error::ListFiles(err) => write!(f, "Failed to list files: {err}"),
         }
     }
 }

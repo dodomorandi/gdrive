@@ -21,13 +21,13 @@ pub async fn copy(config: Config) -> Result<(), Error> {
 
     let file = files::info::get_file(&hub, &config.file_id)
         .await
-        .map_err(Error::GetFile)?;
+        .map_err(|err| Error::GetFile(Box::new(err)))?;
 
     err_if_directory(&file)?;
 
     let to_parent = files::info::get_file(&hub, &config.to_folder_id)
         .await
-        .map_err(Error::GetDestinationFolder)?;
+        .map_err(|err| Error::GetDestinationFolder(Box::new(err)))?;
 
     err_if_not_directory(&to_parent)?;
 
@@ -44,7 +44,7 @@ pub async fn copy(config: Config) -> Result<(), Error> {
 
     let new_file = copy_file(&hub, delegate_config, &copy_config)
         .await
-        .map_err(Error::Copy)?;
+        .map_err(|err| Error::Copy(Box::new(err)))?;
 
     let fields = files::info::prepare_fields(&new_file, &DisplayConfig::default());
     files::info::print_fields(&fields);
@@ -84,11 +84,11 @@ pub async fn copy_file(
 #[derive(Debug)]
 pub enum Error {
     Hub(hub_helper::Error),
-    GetFile(google_drive3::Error),
-    GetDestinationFolder(google_drive3::Error),
+    GetFile(Box<google_drive3::Error>),
+    GetDestinationFolder(Box<google_drive3::Error>),
     DestinationNotADirectory,
     SourceIsADirectory,
-    Copy(google_drive3::Error),
+    Copy(Box<google_drive3::Error>),
 }
 
 impl error::Error for Error {}
@@ -96,12 +96,12 @@ impl error::Error for Error {}
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         match self {
-            Error::Hub(err) => write!(f, "{}", err),
+            Error::Hub(err) => write!(f, "{err}"),
             Error::GetFile(err) => {
-                write!(f, "Failed to get file: {}", err)
+                write!(f, "Failed to get file: {err}")
             }
             Error::GetDestinationFolder(err) => {
-                write!(f, "Failed to get destination folder: {}", err)
+                write!(f, "Failed to get destination folder: {err}")
             }
             Error::DestinationNotADirectory => {
                 write!(f, "Can only copy to a directory")
@@ -110,7 +110,7 @@ impl Display for Error {
                 write!(f, "Copy directories is not supported")
             }
             Error::Copy(err) => {
-                write!(f, "Failed to move file: {}", err)
+                write!(f, "Failed to move file: {err}")
             }
         }
     }

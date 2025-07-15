@@ -79,9 +79,9 @@ impl error::Error for Error {}
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            Error::Hub(err) => write!(f, "{}", err),
+            Error::Hub(err) => write!(f, "{err}"),
             Error::CreateDirectory(err) => {
-                write!(f, "Failed to create directory on drive: {}", err)
+                write!(f, "Failed to create directory on drive: {err}")
             }
         }
     }

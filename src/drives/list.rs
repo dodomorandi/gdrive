@@ -80,9 +80,9 @@ impl error::Error for Error {}
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Error::Hub(err) => write!(f, "{}", err),
+            Error::Hub(err) => write!(f, "{err}"),
             Error::ListDrives(err) => {
-                write!(f, "Failed to list drives: {}", err)
+                write!(f, "Failed to list drives: {err}")
             }
         }
     }

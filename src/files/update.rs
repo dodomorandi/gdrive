@@ -97,7 +97,7 @@ where
 
     let req = hub
         .files()
-        .update(dst_file, &file_id)
+        .update(dst_file, file_id)
         .param("fields", "id,name,size,createdTime,modifiedTime,md5Checksum,mimeType,parents,shared,description,webContentLink,webViewLink")
         .add_scope(google_drive3::api::Scope::Full)
         .delegate(&mut delegate)
@@ -145,13 +145,13 @@ impl error::Error for Error {}
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            Error::Hub(err) => write!(f, "{}", err),
-            Error::FileInfo(err) => write!(f, "{}", err),
+            Error::Hub(err) => write!(f, "{err}"),
+            Error::FileInfo(err) => write!(f, "{err}"),
             Error::OpenFile(path, err) => {
                 write!(f, "Failed to open file '{}': {}", path.display(), err)
             }
-            Error::GetFile(err) => write!(f, "Failed to get file: {}", err),
-            Error::Update(err) => write!(f, "Failed to update file: {}", err),
+            Error::GetFile(err) => write!(f, "Failed to get file: {err}"),
+            Error::Update(err) => write!(f, "Failed to update file: {err}"),
         }
     }
 }

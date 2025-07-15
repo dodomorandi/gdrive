@@ -38,13 +38,13 @@ impl<'a> IdGen<'a> {
     async fn generate_ids(&self) -> Result<Vec<String>, Error> {
         generate_ids::generate_ids(self.hub, 1000, self.delegate_config.clone())
             .await
-            .map_err(Error::GenerateIds)
+            .map_err(|err| Error::GenerateIds(Box::new(err)))
     }
 }
 
 #[derive(Debug)]
 pub enum Error {
-    GenerateIds(google_drive3::Error),
+    GenerateIds(Box<google_drive3::Error>),
     OutOfIds,
 }
 
@@ -54,7 +54,7 @@ impl Display for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             Error::GenerateIds(err) => {
-                write!(f, "Failed generate id's: {}", err)
+                write!(f, "Failed generate id's: {err}")
             }
 
             Error::OutOfIds => {

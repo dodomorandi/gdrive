@@ -21,11 +21,11 @@ pub fn import(config: Config) -> Result<(), Error> {
     let config_base_path = AppConfig::default_base_path().map_err(Error::AppConfig)?;
     account_archive::unpack(&config.archive_path, &config_base_path).map_err(Error::Unpack)?;
 
-    println!("Imported account '{}'", account_name);
+    println!("Imported account '{account_name}'");
 
     if !AppConfig::has_current_account() {
         let app_cfg = AppConfig::load_account(&account_name).map_err(Error::AppConfig)?;
-        println!("Switched to account '{}'", account_name);
+        println!("Switched to account '{account_name}'");
         app_config::switch_account(&app_cfg).map_err(Error::AppConfig)?;
     }
 
@@ -45,10 +45,10 @@ impl error::Error for Error {}
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            Error::AppConfig(e) => write!(f, "{}", e),
-            Error::AccountExists(name) => write!(f, "Account '{}' already exists", name),
-            Error::ReadAccountName(e) => write!(f, "{}", e),
-            Error::Unpack(e) => write!(f, "{}", e),
+            Error::AppConfig(e) => write!(f, "{e}"),
+            Error::AccountExists(name) => write!(f, "Account '{name}' already exists"),
+            Error::ReadAccountName(e) => write!(f, "{e}"),
+            Error::Unpack(e) => write!(f, "{e}"),
         }
     }
 }
