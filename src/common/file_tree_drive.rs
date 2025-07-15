@@ -282,7 +282,7 @@ fn err_if_not_directory(file: &google_drive3::api::File) -> Result<(), Error> {
         let name = file
             .name
             .as_ref()
-            .map(|s| s.to_string())
+            .map(ToString::to_string)
             .unwrap_or_default();
         Err(Error::NotADirectory(name))
     }

@@ -247,7 +247,7 @@ fn format_file_name(config: &Config, file: &google_drive3::api::File) -> String 
             .map(|s| truncate_middle(s, 41))
             .unwrap_or_default()
     } else {
-        file_name.map(|s| s.to_string()).unwrap_or_default()
+        file_name.map(ToString::to_string).unwrap_or_default()
     }
 }
 

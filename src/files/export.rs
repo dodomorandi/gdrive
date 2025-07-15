@@ -124,7 +124,7 @@ impl Display for Error {
                 let supported_types = doc_type
                     .supported_export_types()
                     .iter()
-                    .map(|ext| ext.to_string())
+                    .map(ToString::to_string)
                     .collect::<Vec<_>>()
                     .join(", ");
 

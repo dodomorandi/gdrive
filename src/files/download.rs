@@ -355,7 +355,7 @@ fn err_if_directory(file: &google_drive3::api::File, config: &Config) -> Result<
         let name = file
             .name
             .as_ref()
-            .map(|s| s.to_string())
+            .map(ToString::to_string)
             .unwrap_or_default();
         Err(Error::IsDirectory(name))
     } else {
@@ -368,7 +368,7 @@ fn err_if_shortcut(file: &google_drive3::api::File, config: &Config) -> Result<(
         let name = file
             .name
             .as_ref()
-            .map(|s| s.to_string())
+            .map(ToString::to_string)
             .unwrap_or_default();
         Err(Error::IsShortcut(name))
     } else {

@@ -40,7 +40,7 @@ pub fn list_accounts() -> Result<Vec<String>, Error> {
     let entries = fs::read_dir(base_path).map_err(Error::ListFiles)?;
 
     let mut accounts: Vec<String> = entries
-        .filter_map(|entry| entry.ok())
+        .filter_map(Result::ok)
         .filter(|entry| entry.path().is_dir())
         .filter(|entry| entry.path().join(TOKENS_CONFIG_NAME).exists())
         .map(|entry| entry.file_name().to_string_lossy().to_string())
