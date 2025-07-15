@@ -6,8 +6,12 @@ pub mod file_helper;
 pub mod file_info;
 pub mod file_tree;
 pub mod file_tree_drive;
+mod folder_like;
 pub mod hub_helper;
 pub mod id_gen;
 pub mod md5_writer;
 pub mod permission;
 pub mod table;
+
+#[expect(unused)]
+use folder_like::FolderLike;
