@@ -8,6 +8,8 @@ use std::fmt::Display;
 use std::fmt::Formatter;
 use std::path::PathBuf;
 
+use super::FolderLike;
+
 #[derive(Debug, Clone)]
 pub struct FileTreeDrive {
     pub root: Folder,
@@ -172,15 +174,7 @@ impl Folder {
 
     #[must_use]
     pub fn ancestor_count(&self) -> usize {
-        let mut count = 0;
-        let mut parent = self.parent.clone();
-
-        while let Some(folder) = parent {
-            count += 1;
-            parent = folder.parent.clone();
-        }
-
-        count
+        FolderLike::ancestor_count(self)
     }
 
     fn collect_folders_recursive(folder: &Folder) -> Vec<Folder> {
@@ -195,6 +189,12 @@ impl Folder {
         });
 
         folders
+    }
+}
+
+impl FolderLike for Folder {
+    fn parent(&self) -> Option<&Self> {
+        self.parent.as_deref()
     }
 }
 
