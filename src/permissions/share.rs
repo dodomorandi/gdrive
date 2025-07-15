@@ -124,7 +124,7 @@ impl Display for Error {
 
 fn err_if_missing_email(config: &Config) -> Result<(), Error> {
     if config.type_.requires_email() && config.email.is_none() {
-        return Err(Error::MissingEmail(config.type_.clone()));
+        return Err(Error::MissingEmail(config.type_));
     }
 
     Ok(())
@@ -132,7 +132,7 @@ fn err_if_missing_email(config: &Config) -> Result<(), Error> {
 
 fn err_if_missing_domain(config: &Config) -> Result<(), Error> {
     if config.type_.requires_domain() && config.domain.is_none() {
-        return Err(Error::MissingDomain(config.type_.clone()));
+        return Err(Error::MissingDomain(config.type_));
     }
 
     Ok(())
