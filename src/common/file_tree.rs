@@ -58,7 +58,7 @@ impl FileTree {
 
             for file in folder.files() {
                 file_count += 1;
-                total_file_size += file.size as u128;
+                total_file_size += file.size;
             }
         }
 
@@ -72,9 +72,9 @@ impl FileTree {
 
 #[derive(Debug, Clone)]
 pub struct TreeInfo {
-    pub file_count: u128,
-    pub folder_count: u128,
-    pub total_file_size: u128,
+    pub file_count: u64,
+    pub folder_count: u64,
+    pub total_file_size: u64,
 }
 
 #[derive(Debug, Clone)]
