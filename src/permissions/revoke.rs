@@ -161,9 +161,8 @@ impl RevokeAction {
         type_: permission::Type,
     ) -> Vec<google_drive3::api::Permission> {
         permissions
-            .iter()
-            .filter(|&p| p.type_ == Some(type_.to_string()))
-            .cloned()
+            .into_iter()
+            .filter(|p| p.type_ == Some(type_.to_string()))
             .collect()
     }
 
@@ -172,9 +171,8 @@ impl RevokeAction {
         role: permission::Role,
     ) -> Vec<google_drive3::api::Permission> {
         permissions
-            .iter()
-            .filter(|&p| p.role != Some(role.to_string()))
-            .cloned()
+            .into_iter()
+            .filter(|p| p.role != Some(role.to_string()))
             .collect()
     }
 
@@ -183,9 +181,8 @@ impl RevokeAction {
         id: &str,
     ) -> Option<google_drive3::api::Permission> {
         permissions
-            .iter()
-            .find(|&p| p.id == Some(id.to_string()))
-            .cloned()
+            .into_iter()
+            .find(|p| p.id == Some(id.to_string()))
     }
 }
 
