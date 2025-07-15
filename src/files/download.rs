@@ -6,9 +6,9 @@ use crate::common::md5_writer::Md5Writer;
 use crate::files;
 use crate::hub::Hub;
 use async_recursion::async_recursion;
+use bytesize::ByteSize;
 use futures::stream::StreamExt;
 use google_drive3::hyper;
-use human_bytes::human_bytes;
 use std::error;
 use std::fmt::Display;
 use std::fmt::Formatter;
@@ -146,7 +146,7 @@ pub async fn download_directory(
         "Found {} files in {} directories with a total size of {}",
         tree_info.file_count,
         tree_info.folder_count,
-        human_bytes(tree_info.total_file_size as f64)
+        ByteSize::b(tree_info.total_file_size).display().si(),
     );
 
     let root_path = config.canonical_destination_root()?;
@@ -180,7 +180,7 @@ pub async fn download_directory(
         "Downloaded {} files in {} directories with a total size of {}",
         tree_info.file_count,
         tree_info.folder_count,
-        human_bytes(tree_info.total_file_size as f64)
+        ByteSize::b(tree_info.total_file_size).display().si()
     );
 
     Ok(())

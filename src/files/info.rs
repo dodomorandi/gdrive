@@ -1,6 +1,6 @@
+use bytesize::ByteSize;
 use google_drive3::chrono;
 use google_drive3::chrono::DateTime;
-use human_bytes::human_bytes;
 
 use crate::common::hub_helper;
 use crate::hub::Hub;
@@ -82,7 +82,9 @@ pub fn prepare_fields(file: &google_drive3::api::File, config: &DisplayConfig) -
         },
         Field {
             name: String::from("Size"),
-            value: file.size.map(|bytes| format_bytes(bytes, config)),
+            value: file
+                .size
+                .map(|bytes| format_bytes(bytes.try_into().unwrap_or(0), config)),
         },
         Field {
             name: String::from("Created"),
@@ -127,11 +129,11 @@ pub fn format_list(list: &[String]) -> String {
 }
 
 #[must_use]
-pub fn format_bytes(bytes: i64, config: &DisplayConfig) -> String {
+pub fn format_bytes(bytes: u64, config: &DisplayConfig) -> String {
     if config.size_in_bytes {
         bytes.to_string()
     } else {
-        human_bytes(bytes as f64)
+        ByteSize::b(bytes).display().si().to_string()
     }
 }
 

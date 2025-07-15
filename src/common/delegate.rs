@@ -1,6 +1,6 @@
+use bytesize::ByteSize;
 use google_drive3::hyper;
 use google_drive3::hyper::http;
-use human_bytes::human_bytes;
 use std::fmt::Display;
 use std::str::FromStr;
 use std::time::Duration;
@@ -47,7 +47,7 @@ impl UploadDelegate {
                 println!(
                     "Info: {} {} chunk ({}-{} of {})",
                     action,
-                    human_bytes(chunk_size as f64),
+                    ByteSize::b(chunk_size).display().si(),
                     range.first,
                     range.last,
                     chunk.total_length

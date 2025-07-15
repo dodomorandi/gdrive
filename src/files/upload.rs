@@ -13,7 +13,7 @@ use crate::files;
 use crate::files::info::DisplayConfig;
 use crate::files::mkdir;
 use crate::hub::Hub;
-use human_bytes::human_bytes;
+use bytesize::ByteSize;
 use mime::Mime;
 use std::error;
 use std::fmt::Display;
@@ -131,7 +131,7 @@ pub async fn upload_directory(
             "Found {} files in {} directories with a total size of {}",
             tree_info.file_count,
             tree_info.folder_count,
-            human_bytes(tree_info.total_file_size as f64)
+            ByteSize::b(tree_info.total_file_size).display().si(),
         );
     }
 
@@ -205,7 +205,7 @@ pub async fn upload_directory(
             "Uploaded {} files in {} directories with a total size of {}",
             tree_info.file_count,
             tree_info.folder_count,
-            human_bytes(tree_info.total_file_size as f64)
+            ByteSize::b(tree_info.total_file_size).display().si(),
         );
     }
 
