@@ -383,7 +383,7 @@ async fn main() {
     match cli.command {
         Command::About => {
             // fmt
-            about::about()
+            about::about();
         }
 
         Command::Account { command } => {
@@ -391,35 +391,35 @@ async fn main() {
             match command {
                 AccountCommand::Add => {
                     // fmt
-                    account::add().await.unwrap_or_else(handle_error)
+                    account::add().await.unwrap_or_else(handle_error);
                 }
 
                 AccountCommand::List => {
                     // fmt
-                    account::list().unwrap_or_else(handle_error)
+                    account::list().unwrap_or_else(handle_error);
                 }
 
                 AccountCommand::Current => {
                     // fmt
-                    account::current().unwrap_or_else(handle_error)
+                    account::current().unwrap_or_else(handle_error);
                 }
 
                 AccountCommand::Switch { account_name } => {
                     // fmt
                     account::switch(account::switch::Config { account_name })
-                        .unwrap_or_else(handle_error)
+                        .unwrap_or_else(handle_error);
                 }
 
                 AccountCommand::Remove { account_name } => {
                     // fmt
                     account::remove(account::remove::Config { account_name })
-                        .unwrap_or_else(handle_error)
+                        .unwrap_or_else(handle_error);
                 }
 
                 AccountCommand::Export { account_name } => {
                     // fmt
                     account::export(account::export::Config { account_name })
-                        .unwrap_or_else(handle_error)
+                        .unwrap_or_else(handle_error);
                 }
 
                 AccountCommand::Import { file_path } => {
@@ -427,7 +427,7 @@ async fn main() {
                     account::import(account::import::Config {
                         archive_path: file_path,
                     })
-                    .unwrap_or_else(handle_error)
+                    .unwrap_or_else(handle_error);
                 }
             }
         }
@@ -459,7 +459,7 @@ async fn main() {
                         size_in_bytes,
                     })
                     .await
-                    .unwrap_or_else(handle_error)
+                    .unwrap_or_else(handle_error);
                 }
 
                 FileCommand::List {
@@ -488,7 +488,7 @@ async fn main() {
                         field_separator,
                     })
                     .await
-                    .unwrap_or_else(handle_error)
+                    .unwrap_or_else(handle_error);
                 }
 
                 FileCommand::Download {
@@ -521,7 +521,7 @@ async fn main() {
                         destination: dst,
                     })
                     .await
-                    .unwrap_or_else(handle_error)
+                    .unwrap_or_else(handle_error);
                 }
 
                 FileCommand::Upload {
@@ -546,7 +546,7 @@ async fn main() {
                         print_only_id,
                     })
                     .await
-                    .unwrap_or_else(handle_error)
+                    .unwrap_or_else(handle_error);
                 }
 
                 FileCommand::Update {
@@ -567,7 +567,7 @@ async fn main() {
                         print_chunk_info,
                     })
                     .await
-                    .unwrap_or_else(handle_error)
+                    .unwrap_or_else(handle_error);
                 }
 
                 FileCommand::Delete { file_id, recursive } => {
@@ -577,7 +577,7 @@ async fn main() {
                         delete_directories: recursive,
                     })
                     .await
-                    .unwrap_or_else(handle_error)
+                    .unwrap_or_else(handle_error);
                 }
 
                 FileCommand::Mkdir {
@@ -593,14 +593,14 @@ async fn main() {
                         print_only_id,
                     })
                     .await
-                    .unwrap_or_else(handle_error)
+                    .unwrap_or_else(handle_error);
                 }
 
                 FileCommand::Rename { file_id, name } => {
                     // fmt
                     files::rename(files::rename::Config { file_id, name })
                         .await
-                        .unwrap_or_else(handle_error)
+                        .unwrap_or_else(handle_error);
                 }
 
                 FileCommand::Move { file_id, folder_id } => {
@@ -610,7 +610,7 @@ async fn main() {
                         to_folder_id: folder_id,
                     })
                     .await
-                    .unwrap_or_else(handle_error)
+                    .unwrap_or_else(handle_error);
                 }
 
                 FileCommand::Copy { file_id, folder_id } => {
@@ -620,7 +620,7 @@ async fn main() {
                         to_folder_id: folder_id,
                     })
                     .await
-                    .unwrap_or_else(handle_error)
+                    .unwrap_or_else(handle_error);
                 }
 
                 FileCommand::Import {
@@ -635,7 +635,7 @@ async fn main() {
                         print_only_id,
                     })
                     .await
-                    .unwrap_or_else(handle_error)
+                    .unwrap_or_else(handle_error);
                 }
 
                 FileCommand::Export {
@@ -655,7 +655,7 @@ async fn main() {
                         existing_file_action,
                     })
                     .await
-                    .unwrap_or_else(handle_error)
+                    .unwrap_or_else(handle_error);
                 }
             }
         }
@@ -680,7 +680,7 @@ async fn main() {
                         domain,
                     })
                     .await
-                    .unwrap_or_else(handle_error)
+                    .unwrap_or_else(handle_error);
                 }
 
                 PermissionCommand::List {
@@ -695,7 +695,7 @@ async fn main() {
                         field_separator,
                     })
                     .await
-                    .unwrap_or_else(handle_error)
+                    .unwrap_or_else(handle_error);
                 }
 
                 PermissionCommand::Revoke { file_id, all, id } => {
@@ -709,14 +709,14 @@ async fn main() {
 
                     permissions::revoke(permissions::revoke::Config { file_id, action })
                         .await
-                        .unwrap_or_else(handle_error)
+                        .unwrap_or_else(handle_error);
                 }
             }
         }
 
         Command::Version => {
             // fmt
-            version::version()
+            version::version();
         }
     }
 }

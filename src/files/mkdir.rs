@@ -25,7 +25,7 @@ pub async fn mkdir(config: Config) -> Result<(), Error> {
         .map_err(Error::CreateDirectory)?;
 
     if config.print_only_id {
-        print!("{}", file.id.unwrap_or_default())
+        print!("{}", file.id.unwrap_or_default());
     } else {
         println!(
             "Created directory '{}' with id: {}",

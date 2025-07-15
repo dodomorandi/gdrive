@@ -52,7 +52,7 @@ pub async fn import(config: Config) -> Result<(), Error> {
         .map_err(Error::UploadFile)?;
 
     if config.print_only_id {
-        print!("{}", file.id.unwrap_or_default())
+        print!("{}", file.id.unwrap_or_default());
     } else {
         println!("File successfully imported");
         let fields = files::info::prepare_fields(&file, &DisplayConfig::default());
@@ -90,10 +90,9 @@ impl Display for Error {
                 "Unsupported file type, supported file types: {}",
                 DocType::supported_import_types().join(", ")
             ),
-            Error::GetMime(doc_type) => write!(
-                f,
-                "Failed to get mime type from document type: {doc_type}"
-            ),
+            Error::GetMime(doc_type) => {
+                write!(f, "Failed to get mime type from document type: {doc_type}")
+            }
         }
     }
 }

@@ -34,7 +34,7 @@ fn print_drives_table(config: &Config, drives: Vec<google_drive3::api::Drive>) {
             // fmt
             drive.id.unwrap_or_default(),
             drive.name.unwrap_or_default(),
-        ])
+        ]);
     }
 
     let table = Table {

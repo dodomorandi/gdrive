@@ -51,7 +51,7 @@ impl UploadDelegate {
                     range.first,
                     range.last,
                     chunk.total_length
-                )
+                );
             }
         }
     }
@@ -70,7 +70,7 @@ impl google_drive3::client::Delegate for UploadDelegate {
     }
 
     fn store_upload_url(&mut self, url: Option<&str>) {
-        self.resumable_upload_url = url.map(|s| s.to_string())
+        self.resumable_upload_url = url.map(|s| s.to_string());
     }
 
     fn upload_url(&mut self) -> Option<String> {

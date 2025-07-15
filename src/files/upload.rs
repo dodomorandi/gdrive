@@ -107,7 +107,7 @@ pub async fn upload_regular(
         .map_err(|err| Error::Upload(Box::new(err)))?;
 
     if config.print_only_id {
-        print!("{}", file.id.unwrap_or_default())
+        print!("{}", file.id.unwrap_or_default());
     } else {
         println!("File successfully uploaded");
         let fields = files::info::prepare_fields(&file, &DisplayConfig::default());

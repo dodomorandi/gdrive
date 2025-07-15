@@ -52,7 +52,7 @@ pub async fn list(config: Config) -> Result<(), Error> {
             file.created_time
                 .map(files::info::format_date_time)
                 .unwrap_or_default(),
-        ])
+        ]);
     }
 
     let table = Table {
