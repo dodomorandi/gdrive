@@ -22,17 +22,13 @@ impl<'a> IdGen<'a> {
     }
 
     pub async fn next(&mut self) -> Result<String, Error> {
-        match self.ids.pop() {
-            Some(id) => {
-                // fmt
-                Ok(id)
-            }
-
-            None => {
-                self.ids = self.generate_ids().await?;
-                let id = self.ids.pop().ok_or(Error::OutOfIds)?;
-                Ok(id)
-            }
+        if let Some(id) = self.ids.pop() {
+            // fmt
+            Ok(id)
+        } else {
+            self.ids = self.generate_ids().await?;
+            let id = self.ids.pop().ok_or(Error::OutOfIds)?;
+            Ok(id)
         }
     }
 

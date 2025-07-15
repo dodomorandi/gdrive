@@ -49,30 +49,27 @@ pub async fn upload(config: Config) -> Result<(), Error> {
         print_chunk_info: config.print_chunk_info,
     };
 
-    match &config.file_path {
-        Some(path) => {
-            err_if_directory(path, &config)?;
+    if let Some(path) = &config.file_path {
+        err_if_directory(path, &config)?;
 
-            if path.is_dir() {
-                upload_directory(&hub, &config, delegate_config).await?;
-            } else {
-                upload_regular(&hub, &config, delegate_config).await?;
-            }
+        if path.is_dir() {
+            upload_directory(&hub, &config, delegate_config).await?;
+        } else {
+            upload_regular(&hub, &config, delegate_config).await?;
         }
-        None => {
-            let tmp_file = file_helper::stdin_to_file()
-                .map_err(|err| Error::OpenFile(PathBuf::from("<stdin>"), err))?;
+    } else {
+        let tmp_file = file_helper::stdin_to_file()
+            .map_err(|err| Error::OpenFile(PathBuf::from("<stdin>"), err))?;
 
-            upload_regular(
-                &hub,
-                &Config {
-                    file_path: Some(tmp_file.as_ref().to_path_buf()),
-                    ..config
-                },
-                delegate_config,
-            )
-            .await?;
-        }
+        upload_regular(
+            &hub,
+            &Config {
+                file_path: Some(tmp_file.as_ref().to_path_buf()),
+                ..config
+            },
+            delegate_config,
+        )
+        .await?;
     };
 
     Ok(())
