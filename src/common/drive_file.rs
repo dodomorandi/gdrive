@@ -118,9 +118,8 @@ impl DocType {
     #[must_use]
     pub fn default_export_type(&self) -> FileExtension {
         match self {
-            DocType::Document => FileExtension::Pdf,
             DocType::Spreadsheet => FileExtension::Csv,
-            DocType::Presentation => FileExtension::Pdf,
+            DocType::Presentation | DocType::Document => FileExtension::Pdf,
         }
     }
 

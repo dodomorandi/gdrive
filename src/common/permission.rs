@@ -54,30 +54,24 @@ impl Type {
     #[must_use]
     pub fn requires_email(&self) -> bool {
         match self {
-            Type::User => true,
-            Type::Group => true,
-            Type::Domain => false,
-            Type::Anyone => false,
+            Type::Group | Type::User => true,
+            Type::Domain | Type::Anyone => false,
         }
     }
 
     #[must_use]
     pub fn requires_domain(&self) -> bool {
         match self {
-            Type::User => false,
-            Type::Group => false,
             Type::Domain => true,
-            Type::Anyone => false,
+            Type::Anyone | Type::Group | Type::User => false,
         }
     }
 
     #[must_use]
     pub fn supports_file_discovery(&self) -> bool {
         match self {
-            Type::User => false,
-            Type::Group => false,
-            Type::Domain => true,
-            Type::Anyone => true,
+            Type::Group | Type::User => false,
+            Type::Domain | Type::Anyone => true,
         }
     }
 }

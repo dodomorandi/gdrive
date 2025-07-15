@@ -47,8 +47,7 @@ impl Display for Error {
         match self {
             Error::AppConfig(e) => write!(f, "{e}"),
             Error::AccountExists(name) => write!(f, "Account '{name}' already exists"),
-            Error::ReadAccountName(e) => write!(f, "{e}"),
-            Error::Unpack(e) => write!(f, "{e}"),
+            Error::ReadAccountName(e) | Error::Unpack(e) => write!(f, "{e}"),
         }
     }
 }
