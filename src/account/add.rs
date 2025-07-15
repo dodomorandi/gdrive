@@ -29,7 +29,7 @@ pub async fn add() -> Result<(), Error> {
     .await
     .map_err(Error::AccessToken)?;
 
-    let hub = hub::Hub::new(auth).await.map_err(Error::HubCreation)?;
+    let hub = hub::Hub::new(auth).map_err(Error::HubCreation)?;
     let (_, about) = hub
         .about()
         .get()

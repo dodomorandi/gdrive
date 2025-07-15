@@ -15,7 +15,7 @@ pub async fn get_hub() -> Result<Hub, Error> {
         .await
         .map_err(Error::Auth)?;
 
-    let hub = Hub::new(auth).await.map_err(Error::Hub)?;
+    let hub = Hub::new(auth).map_err(Error::Hub)?;
 
     Ok(hub)
 }

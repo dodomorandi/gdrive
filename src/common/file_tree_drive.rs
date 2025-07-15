@@ -126,7 +126,7 @@ impl Folder {
                 let node = Node::FolderNode(folder);
                 children.push(node);
             } else if drive_file::is_binary(&file) {
-                let f = File::from_file(&file, &folder).await?;
+                let f = File::from_file(&file, &folder)?;
                 let node = Node::FileNode(f);
                 children.push(node);
             } else {
@@ -208,10 +208,7 @@ pub struct File {
 }
 
 impl File {
-    pub async fn from_file(
-        file: &google_drive3::api::File,
-        parent: &Folder,
-    ) -> Result<File, Error> {
+    pub fn from_file(file: &google_drive3::api::File, parent: &Folder) -> Result<File, Error> {
         let name = file.name.clone().ok_or(Error::MissingFileName)?;
         let size = file.size.ok_or(Error::MissingFileSize)? as u64;
         let file_id = file.id.clone().ok_or(Error::MissingFileId)?;

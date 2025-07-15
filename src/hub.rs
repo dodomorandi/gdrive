@@ -29,7 +29,7 @@ impl Deref for Hub {
 }
 
 impl Hub {
-    pub async fn new(auth: Auth) -> io::Result<Hub> {
+    pub fn new(auth: Auth) -> io::Result<Hub> {
         let connector = HttpsConnectorBuilder::new()
             .with_native_roots()?
             .https_or_http()
@@ -98,15 +98,13 @@ impl InstalledFlowDelegate for AuthDelegate {
         url: &'a str,
         _need_code: bool,
     ) -> Pin<Box<dyn Future<Output = Result<String, String>> + Send + 'a>> {
-        Box::pin(present_user_url(url))
+        Box::pin(async move {
+            println!();
+            println!();
+            println!("Gdrive requires permissions to manage your files on Google Drive.");
+            println!("Open the url in your browser and follow the instructions:");
+            println!("{url}");
+            Ok(String::new())
+        })
     }
-}
-
-async fn present_user_url(url: &str) -> Result<String, String> {
-    println!();
-    println!();
-    println!("Gdrive requires permissions to manage your files on Google Drive.");
-    println!("Open the url in your browser and follow the instructions:");
-    println!("{url}");
-    Ok(String::new())
 }
