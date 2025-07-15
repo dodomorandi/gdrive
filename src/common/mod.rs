@@ -13,5 +13,4 @@ pub mod md5_writer;
 pub mod permission;
 pub mod table;
 
-#[expect(unused)]
 use folder_like::FolderLike;
