@@ -112,6 +112,7 @@ pub fn prepare_fields(file: &google_drive3::api::File, config: &DisplayConfig) -
 }
 
 // TODO: move to common
+#[must_use]
 pub fn format_bool(b: bool) -> String {
     if b {
         String::from("True")
@@ -120,10 +121,12 @@ pub fn format_bool(b: bool) -> String {
     }
 }
 
+#[must_use]
 pub fn format_list(list: &[String]) -> String {
     list.join(", ")
 }
 
+#[must_use]
 pub fn format_bytes(bytes: i64, config: &DisplayConfig) -> String {
     if config.size_in_bytes {
         bytes.to_string()
@@ -132,6 +135,7 @@ pub fn format_bytes(bytes: i64, config: &DisplayConfig) -> String {
     }
 }
 
+#[must_use]
 pub fn format_date_time(utc_time: DateTime<chrono::Utc>) -> String {
     let local_time: DateTime<chrono::Local> = DateTime::from(utc_time);
     local_time.format("%Y-%m-%d %H:%M:%S").to_string()

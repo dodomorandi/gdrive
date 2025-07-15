@@ -82,6 +82,7 @@ impl DocType {
         (FileExtension::Odp, DocType::Presentation),
     ];
 
+    #[must_use]
     pub fn from_file_path(path: &Path) -> Option<DocType> {
         let extension = FileExtension::from_path(path)?;
 
@@ -96,6 +97,7 @@ impl DocType {
             })
     }
 
+    #[must_use]
     pub fn from_mime_type(mime: &str) -> Option<DocType> {
         match mime {
             MIME_TYPE_DRIVE_DOCUMENT => Some(DocType::Document),
@@ -105,6 +107,7 @@ impl DocType {
         }
     }
 
+    #[must_use]
     pub fn supported_import_types() -> Vec<String> {
         Self::IMPORT_EXTENSION_MAP
             .iter()
@@ -112,6 +115,7 @@ impl DocType {
             .collect()
     }
 
+    #[must_use]
     pub fn default_export_type(&self) -> FileExtension {
         match self {
             DocType::Document => FileExtension::Pdf,
@@ -120,10 +124,12 @@ impl DocType {
         }
     }
 
+    #[must_use]
     pub fn can_export_to(&self, extension: &FileExtension) -> bool {
         self.supported_export_types().contains(extension)
     }
 
+    #[must_use]
     pub fn supported_export_types(&self) -> Vec<FileExtension> {
         match self {
             DocType::Document => vec![
@@ -153,6 +159,7 @@ impl DocType {
         }
     }
 
+    #[must_use]
     pub fn mime(&self) -> Option<Mime> {
         match self {
             DocType::Document => MIME_TYPE_DRIVE_DOCUMENT.parse().ok(),
@@ -224,6 +231,7 @@ impl fmt::Display for FileExtension {
 }
 
 impl FileExtension {
+    #[must_use]
     pub fn from_path(path: &Path) -> Option<FileExtension> {
         let extension = path.extension()?.to_str()?;
 
@@ -252,6 +260,7 @@ impl FileExtension {
         }
     }
 
+    #[must_use]
     pub fn get_export_mime(&self) -> Option<Mime> {
         match self {
             FileExtension::Doc => MIME_TYPE_DOC.parse().ok(),
@@ -278,14 +287,17 @@ impl FileExtension {
     }
 }
 
+#[must_use]
 pub fn is_directory(file: &google_drive3::api::File) -> bool {
     file.mime_type == Some(String::from(MIME_TYPE_DRIVE_FOLDER))
 }
 
+#[must_use]
 pub fn is_binary(file: &google_drive3::api::File) -> bool {
     file.md5_checksum.is_some()
 }
 
+#[must_use]
 pub fn is_shortcut(file: &google_drive3::api::File) -> bool {
     file.mime_type == Some(String::from(MIME_TYPE_DRIVE_SHORTCUT))
 }

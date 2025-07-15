@@ -163,6 +163,7 @@ pub struct PatchFile {
 }
 
 impl PatchFile {
+    #[must_use]
     pub fn new(id: String) -> Self {
         Self {
             id,
@@ -170,6 +171,7 @@ impl PatchFile {
         }
     }
 
+    #[must_use]
     pub fn with_name(&self, name: &str) -> Self {
         Self {
             file: google_drive3::api::File {
@@ -180,10 +182,12 @@ impl PatchFile {
         }
     }
 
+    #[must_use]
     pub fn id(&self) -> String {
         self.id.clone()
     }
 
+    #[must_use]
     pub fn file(&self) -> google_drive3::api::File {
         self.file.clone()
     }

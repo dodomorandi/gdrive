@@ -22,6 +22,7 @@ impl FileTreeDrive {
         Ok(FileTreeDrive { root })
     }
 
+    #[must_use]
     pub fn folders(&self) -> Vec<Folder> {
         let mut folders = vec![];
 
@@ -43,6 +44,7 @@ impl FileTreeDrive {
         folders
     }
 
+    #[must_use]
     pub fn info(&self) -> TreeInfo {
         let mut file_count = 0;
         let mut folder_count = 0;
@@ -137,6 +139,7 @@ impl Folder {
         Ok(folder)
     }
 
+    #[must_use]
     pub fn files(&self) -> Vec<File> {
         let mut files = vec![];
 
@@ -151,6 +154,7 @@ impl Folder {
         files
     }
 
+    #[must_use]
     pub fn relative_path(&self) -> PathBuf {
         let mut path = PathBuf::new();
 
@@ -161,10 +165,12 @@ impl Folder {
         path.join(&self.name)
     }
 
+    #[must_use]
     pub fn folders_recursive(&self) -> Vec<Folder> {
         Folder::collect_folders_recursive(self)
     }
 
+    #[must_use]
     pub fn ancestor_count(&self) -> usize {
         let mut count = 0;
         let mut parent = self.parent.clone();
@@ -222,6 +228,7 @@ impl File {
         Ok(file)
     }
 
+    #[must_use]
     pub fn relative_path(&self) -> PathBuf {
         self.parent.relative_path().join(&self.name)
     }

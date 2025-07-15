@@ -52,6 +52,7 @@ pub fn list_accounts() -> Result<Vec<String>, Error> {
 }
 
 impl AppConfig {
+    #[must_use]
     pub fn has_current_account() -> bool {
         if let Ok(base_path) = AppConfig::default_base_path() {
             let account_config_path = base_path.join(ACCOUNT_CONFIG_NAME);
@@ -104,9 +105,7 @@ impl AppConfig {
         fs::write(&path, content).map_err(Error::WriteSecret)?;
 
         if let Err(err) = set_file_permissions(&path) {
-            eprintln!(
-                "Warning: Failed to set file permissions on secrets file: {err}"
-            );
+            eprintln!("Warning: Failed to set file permissions on secrets file: {err}");
         }
 
         Ok(())
@@ -139,18 +138,22 @@ impl AppConfig {
         Ok(())
     }
 
+    #[must_use]
     pub fn account_config_path(&self) -> PathBuf {
         self.base_path.join(ACCOUNT_CONFIG_NAME)
     }
 
+    #[must_use]
     pub fn account_base_path(&self) -> PathBuf {
         self.base_path.join(&self.account.name)
     }
 
+    #[must_use]
     pub fn secret_path(&self) -> PathBuf {
         self.account_base_path().join(SECRET_CONFIG_NAME)
     }
 
+    #[must_use]
     pub fn tokens_path(&self) -> PathBuf {
         self.account_base_path().join(TOKENS_CONFIG_NAME)
     }
@@ -181,6 +184,7 @@ pub struct Account {
 }
 
 impl Account {
+    #[must_use]
     pub fn new(name: &str) -> Account {
         Account {
             name: name.to_string(),

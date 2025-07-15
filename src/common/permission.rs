@@ -51,6 +51,7 @@ pub enum Type {
 }
 
 impl Type {
+    #[must_use]
     pub fn requires_email(&self) -> bool {
         match self {
             Type::User => true,
@@ -60,6 +61,7 @@ impl Type {
         }
     }
 
+    #[must_use]
     pub fn requires_domain(&self) -> bool {
         match self {
             Type::User => false,
@@ -69,6 +71,7 @@ impl Type {
         }
     }
 
+    #[must_use]
     pub fn supports_file_discovery(&self) -> bool {
         match self {
             Type::User => false,

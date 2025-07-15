@@ -5,15 +5,13 @@ use std::fmt::Display;
 use std::str::FromStr;
 use std::time::Duration;
 
-#[derive(Debug, Clone)]
-#[derive(Default)]
+#[derive(Debug, Clone, Default)]
 pub struct UploadDelegateConfig {
     pub chunk_size: ChunkSize,
     pub backoff_config: BackoffConfig,
     pub print_chunk_errors: bool,
     pub print_chunk_info: bool,
 }
-
 
 pub struct UploadDelegate {
     config: UploadDelegateConfig,
@@ -23,6 +21,7 @@ pub struct UploadDelegate {
 }
 
 impl UploadDelegate {
+    #[must_use]
     pub fn new(config: UploadDelegateConfig) -> UploadDelegate {
         let backoff_config = config.backoff_config.clone();
 
@@ -134,6 +133,7 @@ pub struct Backoff {
 }
 
 impl Backoff {
+    #[must_use]
     pub fn new(config: BackoffConfig) -> Backoff {
         Backoff {
             attempts: 0,
@@ -178,6 +178,7 @@ pub enum ChunkSize {
 }
 
 impl ChunkSize {
+    #[must_use]
     pub fn in_bytes(&self) -> u64 {
         match self {
             ChunkSize::Approx1 => u64::pow(2, 20),

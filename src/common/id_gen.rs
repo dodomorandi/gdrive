@@ -12,6 +12,7 @@ pub struct IdGen<'a> {
 }
 
 impl<'a> IdGen<'a> {
+    #[must_use]
     pub fn new(hub: &'a Hub, delegate_config: &UploadDelegateConfig) -> Self {
         Self {
             hub,
