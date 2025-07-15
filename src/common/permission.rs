@@ -41,7 +41,7 @@ impl FromStr for Role {
     }
 }
 
-#[derive(Debug, Clone, Default, Eq, PartialEq)]
+#[derive(Debug, Clone, Copy, Default, Eq, PartialEq)]
 pub enum Type {
     User,
     Group,
