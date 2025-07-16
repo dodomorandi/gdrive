@@ -210,7 +210,11 @@ pub struct File {
 impl File {
     pub fn from_file(file: &google_drive3::api::File, parent: &Folder) -> Result<File, Error> {
         let name = file.name.clone().ok_or(Error::MissingFileName)?;
-        let size = file.size.ok_or(Error::MissingFileSize)? as u64;
+        let size = file
+            .size
+            .ok_or(Error::MissingFileSize)?
+            .try_into()
+            .map_err(|_| Error::InvalidFileSize)?;
         let file_id = file.id.clone().ok_or(Error::MissingFileId)?;
         let md5 = file.md5_checksum.clone();
 
@@ -237,6 +241,7 @@ pub enum Error {
     MissingFileName,
     MissingFileId,
     MissingFileSize,
+    InvalidFileSize,
     ListFiles(list::Error),
 }
 
@@ -249,6 +254,7 @@ impl Display for Error {
             Error::MissingFileName => write!(f, "Drive file is missing file name"),
             Error::MissingFileId => write!(f, "Drive file is missing file id"),
             Error::MissingFileSize => write!(f, "Drive file is missing file size"),
+            Error::InvalidFileSize => f.write_str("Drive file size is negative thus invalid"),
             Error::ListFiles(err) => write!(f, "Failed to list files: {err}"),
         }
     }
