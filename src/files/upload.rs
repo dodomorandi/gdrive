@@ -41,7 +41,7 @@ pub async fn upload(config: Config) -> Result<(), Error> {
     let delegate_config = UploadDelegateConfig {
         chunk_size: config.chunk_size.clone(),
         backoff_config: BackoffConfig {
-            max_retries: 100000,
+            max_retries: 100_000,
             min_sleep: Duration::from_secs(1),
             max_sleep: Duration::from_secs(60),
         },
