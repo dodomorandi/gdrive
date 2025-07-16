@@ -406,7 +406,7 @@ async fn main() {
 
                 AccountCommand::Switch { account_name } => {
                     // fmt
-                    account::switch(account::switch::Config { account_name })
+                    account::switch(&account::switch::Config { account_name })
                         .unwrap_or_else(handle_error);
                 }
 
