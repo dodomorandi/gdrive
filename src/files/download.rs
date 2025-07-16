@@ -409,7 +409,7 @@ fn local_file_is_identical(path: &PathBuf, file: &file_tree_drive::File) -> bool
             String::new()
         });
 
-        file.md5.clone().map(|md5| md5 == file_md5).unwrap_or(false)
+        file.md5.as_ref().is_some_and(|md5| md5 == &file_md5)
     } else {
         false
     }
