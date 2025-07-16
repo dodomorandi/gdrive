@@ -15,10 +15,10 @@ use md5::Digest;
 use std::error;
 use std::fmt::Display;
 use std::fmt::Formatter;
-use std::fs;
 use std::io;
 use std::io::Write;
 use std::path::PathBuf;
+use tokio::fs;
 use tokio::fs::File;
 use tokio::io::AsyncRead;
 use tokio::io::AsyncReadExt;
@@ -151,6 +151,7 @@ pub async fn download_directory(
 
         println!("Creating directory {}", folder_path.display());
         fs::create_dir_all(&abs_folder_path)
+            .await
             .map_err(|err| Error::CreateDirectory(abs_folder_path, err))?;
 
         for file in folder.files() {
@@ -310,7 +311,9 @@ pub async fn save_body_to_file(
     err_if_md5_mismatch(expected_md5, &writer.md5())?;
 
     // Rename temporary file to final file
-    fs::rename(&tmp_file_path, file_path).map_err(Error::RenameFile)
+    fs::rename(&tmp_file_path, file_path)
+        .await
+        .map_err(Error::RenameFile)
 }
 
 // TODO: move to common
