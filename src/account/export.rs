@@ -12,7 +12,7 @@ pub struct Config {
     pub account_name: String,
 }
 
-pub fn export(config: Config) -> Result<(), Error> {
+pub fn export(config: &Config) -> Result<(), Error> {
     let accounts = app_config::list_accounts().map_err(Error::AppConfig)?;
     err_if_account_not_found(&accounts, &config.account_name)?;
 

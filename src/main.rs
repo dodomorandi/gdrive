@@ -418,7 +418,7 @@ async fn main() {
 
                 AccountCommand::Export { account_name } => {
                     // fmt
-                    account::export(account::export::Config { account_name })
+                    account::export(&account::export::Config { account_name })
                         .unwrap_or_else(handle_error);
                 }
 
