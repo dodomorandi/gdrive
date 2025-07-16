@@ -1,6 +1,7 @@
 use crate::common::drive_file;
 use crate::files::list;
 use crate::files::list::ListQuery;
+use crate::files::list::ListSortOrder;
 use crate::hub::Hub;
 use async_recursion::async_recursion;
 use std::error;
@@ -113,7 +114,7 @@ impl Folder {
             hub,
             &list::ListFilesConfig {
                 query: ListQuery::FilesInFolder { folder_id: file_id },
-                order_by: Default::default(),
+                order_by: ListSortOrder::default(),
                 max_files: usize::MAX,
             },
         )
