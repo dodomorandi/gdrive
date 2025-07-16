@@ -74,7 +74,7 @@ pub async fn upload(config: Config) -> Result<(), Error> {
             delegate_config,
         )
         .await?;
-    };
+    }
 
     Ok(())
 }
