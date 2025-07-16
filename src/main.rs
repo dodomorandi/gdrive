@@ -397,45 +397,7 @@ async fn run() -> Result<(), Box<dyn std::error::Error + 'static>> {
         }
 
         Command::Account { command } => {
-            // fmt
-            match command {
-                AccountCommand::Add => {
-                    // fmt
-                    account::add().await?;
-                }
-
-                AccountCommand::List => {
-                    // fmt
-                    account::list()?;
-                }
-
-                AccountCommand::Current => {
-                    // fmt
-                    account::current()?;
-                }
-
-                AccountCommand::Switch { account_name } => {
-                    // fmt
-                    account::switch(&account::switch::Config { account_name })?;
-                }
-
-                AccountCommand::Remove { account_name } => {
-                    // fmt
-                    account::remove(&account::remove::Config { account_name })?;
-                }
-
-                AccountCommand::Export { account_name } => {
-                    // fmt
-                    account::export(&account::export::Config { account_name })?;
-                }
-
-                AccountCommand::Import { file_path } => {
-                    // fmt
-                    account::import(&account::import::Config {
-                        archive_path: file_path,
-                    })?;
-                }
-            }
+            handle_account_command(command).await?;
         }
 
         Command::Drives { command } => {
@@ -455,257 +417,319 @@ async fn run() -> Result<(), Box<dyn std::error::Error + 'static>> {
         }
 
         Command::Files { command } => {
-            match command {
-                FileCommand::Info {
-                    file_id,
-                    size_in_bytes,
-                } => {
-                    // fmt
-                    files::info(files::info::Config {
-                        file_id,
-                        size_in_bytes,
-                    })
-                    .await?;
-                }
-
-                FileCommand::List {
-                    max,
-                    query,
-                    order_by,
-                    parent,
-                    drive,
-                    skip_header,
-                    full_name,
-                    field_separator,
-                } => {
-                    let parent_query =
-                        parent.map(|folder_id| ListQuery::FilesInFolder { folder_id });
-
-                    let drive_query = drive.map(|drive_id| ListQuery::FilesOnDrive { drive_id });
-
-                    let q = parent_query.or(drive_query).unwrap_or(query);
-
-                    files::list(files::list::Config {
-                        query: q,
-                        order_by,
-                        max_files: max,
-                        skip_header,
-                        truncate_name: !full_name,
-                        field_separator,
-                    })
-                    .await?;
-                }
-
-                FileCommand::Download {
-                    file_id,
-                    overwrite,
-                    follow_shortcuts,
-                    recursive,
-                    destination,
-                    stdout,
-                } => {
-                    let existing_file_action = if overwrite {
-                        files::download::ExistingFileAction::Overwrite
-                    } else {
-                        files::download::ExistingFileAction::Abort
-                    };
-
-                    let dst = if stdout {
-                        files::download::Destination::Stdout
-                    } else if let Some(path) = destination {
-                        files::download::Destination::Path(path)
-                    } else {
-                        files::download::Destination::CurrentDir
-                    };
-
-                    files::download(files::download::Config {
-                        file_id,
-                        existing_file_action,
-                        follow_shortcuts,
-                        download_directories: recursive,
-                        destination: dst,
-                    })
-                    .await?;
-                }
-
-                FileCommand::Upload {
-                    file_path,
-                    mime,
-                    parent,
-                    recursive,
-                    chunk_size,
-                    print_chunk_errors,
-                    print_chunk_info,
-                    print_only_id,
-                } => {
-                    files::upload(files::upload::Config {
-                        file_path,
-                        mime_type: mime,
-                        parents: parent,
-                        chunk_size,
-                        print_chunk_errors,
-                        print_chunk_info,
-                        upload_directories: recursive,
-                        print_only_id,
-                    })
-                    .await?;
-                }
-
-                FileCommand::Update {
-                    file_id,
-                    file_path,
-                    mime,
-                    chunk_size,
-                    print_chunk_errors,
-                    print_chunk_info,
-                } => {
-                    // fmt
-                    files::update(files::update::Config {
-                        file_id,
-                        file_path,
-                        mime_type: mime,
-                        chunk_size,
-                        print_chunk_errors,
-                        print_chunk_info,
-                    })
-                    .await?;
-                }
-
-                FileCommand::Delete { file_id, recursive } => {
-                    // fmt
-                    files::delete(files::delete::Config {
-                        file_id,
-                        delete_directories: recursive,
-                    })
-                    .await?;
-                }
-
-                FileCommand::Mkdir {
-                    name,
-                    parent,
-                    print_only_id,
-                } => {
-                    // fmt
-                    files::mkdir(files::mkdir::Config {
-                        id: None,
-                        name,
-                        parents: parent,
-                        print_only_id,
-                    })
-                    .await?;
-                }
-
-                FileCommand::Rename { file_id, name } => {
-                    // fmt
-                    files::rename(files::rename::Config { file_id, name }).await?;
-                }
-
-                FileCommand::Move { file_id, folder_id } => {
-                    // fmt
-                    files::mv(files::mv::Config {
-                        file_id,
-                        to_folder_id: folder_id,
-                    })
-                    .await?;
-                }
-
-                FileCommand::Copy { file_id, folder_id } => {
-                    // fmt
-                    files::copy(files::copy::Config {
-                        file_id,
-                        to_folder_id: folder_id,
-                    })
-                    .await?;
-                }
-
-                FileCommand::Import {
-                    file_path,
-                    parent,
-                    print_only_id,
-                } => {
-                    // fmt
-                    files::import(files::import::Config {
-                        file_path,
-                        parents: parent,
-                        print_only_id,
-                    })
-                    .await?;
-                }
-
-                FileCommand::Export {
-                    file_id,
-                    file_path,
-                    overwrite,
-                } => {
-                    let existing_file_action = if overwrite {
-                        files::export::ExistingFileAction::Overwrite
-                    } else {
-                        files::export::ExistingFileAction::Abort
-                    };
-
-                    files::export(files::export::Config {
-                        file_id,
-                        file_path,
-                        existing_file_action,
-                    })
-                    .await?;
-                }
-            }
+            handle_files_command(command).await?;
         }
 
         Command::Permissions { command } => {
-            match command {
-                PermissionCommand::Share {
-                    file_id,
-                    role,
-                    type_,
-                    discoverable,
-                    email,
-                    domain,
-                } => {
-                    // fmt
-                    permissions::share(permissions::share::Config {
-                        file_id,
-                        role,
-                        type_,
-                        discoverable,
-                        email,
-                        domain,
-                    })
-                    .await?;
-                }
-
-                PermissionCommand::List {
-                    file_id,
-                    skip_header,
-                    field_separator,
-                } => {
-                    // fmt
-                    permissions::list(permissions::list::Config {
-                        file_id,
-                        skip_header,
-                        field_separator,
-                    })
-                    .await?;
-                }
-
-                PermissionCommand::Revoke { file_id, all, id } => {
-                    let action = if all {
-                        permissions::revoke::RevokeAction::AllExceptOwner
-                    } else if id.is_some() {
-                        permissions::revoke::RevokeAction::Id(id.unwrap_or_default())
-                    } else {
-                        permissions::revoke::RevokeAction::Anyone
-                    };
-
-                    permissions::revoke(permissions::revoke::Config { file_id, action }).await?;
-                }
-            }
+            handle_permissions_command(command).await?;
         }
 
         Command::Version => {
             // fmt
             version::version();
+        }
+    }
+
+    Ok(())
+}
+
+async fn handle_permissions_command(
+    command: PermissionCommand,
+) -> Result<(), Box<dyn std::error::Error + 'static>> {
+    match command {
+        PermissionCommand::Share {
+            file_id,
+            role,
+            type_,
+            discoverable,
+            email,
+            domain,
+        } => {
+            // fmt
+            permissions::share(permissions::share::Config {
+                file_id,
+                role,
+                type_,
+                discoverable,
+                email,
+                domain,
+            })
+            .await?;
+        }
+
+        PermissionCommand::List {
+            file_id,
+            skip_header,
+            field_separator,
+        } => {
+            // fmt
+            permissions::list(permissions::list::Config {
+                file_id,
+                skip_header,
+                field_separator,
+            })
+            .await?;
+        }
+
+        PermissionCommand::Revoke { file_id, all, id } => {
+            let action = if all {
+                permissions::revoke::RevokeAction::AllExceptOwner
+            } else if id.is_some() {
+                permissions::revoke::RevokeAction::Id(id.unwrap_or_default())
+            } else {
+                permissions::revoke::RevokeAction::Anyone
+            };
+
+            permissions::revoke(permissions::revoke::Config { file_id, action }).await?;
+        }
+    }
+
+    Ok(())
+}
+
+#[expect(
+    clippy::too_many_lines,
+    reason = "FileCommand has many variants, pretty big match statement"
+)]
+async fn handle_files_command(
+    command: FileCommand,
+) -> Result<(), Box<dyn std::error::Error + 'static>> {
+    match command {
+        FileCommand::Info {
+            file_id,
+            size_in_bytes,
+        } => {
+            // fmt
+            files::info(files::info::Config {
+                file_id,
+                size_in_bytes,
+            })
+            .await?;
+        }
+
+        FileCommand::List {
+            max,
+            query,
+            order_by,
+            parent,
+            drive,
+            skip_header,
+            full_name,
+            field_separator,
+        } => {
+            let parent_query = parent.map(|folder_id| ListQuery::FilesInFolder { folder_id });
+            let drive_query = drive.map(|drive_id| ListQuery::FilesOnDrive { drive_id });
+            let q = parent_query.or(drive_query).unwrap_or(query);
+
+            files::list(files::list::Config {
+                query: q,
+                order_by,
+                max_files: max,
+                skip_header,
+                truncate_name: !full_name,
+                field_separator,
+            })
+            .await?;
+        }
+
+        FileCommand::Download {
+            file_id,
+            overwrite,
+            follow_shortcuts,
+            recursive,
+            destination,
+            stdout,
+        } => {
+            let existing_file_action = if overwrite {
+                files::download::ExistingFileAction::Overwrite
+            } else {
+                files::download::ExistingFileAction::Abort
+            };
+
+            let dst = if stdout {
+                files::download::Destination::Stdout
+            } else if let Some(path) = destination {
+                files::download::Destination::Path(path)
+            } else {
+                files::download::Destination::CurrentDir
+            };
+
+            files::download(files::download::Config {
+                file_id,
+                existing_file_action,
+                follow_shortcuts,
+                download_directories: recursive,
+                destination: dst,
+            })
+            .await?;
+        }
+
+        FileCommand::Upload {
+            file_path,
+            mime,
+            parent,
+            recursive,
+            chunk_size,
+            print_chunk_errors,
+            print_chunk_info,
+            print_only_id,
+        } => {
+            files::upload(files::upload::Config {
+                file_path,
+                mime_type: mime,
+                parents: parent,
+                chunk_size,
+                print_chunk_errors,
+                print_chunk_info,
+                upload_directories: recursive,
+                print_only_id,
+            })
+            .await?;
+        }
+
+        FileCommand::Update {
+            file_id,
+            file_path,
+            mime,
+            chunk_size,
+            print_chunk_errors,
+            print_chunk_info,
+        } => {
+            // fmt
+            files::update(files::update::Config {
+                file_id,
+                file_path,
+                mime_type: mime,
+                chunk_size,
+                print_chunk_errors,
+                print_chunk_info,
+            })
+            .await?;
+        }
+
+        FileCommand::Delete { file_id, recursive } => {
+            // fmt
+            files::delete(files::delete::Config {
+                file_id,
+                delete_directories: recursive,
+            })
+            .await?;
+        }
+
+        FileCommand::Mkdir {
+            name,
+            parent,
+            print_only_id,
+        } => {
+            // fmt
+            files::mkdir(files::mkdir::Config {
+                id: None,
+                name,
+                parents: parent,
+                print_only_id,
+            })
+            .await?;
+        }
+
+        FileCommand::Rename { file_id, name } => {
+            // fmt
+            files::rename(files::rename::Config { file_id, name }).await?;
+        }
+
+        FileCommand::Move { file_id, folder_id } => {
+            // fmt
+            files::mv(files::mv::Config {
+                file_id,
+                to_folder_id: folder_id,
+            })
+            .await?;
+        }
+
+        FileCommand::Copy { file_id, folder_id } => {
+            // fmt
+            files::copy(files::copy::Config {
+                file_id,
+                to_folder_id: folder_id,
+            })
+            .await?;
+        }
+
+        FileCommand::Import {
+            file_path,
+            parent,
+            print_only_id,
+        } => {
+            // fmt
+            files::import(files::import::Config {
+                file_path,
+                parents: parent,
+                print_only_id,
+            })
+            .await?;
+        }
+
+        FileCommand::Export {
+            file_id,
+            file_path,
+            overwrite,
+        } => {
+            let existing_file_action = if overwrite {
+                files::export::ExistingFileAction::Overwrite
+            } else {
+                files::export::ExistingFileAction::Abort
+            };
+
+            files::export(files::export::Config {
+                file_id,
+                file_path,
+                existing_file_action,
+            })
+            .await?;
+        }
+    }
+
+    Ok(())
+}
+
+async fn handle_account_command(
+    command: AccountCommand,
+) -> Result<(), Box<dyn std::error::Error + 'static>> {
+    match command {
+        AccountCommand::Add => {
+            // fmt
+            account::add().await?;
+        }
+
+        AccountCommand::List => {
+            // fmt
+            account::list()?;
+        }
+
+        AccountCommand::Current => {
+            // fmt
+            account::current()?;
+        }
+
+        AccountCommand::Switch { account_name } => {
+            // fmt
+            account::switch(&account::switch::Config { account_name })?;
+        }
+
+        AccountCommand::Remove { account_name } => {
+            // fmt
+            account::remove(&account::remove::Config { account_name })?;
+        }
+
+        AccountCommand::Export { account_name } => {
+            // fmt
+            account::export(&account::export::Config { account_name })?;
+        }
+
+        AccountCommand::Import { file_path } => {
+            // fmt
+            account::import(&account::import::Config {
+                archive_path: file_path,
+            })?;
         }
     }
 
