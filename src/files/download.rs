@@ -3,22 +3,27 @@ use crate::common::file_tree_drive;
 use crate::common::file_tree_drive::FileTreeDrive;
 use crate::common::hub_helper;
 use crate::common::md5_writer::Md5Writer;
+use crate::common::parse_md5_digest;
 use crate::files;
 use crate::hub::Hub;
 use async_recursion::async_recursion;
 use bytesize::ByteSize;
+use error_trace::ErrorTrace;
 use futures::stream::StreamExt;
 use google_drive3::hyper;
+use md5::Digest;
 use std::error;
 use std::fmt::Display;
 use std::fmt::Formatter;
 use std::fs;
-use std::fs::File;
 use std::io;
-use std::io::BufReader;
-use std::io::Read;
 use std::io::Write;
 use std::path::PathBuf;
+use tokio::fs::File;
+use tokio::io::AsyncRead;
+use tokio::io::AsyncReadExt;
+use tokio::io::AsyncWriteExt;
+use tokio::io::BufReader;
 
 pub struct Config {
     pub file_id: String,
@@ -112,7 +117,8 @@ pub async fn download_regular(
         let abs_file_path = root_path.join(&file_name);
 
         println!("Downloading {file_name}");
-        save_body_to_file(body, &abs_file_path, file.md5_checksum.clone()).await?;
+        let md5_checksum = file.md5_checksum.as_deref().and_then(parse_md5_digest);
+        save_body_to_file(body, &abs_file_path, md5_checksum.as_ref()).await?;
         println!("Successfully downloaded {file_name}");
     }
 
@@ -151,7 +157,7 @@ pub async fn download_directory(
             let file_path = file.relative_path();
             let abs_file_path = root_path.join(&file_path);
 
-            if local_file_is_identical(&abs_file_path, &file) {
+            if local_file_is_identical(&abs_file_path, &file).await {
                 continue;
             }
 
@@ -160,7 +166,7 @@ pub async fn download_directory(
                 .map_err(|err| Error::DownloadFile(Box::new(err)))?;
 
             println!("Downloading file '{}'", file_path.display());
-            save_body_to_file(body, &abs_file_path, file.md5.clone()).await?;
+            save_body_to_file(body, &abs_file_path, file.md5.as_ref()).await?;
         }
     }
 
@@ -195,7 +201,10 @@ pub enum Error {
     MissingFileName,
     FileExists(PathBuf),
     IsDirectory(String),
-    Md5Mismatch { expected: String, actual: String },
+    Md5Mismatch {
+        expected: Option<Digest>,
+        actual: Digest,
+    },
     CreateFile(io::Error),
     CreateDirectory(PathBuf, io::Error),
     CopyFile(io::Error),
@@ -230,7 +239,10 @@ impl Display for Error {
                 "'{name}' is a directory, use --recursive to download directories"
             ),
             Error::Md5Mismatch { expected, actual } => {
-                write!(f, "MD5 mismatch, expected: {expected}, actual: {actual}")
+                write!(
+                    f,
+                    "MD5 mismatch, expected: {expected:x?}, actual: {actual:x?}"
+                )
             }
             Error::CreateFile(err) => write!(f, "Failed to create file: {err}"),
             Error::CreateDirectory(path, err) => write!(
@@ -277,11 +289,13 @@ impl Display for Error {
 pub async fn save_body_to_file(
     mut body: hyper::Body,
     file_path: &PathBuf,
-    expected_md5: Option<String>,
+    expected_md5: Option<&Digest>,
 ) -> Result<(), Error> {
     // Create temporary file
     let tmp_file_path = file_path.with_extension("incomplete");
-    let file = File::create(&tmp_file_path).map_err(Error::CreateFile)?;
+    let file = File::create(&tmp_file_path)
+        .await
+        .map_err(Error::CreateFile)?;
 
     // Wrap file in writer that calculates md5
     let mut writer = Md5Writer::new(file);
@@ -289,11 +303,11 @@ pub async fn save_body_to_file(
     // Read chunks from stream and write to file
     while let Some(chunk_result) = body.next().await {
         let chunk = chunk_result.map_err(Error::ReadChunk)?;
-        writer.write_all(&chunk).map_err(Error::WriteChunk)?;
+        writer.write_all(&chunk).await.map_err(Error::WriteChunk)?;
     }
 
     // Check md5
-    err_if_md5_mismatch(expected_md5, writer.md5())?;
+    err_if_md5_mismatch(expected_md5, &writer.md5())?;
 
     // Rename temporary file to final file
     fs::rename(&tmp_file_path, file_path).map_err(Error::RenameFile)
@@ -360,54 +374,58 @@ fn err_if_shortcut(file: &google_drive3::api::File, config: &Config) -> Result<(
     }
 }
 
-fn err_if_md5_mismatch(expected: Option<String>, actual: String) -> Result<(), Error> {
+fn err_if_md5_mismatch(expected: Option<&Digest>, actual: &Digest) -> Result<(), Error> {
     let is_matching = expected.as_ref().is_none_or(|md5| md5 == &actual);
 
     if is_matching {
         Ok(())
     } else {
         Err(Error::Md5Mismatch {
-            expected: expected.unwrap_or_default(),
-            actual,
+            expected: expected.copied(),
+            actual: *actual,
         })
     }
 }
 
-fn local_file_is_identical(path: &PathBuf, file: &file_tree_drive::File) -> bool {
+async fn local_file_is_identical(path: &PathBuf, file: &file_tree_drive::File) -> bool {
     if path.exists() {
-        let file_md5 = compute_md5_from_path(path).unwrap_or_else(|err| {
-            eprintln!(
-                "Warning: Error while computing md5 of '{}': {}",
-                path.display(),
-                err
-            );
-
-            String::new()
-        });
-
-        file.md5.as_ref().is_some_and(|md5| md5 == &file_md5)
+        match compute_md5_from_path(path).await {
+            Ok(file_md5) => file.md5.as_ref().is_some_and(|md5| md5 == &file_md5),
+            Err(err) => {
+                eprintln!(
+                    "Warning: Error while computing md5 of '{}': {}",
+                    path.display(),
+                    err.trace(),
+                );
+                false
+            }
+        }
     } else {
         false
     }
 }
 
-fn compute_md5_from_path(path: &PathBuf) -> Result<String, io::Error> {
-    let input = File::open(path)?;
+async fn compute_md5_from_path(path: &PathBuf) -> Result<Digest, io::Error> {
+    let input = File::open(path).await?;
     let reader = BufReader::new(input);
-    compute_md5_from_reader(reader)
+    compute_md5_from_async_reader(reader).await
 }
 
-fn compute_md5_from_reader<R: Read>(mut reader: R) -> Result<String, io::Error> {
+async fn compute_md5_from_async_reader<R>(mut reader: R) -> Result<Digest, io::Error>
+where
+    R: AsyncRead + Unpin,
+{
     let mut context = md5::Context::new();
     let mut buffer = [0; 4096];
 
     loop {
-        let count = reader.read(&mut buffer)?;
-        if count == 0 {
-            break;
+        match reader.read(&mut buffer).await {
+            Ok(0) => break,
+            Ok(count) => context.consume(&buffer[..count]),
+            Err(err) if err.kind() == io::ErrorKind::Interrupted => {}
+            Err(err) => return Err(err),
         }
-        context.consume(&buffer[..count]);
     }
 
-    Ok(format!("{:x}", context.compute()))
+    Ok(context.compute())
 }

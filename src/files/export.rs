@@ -4,6 +4,7 @@ use crate::common::drive_file;
 use crate::common::drive_file::DocType;
 use crate::common::drive_file::FileExtension;
 use crate::common::hub_helper;
+use crate::common::parse_md5_digest;
 use crate::files;
 use crate::hub::Hub;
 use std::error;
@@ -57,7 +58,8 @@ pub async fn export(config: Config) -> Result<(), Error> {
         config.file_path.display()
     );
 
-    files::download::save_body_to_file(body, &config.file_path, file.md5_checksum)
+    let md5_checksum = file.md5_checksum.as_deref().and_then(parse_md5_digest);
+    files::download::save_body_to_file(body, &config.file_path, md5_checksum.as_ref())
         .await
         .map_err(Error::SaveFile)?;
 

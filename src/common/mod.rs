@@ -15,7 +15,6 @@ pub mod table;
 
 use folder_like::FolderLike;
 
-#[cfg_attr(not(test), expect(unused))]
 pub(crate) fn parse_md5_digest(s: &str) -> Option<md5::Digest> {
     const MD5_LEN: usize = 16;
 

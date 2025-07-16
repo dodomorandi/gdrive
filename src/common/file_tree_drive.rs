@@ -9,6 +9,7 @@ use std::fmt::Display;
 use std::fmt::Formatter;
 use std::path::PathBuf;
 
+use super::parse_md5_digest;
 use super::FolderLike;
 
 #[derive(Debug, Clone)]
@@ -205,7 +206,7 @@ pub struct File {
     pub size: u64,
     pub parent: Folder,
     pub drive_id: String,
-    pub md5: Option<String>,
+    pub md5: Option<md5::Digest>,
 }
 
 impl File {
@@ -217,7 +218,7 @@ impl File {
             .try_into()
             .map_err(|_| Error::InvalidFileSize)?;
         let file_id = file.id.clone().ok_or(Error::MissingFileId)?;
-        let md5 = file.md5_checksum.clone();
+        let md5 = file.md5_checksum.as_deref().and_then(parse_md5_digest);
 
         let file = File {
             name,
