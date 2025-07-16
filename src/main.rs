@@ -412,7 +412,7 @@ async fn main() {
 
                 AccountCommand::Remove { account_name } => {
                     // fmt
-                    account::remove(account::remove::Config { account_name })
+                    account::remove(&account::remove::Config { account_name })
                         .unwrap_or_else(handle_error);
                 }
 
