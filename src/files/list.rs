@@ -101,7 +101,7 @@ pub async fn list_files(
         }
 
         let (_, file_list) = req
-            .page_size(page_size as i32)
+            .page_size(page_size.try_into().unwrap_or(i32::MAX))
             .q(&config.query.to_string())
             .order_by(&config.order_by.to_string())
             .add_scope(google_drive3::api::Scope::Full)
