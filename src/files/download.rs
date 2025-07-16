@@ -385,7 +385,7 @@ fn err_if_shortcut_target_is_missing(target_id: &Option<String>) -> Result<(), E
 }
 
 fn err_if_md5_mismatch(expected: Option<String>, actual: String) -> Result<(), Error> {
-    let is_matching = expected.clone().map(|md5| md5 == actual).unwrap_or(true);
+    let is_matching = expected.as_ref().is_none_or(|md5| md5 == &actual);
 
     if is_matching {
         Ok(())
