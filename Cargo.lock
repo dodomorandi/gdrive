@@ -345,6 +345,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "877a4ace8713b0bcf2a4e7eec82529c029f1d0619886d18145fea96c3ffe5c0f"
 
 [[package]]
+name = "error-trace"
+version = "4.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d80eeab1d29829898de1c3be1e242af75475b47452635f0ddd32a495fd5a8143"
+
+[[package]]
 name = "exponential-backoff"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -486,6 +492,7 @@ dependencies = [
  "bytes",
  "bytesize",
  "clap",
+ "error-trace",
  "exponential-backoff",
  "futures",
  "google-drive3",
