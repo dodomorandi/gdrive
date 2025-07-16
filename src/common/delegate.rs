@@ -101,7 +101,7 @@ impl google_drive3::client::Delegate for UploadDelegate {
             }
             self.backoff.retry()
         } else {
-            self.backoff.abort()
+            google_drive3::client::Retry::Abort
         }
     }
 }
@@ -151,10 +151,6 @@ impl Backoff {
             google_drive3::client::Retry::Abort,
             google_drive3::client::Retry::After,
         )
-    }
-
-    fn abort(&mut self) -> google_drive3::client::Retry {
-        google_drive3::client::Retry::Abort
     }
 }
 
