@@ -15,7 +15,7 @@ pub mod table;
 
 use folder_like::FolderLike;
 
-#[expect(unused)]
+#[cfg_attr(not(test), expect(unused))]
 pub(crate) fn parse_md5_digest(s: &str) -> Option<md5::Digest> {
     const MD5_LEN: usize = 16;
 
@@ -38,4 +38,29 @@ pub(crate) fn parse_md5_digest(s: &str) -> Option<md5::Digest> {
         })?;
 
     Some(md5::Digest(md5_bytes))
+}
+
+#[cfg(test)]
+mod test {
+    use super::parse_md5_digest;
+
+    #[test]
+    fn parse_md5_digest_valid() {
+        assert_eq!(
+            parse_md5_digest("123456789abcdef01fedcba098765432").unwrap(),
+            md5::Digest([
+                0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0, 0x1f, 0xed, 0xcb, 0xa0, 0x98, 0x76,
+                0x54, 0x32,
+            ])
+        );
+    }
+
+    #[test]
+    fn parse_md5_digest_invalid() {
+        assert!(parse_md5_digest("123456789abcdef01f3dcba09876542").is_none());
+        assert!(parse_md5_digest("123456789abcdef01f3dcba09876543").is_none());
+        assert!(parse_md5_digest("123456789abcdef01f3dcba0987654321").is_none());
+        assert!(parse_md5_digest("123456789abcdef01f3dcba09876543210").is_none());
+        assert!(parse_md5_digest("g23456789abcdef01f3dcba098765432").is_none());
+    }
 }
