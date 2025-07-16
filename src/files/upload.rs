@@ -24,6 +24,10 @@ use std::path::Path;
 use std::path::PathBuf;
 use std::time::Duration;
 
+#[expect(
+    clippy::struct_excessive_bools,
+    reason = "they are orthogonal one each other"
+)]
 pub struct Config {
     pub file_path: Option<PathBuf>,
     pub mime_type: Option<Mime>,
