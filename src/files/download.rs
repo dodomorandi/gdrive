@@ -86,13 +86,9 @@ pub async fn download(config: Config) -> Result<(), Error> {
     if drive_file::is_shortcut(&file) {
         let target_file_id = file.shortcut_details.and_then(|details| details.target_id);
 
-        err_if_shortcut_target_is_missing(&target_file_id)?;
+        let file_id = target_file_id.ok_or(Error::MissingShortcutTarget)?;
 
-        download(Config {
-            file_id: target_file_id.unwrap_or_default(),
-            ..config
-        })
-        .await?;
+        download(Config { file_id, ..config }).await?;
     } else if drive_file::is_directory(&file) {
         download_directory(&hub, &file, &config).await?;
     } else {
@@ -371,14 +367,6 @@ fn err_if_shortcut(file: &google_drive3::api::File, config: &Config) -> Result<(
             .map(ToString::to_string)
             .unwrap_or_default();
         Err(Error::IsShortcut(name))
-    } else {
-        Ok(())
-    }
-}
-
-fn err_if_shortcut_target_is_missing(target_id: &Option<String>) -> Result<(), Error> {
-    if target_id.is_none() {
-        Err(Error::MissingShortcutTarget)
     } else {
         Ok(())
     }
