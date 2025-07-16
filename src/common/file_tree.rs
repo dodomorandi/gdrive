@@ -18,7 +18,7 @@ pub struct FileTree {
 }
 
 impl FileTree {
-    pub async fn from_path<'a>(path: &Path, ids: &mut IdGen<'a>) -> Result<FileTree, Error> {
+    pub async fn from_path(path: &Path, ids: &mut IdGen<'_>) -> Result<FileTree, Error> {
         let canonical_path = path
             .canonicalize()
             .map_err(|err| Error::CanonicalizePath(path.to_owned(), err))?;
@@ -207,10 +207,10 @@ pub struct File {
 }
 
 impl File {
-    pub async fn from_path<'a>(
+    pub async fn from_path(
         path: &PathBuf,
         parent: &Folder,
-        ids: &mut IdGen<'a>,
+        ids: &mut IdGen<'_>,
     ) -> Result<File, Error> {
         let name = path
             .file_name()
