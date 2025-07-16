@@ -11,7 +11,7 @@ pub struct Config {
     pub archive_path: PathBuf,
 }
 
-pub fn import(config: Config) -> Result<(), Error> {
+pub fn import(config: &Config) -> Result<(), Error> {
     let account_name =
         account_archive::get_account_name(&config.archive_path).map_err(Error::ReadAccountName)?;
 

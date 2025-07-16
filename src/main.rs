@@ -424,7 +424,7 @@ async fn main() {
 
                 AccountCommand::Import { file_path } => {
                     // fmt
-                    account::import(account::import::Config {
+                    account::import(&account::import::Config {
                         archive_path: file_path,
                     })
                     .unwrap_or_else(handle_error);
