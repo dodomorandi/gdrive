@@ -23,11 +23,11 @@ pub struct UploadDelegate {
 impl UploadDelegate {
     #[must_use]
     pub fn new(config: UploadDelegateConfig) -> UploadDelegate {
-        let backoff_config = config.backoff_config.clone();
+        let backoff = Backoff::new(&config.backoff_config);
 
         UploadDelegate {
             config,
-            backoff: Backoff::new(backoff_config),
+            backoff,
             resumable_upload_url: None,
             previous_chunk: None,
         }
@@ -134,7 +134,7 @@ pub struct Backoff {
 
 impl Backoff {
     #[must_use]
-    pub fn new(config: BackoffConfig) -> Backoff {
+    pub fn new(config: &BackoffConfig) -> Backoff {
         Backoff {
             attempts: 0,
             backoff: exponential_backoff::Backoff::new(
