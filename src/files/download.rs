@@ -50,10 +50,7 @@ impl Config {
                 }
             }
 
-            Destination::Stdout => {
-                // fmt
-                Err(Error::StdoutNotValidDestination)
-            }
+            Destination::Stdout => Err(Error::StdoutNotValidDestination),
         }
     }
 }
@@ -108,7 +105,6 @@ pub async fn download_regular(
         .map_err(|err| Error::DownloadFile(Box::new(err)))?;
 
     if config.destination == Destination::Stdout {
-        // fmt
         save_body_to_stdout(body).await?;
     } else {
         let file_name = file.name.clone().ok_or(Error::MissingFileName)?;
@@ -234,7 +230,6 @@ impl Display for Error {
                 "'{name}' is a directory, use --recursive to download directories"
             ),
             Error::Md5Mismatch { expected, actual } => {
-                // fmt
                 write!(f, "MD5 mismatch, expected: {expected}, actual: {actual}")
             }
             Error::CreateFile(err) => write!(f, "Failed to create file: {err}"),
@@ -335,10 +330,7 @@ fn err_if_file_exists(file: &google_drive3::api::File, config: &Config) -> Resul
             }
         }
 
-        None => {
-            // fmt
-            Ok(())
-        }
+        None => Ok(()),
     }
 }
 

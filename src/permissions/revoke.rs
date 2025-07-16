@@ -131,28 +131,19 @@ impl RevokeAction {
         permissions: Vec<google_drive3::api::Permission>,
     ) -> Result<Vec<google_drive3::api::Permission>, Error> {
         match self {
-            RevokeAction::Anyone => {
-                // fmt
-                Ok(Self::get_permissions_by_type(
-                    permissions,
-                    permission::Type::Anyone,
-                ))
-            }
+            RevokeAction::Anyone => Ok(Self::get_permissions_by_type(
+                permissions,
+                permission::Type::Anyone,
+            )),
 
-            RevokeAction::AllExceptOwner => {
-                // fmt
-                Ok(Self::get_permissions_except_role(
-                    permissions,
-                    permission::Role::Owner,
-                ))
-            }
+            RevokeAction::AllExceptOwner => Ok(Self::get_permissions_except_role(
+                permissions,
+                permission::Role::Owner,
+            )),
 
-            RevokeAction::Id(id) => {
-                // fmt
-                Self::find_permission_by_id(permissions, id)
-                    .map(|p| vec![p])
-                    .ok_or_else(|| Error::PermissionNotFound(id.to_string()))
-            }
+            RevokeAction::Id(id) => Self::find_permission_by_id(permissions, id)
+                .map(|p| vec![p])
+                .ok_or_else(|| Error::PermissionNotFound(id.to_string())),
         }
     }
 

@@ -23,7 +23,6 @@ impl<'a> IdGen<'a> {
 
     pub async fn next(&mut self) -> Result<String, Error> {
         if let Some(id) = self.ids.pop() {
-            // fmt
             Ok(id)
         } else {
             self.ids = self.generate_ids().await?;

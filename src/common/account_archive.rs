@@ -87,57 +87,46 @@ impl Display for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             Error::CreateFile(err) => {
-                // fmt
                 write!(f, "Failed to create file: {err}")
             }
 
             Error::PathDoesNotExist(path) => {
-                // fmt
                 write!(f, "'{}' does not exist", path.display())
             }
 
             Error::PathNotDir(path) => {
-                // fmt
                 write!(f, "'{}' is not a directory", path.display())
             }
 
             Error::PathAlreadyExists(path) => {
-                // fmt
                 write!(f, "'{}' already exists", path.display())
             }
 
             Error::AppendDir(path, err) => {
-                // fmt
                 write!(f, "Failed to add {} to archive: {}", path.display(), err)
             }
 
             Error::FinishArchive(path, err) => {
-                // fmt
                 write!(f, "Failed to create archive '{}': {}", path.display(), err)
             }
 
             Error::OpenFile(err) => {
-                // fmt
                 write!(f, "Failed to open archive: {err}")
             }
 
             Error::ReadEntries(err) => {
-                // fmt
                 write!(f, "Failed to read archive entries: {err}")
             }
 
             Error::NoDirectories => {
-                // fmt
                 write!(f, "Archive contains no directories")
             }
 
             Error::MultipleDirectories => {
-                // fmt
                 write!(f, "Archive contains multiple directories")
             }
 
             Error::Unpack(err) => {
-                // fmt
                 write!(f, "Failed to unpack archive: {err}")
             }
         }

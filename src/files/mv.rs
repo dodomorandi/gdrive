@@ -128,10 +128,7 @@ impl Display for Error {
 
 fn get_old_parent_id(file: &google_drive3::api::File) -> Result<String, Error> {
     match &file.parents {
-        None => {
-            // fmt
-            Err(Error::NoParents)
-        }
+        None => Err(Error::NoParents),
 
         Some(parents) => match &parents[..] {
             [] => Err(Error::NoParents),

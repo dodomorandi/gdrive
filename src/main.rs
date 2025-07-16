@@ -392,7 +392,6 @@ async fn run() -> Result<(), Box<dyn std::error::Error + 'static>> {
 
     match cli.command {
         Command::About => {
-            // fmt
             about::about();
         }
 
@@ -400,21 +399,18 @@ async fn run() -> Result<(), Box<dyn std::error::Error + 'static>> {
             handle_account_command(command).await?;
         }
 
-        Command::Drives { command } => {
-            // fmt
-            match command {
-                DriveCommand::List {
+        Command::Drives { command } => match command {
+            DriveCommand::List {
+                skip_header,
+                field_separator,
+            } => {
+                drives::list(drives::list::Config {
                     skip_header,
                     field_separator,
-                } => {
-                    drives::list(drives::list::Config {
-                        skip_header,
-                        field_separator,
-                    })
-                    .await?;
-                }
+                })
+                .await?;
             }
-        }
+        },
 
         Command::Files { command } => {
             handle_files_command(command).await?;
@@ -425,7 +421,6 @@ async fn run() -> Result<(), Box<dyn std::error::Error + 'static>> {
         }
 
         Command::Version => {
-            // fmt
             version::version();
         }
     }
@@ -445,7 +440,6 @@ async fn handle_permissions_command(
             email,
             domain,
         } => {
-            // fmt
             permissions::share(permissions::share::Config {
                 file_id,
                 role,
@@ -462,7 +456,6 @@ async fn handle_permissions_command(
             skip_header,
             field_separator,
         } => {
-            // fmt
             permissions::list(permissions::list::Config {
                 file_id,
                 skip_header,
@@ -499,7 +492,6 @@ async fn handle_files_command(
             file_id,
             size_in_bytes,
         } => {
-            // fmt
             files::info(files::info::Config {
                 file_id,
                 size_in_bytes,
@@ -595,7 +587,6 @@ async fn handle_files_command(
             print_chunk_errors,
             print_chunk_info,
         } => {
-            // fmt
             files::update(files::update::Config {
                 file_id,
                 file_path,
@@ -608,7 +599,6 @@ async fn handle_files_command(
         }
 
         FileCommand::Delete { file_id, recursive } => {
-            // fmt
             files::delete(files::delete::Config {
                 file_id,
                 delete_directories: recursive,
@@ -621,7 +611,6 @@ async fn handle_files_command(
             parent,
             print_only_id,
         } => {
-            // fmt
             files::mkdir(files::mkdir::Config {
                 id: None,
                 name,
@@ -632,12 +621,10 @@ async fn handle_files_command(
         }
 
         FileCommand::Rename { file_id, name } => {
-            // fmt
             files::rename(files::rename::Config { file_id, name }).await?;
         }
 
         FileCommand::Move { file_id, folder_id } => {
-            // fmt
             files::mv(files::mv::Config {
                 file_id,
                 to_folder_id: folder_id,
@@ -646,7 +633,6 @@ async fn handle_files_command(
         }
 
         FileCommand::Copy { file_id, folder_id } => {
-            // fmt
             files::copy(files::copy::Config {
                 file_id,
                 to_folder_id: folder_id,
@@ -659,7 +645,6 @@ async fn handle_files_command(
             parent,
             print_only_id,
         } => {
-            // fmt
             files::import(files::import::Config {
                 file_path,
                 parents: parent,
@@ -696,37 +681,30 @@ async fn handle_account_command(
 ) -> Result<(), Box<dyn std::error::Error + 'static>> {
     match command {
         AccountCommand::Add => {
-            // fmt
             account::add().await?;
         }
 
         AccountCommand::List => {
-            // fmt
             account::list()?;
         }
 
         AccountCommand::Current => {
-            // fmt
             account::current()?;
         }
 
         AccountCommand::Switch { account_name } => {
-            // fmt
             account::switch(&account::switch::Config { account_name })?;
         }
 
         AccountCommand::Remove { account_name } => {
-            // fmt
             account::remove(&account::remove::Config { account_name })?;
         }
 
         AccountCommand::Export { account_name } => {
-            // fmt
             account::export(&account::export::Config { account_name })?;
         }
 
         AccountCommand::Import { file_path } => {
-            // fmt
             account::import(&account::import::Config {
                 archive_path: file_path,
             })?;

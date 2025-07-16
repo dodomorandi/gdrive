@@ -30,11 +30,7 @@ fn print_drives_table(config: &Config, drives: Vec<google_drive3::api::Drive>) {
     let mut values: Vec<[String; 2]> = vec![];
 
     for drive in drives {
-        values.push([
-            // fmt
-            drive.id.unwrap_or_default(),
-            drive.name.unwrap_or_default(),
-        ]);
+        values.push([drive.id.unwrap_or_default(), drive.name.unwrap_or_default()]);
     }
 
     let table = Table {

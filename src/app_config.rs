@@ -235,89 +235,72 @@ impl Display for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             Error::HomeDirNotFound => {
-                // fmt
                 write!(f, "Home directory not found")
             }
 
             Error::CreateConfigDir(err) => {
-                // fmt
                 write!(f, "Failed to create config directory: {err}")
             }
 
             Error::ReadAccountConfig(err) => {
-                // fmt
                 write!(f, "Failed to read account config: {err}")
             }
 
             Error::AccountConfigMissing => {
-                // fmt
                 writeln!(f, "No account has been selected")?;
                 writeln!(f, "Use `gdrive account list` to show all accounts.")?;
                 write!(f, "Use `gdrive account switch` to select an account.")
             }
 
             Error::ParseAccountConfig(err) => {
-                // fmt
                 write!(f, "Failed to parse account config: {err}")
             }
 
             Error::SerializeAccountConfig(err) => {
-                // fmt
                 write!(f, "Failed to serialize account config: {err}")
             }
 
             Error::WriteAccountConfig(err) => {
-                // fmt
                 write!(f, "Failed to write account config: {err}")
             }
 
             Error::SerializeSecret(err) => {
-                // fmt
                 write!(f, "Failed to serialize secret: {err}")
             }
 
             Error::WriteSecret(err) => {
-                // fmt
                 write!(f, "Failed to write secret: {err}")
             }
 
             Error::ReadSecret(err) => {
-                // fmt
                 write!(f, "Failed to read secret: {err}")
             }
 
             Error::DeserializeSecret(err) => {
-                // fmt
                 write!(f, "Failed to deserialize secret: {err}")
             }
 
             Error::DeserializeAccountConfig(err) => {
-                // fmt
                 write!(f, "Failed to deserialize account config: {err}")
             }
 
             Error::CopyTokens(err) => {
-                // fmt
                 write!(f, "Failed to copy tokens: {err}")
             }
 
             Error::ListFiles(err) => {
-                // fmt
                 write!(f, "Failed to list files: {err}")
             }
 
             Error::RemoveAccountDir(err) => {
-                // fmt
                 write!(f, "Failed to remove account directory: {err}")
             }
 
             Error::RemoveAccountConfig(err) => {
-                // fmt
                 write!(f, "Failed to remove account config: {err}")
             }
 
             Error::CreateBaseDir(path, err) => {
-                // fmt
                 write!(
                     f,
                     "Failed to create directory '{}': {}",
