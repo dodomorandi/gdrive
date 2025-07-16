@@ -107,21 +107,17 @@ pub async fn download_regular(
         .await
         .map_err(|err| Error::DownloadFile(Box::new(err)))?;
 
-    match &config.destination {
-        Destination::Stdout => {
-            // fmt
-            save_body_to_stdout(body).await?;
-        }
+    if config.destination == Destination::Stdout {
+        // fmt
+        save_body_to_stdout(body).await?;
+    } else {
+        let file_name = file.name.clone().ok_or(Error::MissingFileName)?;
+        let root_path = config.canonical_destination_root()?;
+        let abs_file_path = root_path.join(&file_name);
 
-        _ => {
-            let file_name = file.name.clone().ok_or(Error::MissingFileName)?;
-            let root_path = config.canonical_destination_root()?;
-            let abs_file_path = root_path.join(&file_name);
-
-            println!("Downloading {file_name}");
-            save_body_to_file(body, &abs_file_path, file.md5_checksum.clone()).await?;
-            println!("Successfully downloaded {file_name}");
-        }
+        println!("Downloading {file_name}");
+        save_body_to_file(body, &abs_file_path, file.md5_checksum.clone()).await?;
+        println!("Successfully downloaded {file_name}");
     }
 
     Ok(())
