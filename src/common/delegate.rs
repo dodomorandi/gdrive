@@ -147,10 +147,10 @@ impl Backoff {
 
     fn retry(&mut self) -> google_drive3::client::Retry {
         self.attempts += 1;
-        self.backoff
-            .next(self.attempts)
-            .map(google_drive3::client::Retry::After)
-            .unwrap_or(google_drive3::client::Retry::Abort)
+        self.backoff.next(self.attempts).map_or(
+            google_drive3::client::Retry::Abort,
+            google_drive3::client::Retry::After,
+        )
     }
 
     fn abort(&mut self) -> google_drive3::client::Retry {
