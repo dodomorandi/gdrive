@@ -76,3 +76,15 @@ fn normalize_name(account_name: &str) -> String {
         .map(|c| if char::is_alphanumeric(c) { c } else { '_' })
         .collect()
 }
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn normalize_name() {
+        assert_eq!(super::normalize_name("hello123"), "hello123");
+        assert_eq!(
+            super::normalize_name("smile 😀! It's fine"),
+            "smile____It_s_fine"
+        );
+    }
+}
