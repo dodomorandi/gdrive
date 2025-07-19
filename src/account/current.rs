@@ -6,7 +6,9 @@ use std::fmt::Formatter;
 
 pub fn current() -> Result<(), Error> {
     let accounts = app_config::list_accounts().map_err(Error::List)?;
-    err_if_no_accounts(&accounts)?;
+    if accounts.is_empty() {
+        return Err(Error::NoAccounts);
+    }
 
     let app_cfg = AppConfig::load_current_account().map_err(Error::LoadCurrent)?;
     println!("{}", app_cfg.account.name);
@@ -39,13 +41,5 @@ impl Display for Error {
         };
 
         f.write_str(s)
-    }
-}
-
-fn err_if_no_accounts(accounts: &[String]) -> Result<(), Error> {
-    if accounts.is_empty() {
-        Err(Error::NoAccounts)
-    } else {
-        Ok(())
     }
 }
