@@ -14,15 +14,16 @@ pub struct Config {
 }
 
 pub fn export(config: &Config) -> Result<(), Error> {
+    let Config { account_name } = config;
     let accounts = app_config::list_accounts().map_err(Error::ListAccounts)?;
-    if accounts.contains(&config.account_name).not() {
-        return Err(Error::AccountNotFound(config.account_name.clone()));
+    if accounts.contains(account_name).not() {
+        return Err(Error::AccountNotFound(account_name.clone()));
     }
 
-    let app_cfg = AppConfig::init_account(&config.account_name).map_err(Error::InitAccount)?;
+    let app_cfg = AppConfig::init_account(account_name).map_err(Error::InitAccount)?;
     let account_path = app_cfg.account_base_path();
 
-    let archive_name = format!("gdrive_export-{}.tar", normalize_name(&config.account_name));
+    let archive_name = format!("gdrive_export-{}.tar", normalize_name(account_name));
     let archive_path = PathBuf::from(&archive_name);
     account_archive::create(&account_path, &archive_path).map_err(Error::CreateArchive)?;
 
@@ -30,10 +31,7 @@ pub fn export(config: &Config) -> Result<(), Error> {
         eprintln!("Warning: Failed to set permissions on archive: {err}");
     }
 
-    println!(
-        "Exported account '{}' to {archive_name}",
-        config.account_name,
-    );
+    println!("Exported account '{account_name}' to {archive_name}");
 
     Ok(())
 }
