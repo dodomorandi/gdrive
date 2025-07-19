@@ -8,8 +8,14 @@ use std::io::Write;
 
 pub async fn add() -> Result<(), Error> {
     println!("To add an account you need a Google Client ID and Client Secret.");
-    println!("Instructions for how to create credentials can be found here: https://github.com/glotlabs/gdrive/blob/main/docs/create_google_api_credentials.md");
-    println!("Note that if you are using gdrive on a remote server you should read this first: https://github.com/glotlabs/gdrive#using-gdrive-on-a-remote-server");
+    println!(
+        "Instructions for how to create credentials can be found here:\
+        https://github.com/glotlabs/gdrive/blob/main/docs/create_google_api_credentials.md"
+    );
+    println!(
+        "Note that if you are using gdrive on a remote server you should read this first:\
+        https://github.com/glotlabs/gdrive#using-gdrive-on-a-remote-server"
+    );
     println!();
 
     let secret = secret_prompt().map_err(Error::Prompt)?;
@@ -51,7 +57,10 @@ pub async fn add() -> Result<(), Error> {
         "Saved account credentials in {}",
         app_cfg.base_path.display()
     );
-    println!("Keep them safe! If someone gets access to them, they will also be able to access your Google Drive.");
+    println!(
+        "Keep them safe! If someone gets access to them, they will also be able to access your\
+        Google Drive."
+    );
 
     app_config::switch_account(&app_cfg).map_err(Error::AppConfig)?;
     println!();
