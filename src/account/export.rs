@@ -4,9 +4,11 @@ use crate::app_config;
 use crate::app_config::set_file_permissions;
 use crate::app_config::AppConfig;
 use crate::common::account_archive;
+use std::borrow::Cow;
 use std::error;
 use std::fmt::Display;
 use std::fmt::Formatter;
+use std::fmt::Write;
 use std::ops::Not;
 use std::path::Path;
 
@@ -70,11 +72,24 @@ impl Display for Error {
     }
 }
 
-fn normalize_name(account_name: &str) -> String {
-    account_name
-        .chars()
-        .map(|c| if char::is_alphanumeric(c) { c } else { '_' })
-        .collect()
+fn normalize_name(account_name: &str) -> Cow<'_, str> {
+    match account_name
+        .char_indices()
+        .find_map(|(index, c)| c.is_alphanumeric().not().then_some(index))
+    {
+        None => Cow::Borrowed(account_name),
+        Some(index) => {
+            let mut normalized = String::with_capacity(account_name.len());
+            let (init, rest) = account_name.split_at(index);
+            write!(normalized, "{init}_").unwrap();
+            normalized.extend(
+                rest.chars()
+                    .skip(1)
+                    .map(|c| if c.is_alphanumeric() { c } else { '_' }),
+            );
+            Cow::Owned(normalized)
+        }
+    }
 }
 
 #[cfg(test)]
