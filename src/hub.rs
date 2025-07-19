@@ -10,6 +10,7 @@ use google_drive3::DriveHub;
 use std::future::Future;
 use std::io;
 use std::ops::Deref;
+use std::path::Path;
 use std::path::PathBuf;
 use std::pin::Pin;
 
@@ -54,10 +55,7 @@ impl Deref for Auth {
 }
 
 impl Auth {
-    pub async fn new(
-        config: &app_config::Secret,
-        tokens_path: &PathBuf,
-    ) -> Result<Auth, io::Error> {
+    pub async fn new(config: &app_config::Secret, tokens_path: &Path) -> Result<Auth, io::Error> {
         let secret = oauth2_secret(config);
         let delegate = Box::new(AuthDelegate);
 

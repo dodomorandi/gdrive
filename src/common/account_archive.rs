@@ -6,7 +6,7 @@ use std::io;
 use std::path::Path;
 use std::path::PathBuf;
 
-pub fn create(src_path: &PathBuf, archive_path: &PathBuf) -> Result<(), Error> {
+pub fn create(src_path: &Path, archive_path: &Path) -> Result<(), Error> {
     err_if_not_exists(src_path)?;
     err_if_not_dir(src_path)?;
     err_if_exists(archive_path)?;
@@ -22,16 +22,16 @@ pub fn create(src_path: &PathBuf, archive_path: &PathBuf) -> Result<(), Error> {
 
     builder
         .append_dir_all(&src_dir_name, src_path)
-        .map_err(|err| Error::AppendDir(src_path.clone(), err))?;
+        .map_err(|err| Error::AppendDir(src_path.to_path_buf(), err))?;
 
     builder
         .finish()
-        .map_err(|err| Error::FinishArchive(archive_path.clone(), err))?;
+        .map_err(|err| Error::FinishArchive(archive_path.to_path_buf(), err))?;
 
     Ok(())
 }
 
-pub fn unpack(archive_path: &PathBuf, dst_path: &PathBuf) -> Result<(), Error> {
+pub fn unpack(archive_path: &Path, dst_path: &Path) -> Result<(), Error> {
     err_if_not_exists(archive_path)?;
     err_if_not_exists(dst_path)?;
 
@@ -40,7 +40,7 @@ pub fn unpack(archive_path: &PathBuf, dst_path: &PathBuf) -> Result<(), Error> {
     archive.unpack(dst_path).map_err(Error::Unpack)
 }
 
-pub fn get_account_name(archive_path: &PathBuf) -> Result<String, Error> {
+pub fn get_account_name(archive_path: &Path) -> Result<String, Error> {
     let archive_file = File::open(archive_path).map_err(Error::OpenFile)?;
     let mut archive = tar::Archive::new(archive_file);
     let entries = archive.entries().map_err(Error::ReadEntries)?;

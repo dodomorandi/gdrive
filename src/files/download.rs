@@ -17,6 +17,7 @@ use std::fmt::Display;
 use std::fmt::Formatter;
 use std::io;
 use std::io::Write;
+use std::path::Path;
 use std::path::PathBuf;
 use tokio::fs;
 use tokio::fs::File;
@@ -289,7 +290,7 @@ impl Display for Error {
 // TODO: move to common
 pub async fn save_body_to_file(
     mut body: hyper::Body,
-    file_path: &PathBuf,
+    file_path: &Path,
     expected_md5: Option<&Digest>,
 ) -> Result<(), Error> {
     // Create temporary file
@@ -390,7 +391,7 @@ fn err_if_md5_mismatch(expected: Option<&Digest>, actual: &Digest) -> Result<(),
     }
 }
 
-async fn local_file_is_identical(path: &PathBuf, file: &file_tree_drive::File) -> bool {
+async fn local_file_is_identical(path: &Path, file: &file_tree_drive::File) -> bool {
     if path.exists() {
         match compute_md5_from_path(path).await {
             Ok(file_md5) => file.md5.as_ref().is_some_and(|md5| md5 == &file_md5),
@@ -408,7 +409,7 @@ async fn local_file_is_identical(path: &PathBuf, file: &file_tree_drive::File) -
     }
 }
 
-async fn compute_md5_from_path(path: &PathBuf) -> Result<Digest, io::Error> {
+async fn compute_md5_from_path(path: &Path) -> Result<Digest, io::Error> {
     let input = File::open(path).await?;
     let reader = BufReader::new(input);
     compute_md5_from_async_reader(reader).await

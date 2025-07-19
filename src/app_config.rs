@@ -5,6 +5,7 @@ use std::fmt::Display;
 use std::fmt::Formatter;
 use std::fs;
 use std::io;
+use std::path::Path;
 use std::path::PathBuf;
 
 const SYSTEM_CONFIG_DIR_NAME: &str = ".config";
@@ -22,7 +23,7 @@ pub struct AppConfig {
 pub fn add_account(
     account_name: &str,
     secret: &Secret,
-    tokens_path: &PathBuf,
+    tokens_path: &Path,
 ) -> Result<AppConfig, Error> {
     let config = AppConfig::init_account(account_name)?;
     config.save_secret(secret)?;
@@ -198,7 +199,7 @@ pub struct Secret {
     pub client_secret: String,
 }
 
-pub fn set_file_permissions(path: &PathBuf) -> Result<(), io::Error> {
+pub fn set_file_permissions(path: &Path) -> Result<(), io::Error> {
     #[cfg(unix)]
     {
         use std::os::unix::fs::PermissionsExt;

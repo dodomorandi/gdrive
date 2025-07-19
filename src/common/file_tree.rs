@@ -97,20 +97,20 @@ pub struct Folder {
 impl Folder {
     #[async_recursion]
     pub async fn from_path<'a>(
-        path: &PathBuf,
+        path: &Path,
         parent: Option<&'async_recursion Folder>,
         ids: &mut IdGen<'a>,
     ) -> Result<Folder, Error> {
         let name = path
             .file_name()
             .map(|s| s.to_string_lossy().to_string())
-            .ok_or(Error::InvalidPath(path.clone()))?;
+            .ok_or(Error::InvalidPath(path.to_path_buf()))?;
 
         let drive_id = ids.next().await.map_err(Error::GetId)?;
 
         let mut folder = Folder {
             name,
-            path: path.clone(),
+            path: path.to_path_buf(),
             parent: parent.map(|folder| Box::new(folder.clone())),
             children: Vec::new(),
             drive_id,
@@ -208,16 +208,17 @@ pub struct File {
 
 impl File {
     pub async fn from_path(
-        path: &PathBuf,
+        path: &Path,
         parent: &Folder,
         ids: &mut IdGen<'_>,
     ) -> Result<File, Error> {
         let name = path
             .file_name()
             .map(|s| s.to_string_lossy().to_string())
-            .ok_or(Error::InvalidPath(path.clone()))?;
+            .ok_or(Error::InvalidPath(path.to_path_buf()))?;
 
-        let os_file = fs::File::open(path).map_err(|err| Error::OpenFile(path.clone(), err))?;
+        let os_file =
+            fs::File::open(path).map_err(|err| Error::OpenFile(path.to_path_buf(), err))?;
         let size = os_file.metadata().map(|m| m.len()).unwrap_or(0);
         let mime_type = mime_guess::from_path(path)
             .first()
@@ -226,7 +227,7 @@ impl File {
 
         let file = File {
             name,
-            path: path.clone(),
+            path: path.to_path_buf(),
             size,
             mime_type,
             parent: parent.clone(),
