@@ -6,7 +6,7 @@ use std::error;
 use std::fmt::Display;
 use std::fmt::Formatter;
 use std::ops::Not;
-use std::path::PathBuf;
+use std::path::Path;
 
 #[derive(Debug, Clone)]
 pub struct Config {
@@ -24,10 +24,10 @@ pub fn export(config: &Config) -> Result<(), Error> {
     let account_path = app_cfg.account_base_path();
 
     let archive_name = format!("gdrive_export-{}.tar", normalize_name(account_name));
-    let archive_path = PathBuf::from(&archive_name);
-    account_archive::create(&account_path, &archive_path).map_err(Error::CreateArchive)?;
+    let archive_path = Path::new(&archive_name);
+    account_archive::create(&account_path, archive_path).map_err(Error::CreateArchive)?;
 
-    if let Err(err) = set_file_permissions(&archive_path) {
+    if let Err(err) = set_file_permissions(archive_path) {
         eprintln!("Warning: Failed to set permissions on archive: {err}");
     }
 
