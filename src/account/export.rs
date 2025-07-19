@@ -1,3 +1,5 @@
+use error_trace::ErrorTrace;
+
 use crate::app_config;
 use crate::app_config::set_file_permissions;
 use crate::app_config::AppConfig;
@@ -28,7 +30,10 @@ pub fn export(config: &Config) -> Result<(), Error> {
     account_archive::create(&account_path, archive_path).map_err(Error::CreateArchive)?;
 
     if let Err(err) = set_file_permissions(archive_path) {
-        eprintln!("Warning: Failed to set permissions on archive: {err}");
+        eprintln!(
+            "Warning: Failed to set permissions on archive: {}",
+            err.trace()
+        );
     }
 
     println!("Exported account '{account_name}' to {archive_name}");
