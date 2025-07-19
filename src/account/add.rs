@@ -51,7 +51,7 @@ pub async fn add() -> Result<(), Error> {
         .map_or(Cow::Borrowed("unknown"), Into::into);
 
     let app_cfg =
-        app_config::add_account(&email, &secret, &tokens_path).map_err(Error::AppConfig)?;
+        app_config::add_account(&email, &secret, &tokens_path).map_err(Error::AddAccount)?;
 
     println!();
     println!(
@@ -63,7 +63,7 @@ pub async fn add() -> Result<(), Error> {
         Google Drive."
     );
 
-    app_config::switch_account(&app_cfg).map_err(Error::AppConfig)?;
+    app_config::switch_account(&app_cfg).map_err(Error::SwitchAccount)?;
     println!();
     println!("Logged in as {}", app_cfg.account.name);
 
@@ -76,7 +76,8 @@ pub enum Error {
     Prompt(io::Error),
     Tempdir(io::Error),
     Auth(io::Error),
-    AppConfig(app_config::Error),
+    AddAccount(app_config::Error),
+    SwitchAccount(app_config::Error),
     AccessToken(google_drive3::oauth2::Error),
     About(google_drive3::Error),
 }
@@ -84,24 +85,31 @@ pub enum Error {
 impl error::Error for Error {
     fn source(&self) -> Option<&(dyn error::Error + 'static)> {
         match self {
-            Error::HubCreation(error) => Some(error),
-            // TODO: fix display and put sources here
-            _ => None,
+            Error::HubCreation(error)
+            | Error::Prompt(error)
+            | Error::Tempdir(error)
+            | Error::Auth(error) => Some(error),
+            Error::AddAccount(error) | Error::SwitchAccount(error) => Some(error),
+            Error::AccessToken(error) => Some(error),
+            Error::About(error) => Some(error),
         }
     }
 }
 
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Error::HubCreation(_) => f.write_str("unable to create a Google Drive hub"),
-            Error::Prompt(e) => write!(f, "Failed to get input from user: {e}"),
-            Error::Tempdir(e) => write!(f, "Failed to create temporary directory: {e}"),
-            Error::Auth(e) => write!(f, "Failed to authenticate: {e}"),
-            Error::AppConfig(e) => write!(f, "{e}"),
-            Error::AccessToken(e) => write!(f, "Failed to get access token: {e}"),
-            Error::About(e) => write!(f, "Failed to get user info: {e}"),
-        }
+        let s = match self {
+            Error::HubCreation(_) => "unable to create a Google Drive hub",
+            Error::Prompt(_) => "failed to get input from user",
+            Error::Tempdir(_) => "failed to create temporary directory",
+            Error::Auth(_) => "failed to authenticate",
+            Error::AddAccount(_) => "unable to add account in the config",
+            Error::SwitchAccount(_) => "unable to switch account in the config",
+            Error::AccessToken(_) => "failed to get access token",
+            Error::About(_) => "failed to get user info",
+        };
+
+        f.write_str(s)
     }
 }
 
