@@ -31,8 +31,8 @@ pub fn export(config: &Config) -> Result<(), Error> {
     }
 
     println!(
-        "Exported account '{}' to {}",
-        config.account_name, archive_name
+        "Exported account '{}' to {archive_name}",
+        config.account_name,
     );
 
     Ok(())
