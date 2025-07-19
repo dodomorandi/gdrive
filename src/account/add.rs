@@ -1,5 +1,6 @@
 use crate::app_config;
 use crate::hub;
+use std::borrow::Cow;
 use std::error;
 use std::fmt::Display;
 use std::fmt::Formatter;
@@ -47,7 +48,7 @@ pub async fn add() -> Result<(), Error> {
     let email = about
         .user
         .and_then(|u| u.email_address)
-        .unwrap_or_else(|| String::from("unknown"));
+        .map_or(Cow::Borrowed("unknown"), Into::into);
 
     let app_cfg =
         app_config::add_account(&email, &secret, &tokens_path).map_err(Error::AppConfig)?;
