@@ -16,7 +16,9 @@ pub fn import(config: &Config) -> Result<(), Error> {
         account_archive::get_account_name(&config.archive_path).map_err(Error::ReadAccountName)?;
 
     let accounts = app_config::list_accounts().map_err(Error::AppConfig)?;
-    err_if_account_exists(&accounts, &account_name)?;
+    if accounts.contains(&account_name) {
+        return Err(Error::AccountExists(account_name.to_string()));
+    }
 
     let config_base_path = AppConfig::default_base_path().map_err(Error::AppConfig)?;
     account_archive::unpack(&config.archive_path, &config_base_path).map_err(Error::Unpack)?;
@@ -49,13 +51,5 @@ impl Display for Error {
             Error::AccountExists(name) => write!(f, "Account '{name}' already exists"),
             Error::ReadAccountName(e) | Error::Unpack(e) => write!(f, "{e}"),
         }
-    }
-}
-
-fn err_if_account_exists(accounts: &[String], account_name: &str) -> Result<(), Error> {
-    if accounts.contains(&account_name.to_string()) {
-        Err(Error::AccountExists(account_name.to_string()))
-    } else {
-        Ok(())
     }
 }
