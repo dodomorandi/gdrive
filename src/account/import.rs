@@ -15,20 +15,20 @@ pub fn import(config: &Config) -> Result<(), Error> {
     let account_name =
         account_archive::get_account_name(&config.archive_path).map_err(Error::ReadAccountName)?;
 
-    let accounts = app_config::list_accounts().map_err(Error::AppConfig)?;
+    let accounts = app_config::list_accounts().map_err(Error::ListAccounts)?;
     if accounts.contains(&account_name) {
         return Err(Error::AccountExists(account_name.to_string()));
     }
 
-    let config_base_path = AppConfig::default_base_path().map_err(Error::AppConfig)?;
+    let config_base_path = AppConfig::default_base_path().map_err(Error::DefaultBasePath)?;
     account_archive::unpack(&config.archive_path, &config_base_path).map_err(Error::Unpack)?;
 
     println!("Imported account '{account_name}'");
 
     if !AppConfig::has_current_account() {
-        let app_cfg = AppConfig::load_account(&account_name).map_err(Error::AppConfig)?;
+        let app_cfg = AppConfig::load_account(&account_name).map_err(Error::LoadAccount)?;
         println!("Switched to account '{account_name}'");
-        app_config::switch_account(&app_cfg).map_err(Error::AppConfig)?;
+        app_config::switch_account(&app_cfg).map_err(Error::SwitchAccount)?;
     }
 
     Ok(())
@@ -36,20 +36,38 @@ pub fn import(config: &Config) -> Result<(), Error> {
 
 #[derive(Debug)]
 pub enum Error {
-    AppConfig(app_config::Error),
-    AccountExists(String),
     ReadAccountName(account_archive::Error),
+    ListAccounts(app_config::Error),
+    AccountExists(String),
+    DefaultBasePath(app_config::Error),
     Unpack(account_archive::Error),
+    LoadAccount(app_config::Error),
+    SwitchAccount(app_config::Error),
 }
 
-impl error::Error for Error {}
+impl error::Error for Error {
+    fn source(&self) -> Option<&(dyn error::Error + 'static)> {
+        match self {
+            Error::AccountExists(_) => None,
+            Error::ReadAccountName(error) | Error::Unpack(error) => Some(error),
+            Error::ListAccounts(error)
+            | Error::DefaultBasePath(error)
+            | Error::LoadAccount(error)
+            | Error::SwitchAccount(error) => Some(error),
+        }
+    }
+}
 
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            Error::AppConfig(e) => write!(f, "{e}"),
+            Error::ReadAccountName(_) => f.write_str("unable to read the account name"),
+            Error::ListAccounts(_) => f.write_str("unable to list accounts"),
             Error::AccountExists(name) => write!(f, "Account '{name}' already exists"),
-            Error::ReadAccountName(e) | Error::Unpack(e) => write!(f, "{e}"),
+            Error::DefaultBasePath(_) => f.write_str("unable to get the default base path"),
+            Error::Unpack(_) => f.write_str("unable to unpack account archive"),
+            Error::LoadAccount(_) => f.write_str("unable to load account"),
+            Error::SwitchAccount(_) => f.write_str("unable to switch account"),
         }
     }
 }
