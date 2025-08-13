@@ -5,7 +5,9 @@ use std::fmt::Formatter;
 
 pub fn list() -> Result<(), Error> {
     let accounts = app_config::list_accounts().map_err(Error::AppConfig)?;
-    err_if_no_accounts(&accounts)?;
+    if accounts.is_empty() {
+        return Err(Error::NoAccounts);
+    }
 
     for account in accounts {
         println!("{account}");
@@ -31,13 +33,5 @@ impl Display for Error {
                 write!(f, "Use `gdrive account add` to add an account.")
             }
         }
-    }
-}
-
-fn err_if_no_accounts(accounts: &[String]) -> Result<(), Error> {
-    if accounts.is_empty() {
-        Err(Error::NoAccounts)
-    } else {
-        Ok(())
     }
 }
