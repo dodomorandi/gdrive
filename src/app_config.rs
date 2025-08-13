@@ -35,7 +35,7 @@ pub fn add_account(
     Ok(config)
 }
 
-pub fn switch_account(config: &AppConfig) -> Result<(), Error> {
+pub fn switch_account(config: &AppConfig) -> Result<(), errors::SaveAccountConfig> {
     config.save_account_config()
 }
 
@@ -135,15 +135,21 @@ impl AppConfig {
         serde_json::from_str(&content).map_err(Error::DeserializeAccountConfig)
     }
 
-    pub fn save_account_config(&self) -> Result<(), Error> {
+    pub fn save_account_config(&self) -> Result<(), errors::SaveAccountConfig> {
         let account_config = AccountConfig {
             current: self.account.name.clone(),
         };
 
-        let content =
-            serde_json::to_string_pretty(&account_config).map_err(Error::SerializeAccountConfig)?;
-        fs::write(self.account_config_path(), content).map_err(Error::WriteAccountConfig)?;
-        Ok(())
+        let content = serde_json::to_string_pretty(&account_config)
+            .map_err(errors::SaveAccountConfig::Serialize)?;
+        let account_config_path = self.account_config_path();
+        match fs::write(&account_config_path, content) {
+            Ok(()) => Ok(()),
+            Err(source) => Err(errors::SaveAccountConfig::Write {
+                path: account_config_path,
+                source,
+            }),
+        }
     }
 
     #[must_use]

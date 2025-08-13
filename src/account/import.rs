@@ -42,7 +42,7 @@ pub enum Error {
     DefaultBasePath(app_config::errors::HomeDirNotFound),
     Unpack(account_archive::Error),
     LoadAccount(app_config::Error),
-    SwitchAccount(app_config::Error),
+    SwitchAccount(app_config::errors::SaveAccountConfig),
 }
 
 impl error::Error for Error {
@@ -50,10 +50,9 @@ impl error::Error for Error {
         match self {
             Error::AccountExists(_) => None,
             Error::ReadAccountName(error) | Error::Unpack(error) => Some(error),
-            Error::ListAccounts(error)
-            | Error::LoadAccount(error)
-            | Error::SwitchAccount(error) => Some(error),
+            Error::ListAccounts(error) | Error::LoadAccount(error) => Some(error),
             Error::DefaultBasePath(error) => Some(error),
+            Error::SwitchAccount(error) => Some(error),
         }
     }
 }

@@ -156,3 +156,31 @@ impl Error for AddAccount {
         }
     }
 }
+
+#[derive(Debug)]
+pub enum SaveAccountConfig {
+    Serialize(serde_json::Error),
+    Write { path: PathBuf, source: io::Error },
+}
+
+impl Display for SaveAccountConfig {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            SaveAccountConfig::Serialize(_) => {
+                f.write_str("unable to serialize account config to JSON")
+            }
+            SaveAccountConfig::Write { path, source: _ } => {
+                write!(f, "unable to save account config to '{}'", path.display())
+            }
+        }
+    }
+}
+
+impl Error for SaveAccountConfig {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            SaveAccountConfig::Serialize(source) => Some(source),
+            SaveAccountConfig::Write { source, .. } => Some(source),
+        }
+    }
+}
