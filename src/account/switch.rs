@@ -11,14 +11,14 @@ pub struct Config {
 }
 
 pub fn switch(config: &Config) -> Result<(), Error> {
-    let accounts = app_config::list_accounts().map_err(Error::AppConfig)?;
+    let accounts = app_config::list_accounts().map_err(Error::ListAccounts)?;
 
     if accounts.contains(&config.account_name).not() {
-        return Err(Error::AccountNotFound(config.account_name.clone()));
+        return Err(Error::AccountNotFound);
     }
 
-    let app_cfg = AppConfig::init_account(&config.account_name).map_err(Error::AppConfig)?;
-    app_config::switch_account(&app_cfg).map_err(Error::AppConfig)?;
+    let app_cfg = AppConfig::init_account(&config.account_name).map_err(Error::InitAccount)?;
+    app_config::switch_account(&app_cfg).map_err(Error::SwitchAccount)?;
     println!("Switched to account '{}'", &config.account_name);
 
     Ok(())
@@ -26,17 +26,32 @@ pub fn switch(config: &Config) -> Result<(), Error> {
 
 #[derive(Debug)]
 pub enum Error {
-    AppConfig(app_config::Error),
-    AccountNotFound(String),
+    ListAccounts(app_config::Error),
+    AccountNotFound,
+    InitAccount(app_config::Error),
+    SwitchAccount(app_config::Error),
 }
 
-impl error::Error for Error {}
+impl error::Error for Error {
+    fn source(&self) -> Option<&(dyn error::Error + 'static)> {
+        match self {
+            Error::ListAccounts(source)
+            | Error::InitAccount(source)
+            | Error::SwitchAccount(source) => Some(source),
+            Error::AccountNotFound => None,
+        }
+    }
+}
 
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Error::AppConfig(e) => write!(f, "{e}"),
-            Error::AccountNotFound(name) => write!(f, "Account '{name}' not found"),
-        }
+        let s = match self {
+            Error::ListAccounts(_) => "unable to list accounts",
+            Error::AccountNotFound => "account not found",
+            Error::InitAccount(_) => "unable to initialize the account",
+            Error::SwitchAccount(_) => "unable to switch to the account",
+        };
+
+        f.write_str(s)
     }
 }
