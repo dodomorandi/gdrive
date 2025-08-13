@@ -102,10 +102,13 @@ impl AppConfig {
         Ok(())
     }
 
-    pub fn save_secret(&self, secret: &Secret) -> Result<(), Error> {
-        let content = serde_json::to_string_pretty(&secret).map_err(Error::SerializeSecret)?;
+    pub fn save_secret(&self, secret: &Secret) -> Result<(), errors::SaveSecret> {
+        let content =
+            serde_json::to_string_pretty(&secret).map_err(errors::SaveSecret::Serialize)?;
         let path = self.secret_path();
-        fs::write(&path, content).map_err(Error::WriteSecret)?;
+        if let Err(source) = fs::write(&path, content) {
+            return Err(errors::SaveSecret::Write { path, source });
+        }
 
         if let Err(err) = set_file_permissions(&path) {
             eprintln!("Warning: Failed to set file permissions on secrets file: {err}");
