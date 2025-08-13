@@ -21,7 +21,7 @@ pub fn export(config: &Config) -> Result<(), Error> {
     let Config { account_name } = config;
     let accounts = app_config::list_accounts().map_err(Error::ListAccounts)?;
     if accounts.contains(account_name).not() {
-        return Err(Error::AccountNotFound(account_name.clone()));
+        return Err(Error::AccountNotFound);
     }
 
     let app_cfg = AppConfig::init_account(account_name).map_err(Error::InitAccount)?;
@@ -47,7 +47,7 @@ pub fn export(config: &Config) -> Result<(), Error> {
 pub enum Error {
     ListAccounts(app_config::Error),
     InitAccount(app_config::Error),
-    AccountNotFound(String),
+    AccountNotFound,
     CreateArchive(account_archive::Error),
 }
 
@@ -55,7 +55,7 @@ impl error::Error for Error {
     fn source(&self) -> Option<&(dyn error::Error + 'static)> {
         match self {
             Error::ListAccounts(error) | Error::InitAccount(error) => Some(error),
-            Error::AccountNotFound(_) => None,
+            Error::AccountNotFound => None,
             Error::CreateArchive(error) => Some(error),
         }
     }
@@ -66,7 +66,7 @@ impl Display for Error {
         match self {
             Error::ListAccounts(_) => f.write_str("unable to list accounts from config"),
             Error::InitAccount(_) => f.write_str("unable to initialize account in config"),
-            Error::AccountNotFound(name) => write!(f, "Account '{name}' not found"),
+            Error::AccountNotFound => f.write_str("account not found"),
             Error::CreateArchive(_) => f.write_str("unable to create account archive"),
         }
     }
