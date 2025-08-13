@@ -169,9 +169,9 @@ impl AppConfig {
         Ok(base_path)
     }
 
-    fn create_account_dir(&self) -> Result<(), Error> {
+    fn create_account_dir(&self) -> Result<(), errors::CreateAccountDir> {
         let path = self.account_base_path();
-        fs::create_dir_all(&path).map_err(Error::CreateConfigDir)?;
+        fs::create_dir_all(&path).map_err(errors::CreateAccountDir)?;
         Ok(())
     }
 }
