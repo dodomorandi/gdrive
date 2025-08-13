@@ -28,17 +28,16 @@ pub fn switch(config: &Config) -> Result<(), Error> {
 pub enum Error {
     ListAccounts(app_config::Error),
     AccountNotFound,
-    InitAccount(app_config::Error),
+    InitAccount(app_config::errors::InitAccount),
     SwitchAccount(app_config::Error),
 }
 
 impl error::Error for Error {
     fn source(&self) -> Option<&(dyn error::Error + 'static)> {
         match self {
-            Error::ListAccounts(source)
-            | Error::InitAccount(source)
-            | Error::SwitchAccount(source) => Some(source),
+            Error::ListAccounts(source) | Error::SwitchAccount(source) => Some(source),
             Error::AccountNotFound => None,
+            Error::InitAccount(source) => Some(source),
         }
     }
 }

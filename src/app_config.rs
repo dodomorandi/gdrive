@@ -80,7 +80,7 @@ impl AppConfig {
         Ok(config)
     }
 
-    pub fn init_account(account_name: &str) -> Result<AppConfig, Error> {
+    pub fn init_account(account_name: &str) -> Result<AppConfig, errors::InitAccount> {
         let base_path = AppConfig::default_base_path()?;
         let account = Account::new(account_name);
 

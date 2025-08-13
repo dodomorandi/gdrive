@@ -46,7 +46,7 @@ pub fn export(config: &Config) -> Result<(), Error> {
 #[derive(Debug)]
 pub enum Error {
     ListAccounts(app_config::Error),
-    InitAccount(app_config::Error),
+    InitAccount(app_config::errors::InitAccount),
     AccountNotFound,
     CreateArchive(account_archive::Error),
 }
@@ -54,7 +54,8 @@ pub enum Error {
 impl error::Error for Error {
     fn source(&self) -> Option<&(dyn error::Error + 'static)> {
         match self {
-            Error::ListAccounts(error) | Error::InitAccount(error) => Some(error),
+            Error::ListAccounts(error) => Some(error),
+            Error::InitAccount(error) => Some(error),
             Error::AccountNotFound => None,
             Error::CreateArchive(error) => Some(error),
         }
