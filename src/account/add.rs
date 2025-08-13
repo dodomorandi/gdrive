@@ -76,7 +76,7 @@ pub enum Error {
     Prompt(io::Error),
     Tempdir(io::Error),
     Auth(io::Error),
-    AddAccount(app_config::Error),
+    AddAccount(app_config::errors::AddAccount),
     SwitchAccount(app_config::Error),
     AccessToken(google_drive3::oauth2::Error),
     About(google_drive3::Error),
@@ -89,7 +89,8 @@ impl error::Error for Error {
             | Error::Prompt(error)
             | Error::Tempdir(error)
             | Error::Auth(error) => Some(error),
-            Error::AddAccount(error) | Error::SwitchAccount(error) => Some(error),
+            Error::AddAccount(error) => Some(error),
+            Error::SwitchAccount(error) => Some(error),
             Error::AccessToken(error) => Some(error),
             Error::About(error) => Some(error),
         }

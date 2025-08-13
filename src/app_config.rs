@@ -26,10 +26,12 @@ pub fn add_account(
     account_name: &str,
     secret: &Secret,
     tokens_path: &Path,
-) -> Result<AppConfig, Error> {
-    let config = AppConfig::init_account(account_name)?;
-    config.save_secret(secret)?;
-    fs::copy(tokens_path, config.tokens_path()).map_err(Error::CopyTokens)?;
+) -> Result<AppConfig, errors::AddAccount> {
+    let config = AppConfig::init_account(account_name).map_err(errors::AddAccount::InitAccount)?;
+    config
+        .save_secret(secret)
+        .map_err(errors::AddAccount::SaveSecret)?;
+    fs::copy(tokens_path, config.tokens_path()).map_err(errors::AddAccount::CopyTokens)?;
     Ok(config)
 }
 

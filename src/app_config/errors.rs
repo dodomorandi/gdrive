@@ -132,7 +132,7 @@ impl From<SaveSecret> for super::Error {
 #[derive(Debug)]
 pub enum AddAccount {
     InitAccount(InitAccount),
-    SaveSecret,
+    SaveSecret(SaveSecret),
     CopyTokens(io::Error),
 }
 
@@ -140,7 +140,7 @@ impl Display for AddAccount {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match self {
             AddAccount::InitAccount(_) => "unable to initialize account",
-            AddAccount::SaveSecret => "unable to save secret",
+            AddAccount::SaveSecret(_) => "unable to save secret",
             AddAccount::CopyTokens(_) => "unable to save tokens to file",
         };
         f.write_str(s)
@@ -151,7 +151,7 @@ impl Error for AddAccount {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
             AddAccount::InitAccount(source) => Some(source),
-            AddAccount::SaveSecret => todo!(),
+            AddAccount::SaveSecret(source) => Some(source),
             AddAccount::CopyTokens(source) => Some(source),
         }
     }
