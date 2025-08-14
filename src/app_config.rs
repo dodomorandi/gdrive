@@ -73,12 +73,10 @@ pub fn list_accounts() -> Result<Vec<String>, errors::ListAccounts> {
 impl AppConfig {
     #[must_use]
     pub fn has_current_account() -> bool {
-        if let Ok(base_path) = AppConfig::default_base_path() {
+        AppConfig::default_base_path().is_ok_and(|base_path| {
             let account_config_path = base_path.join(ACCOUNT_CONFIG_NAME);
             account_config_path.exists()
-        } else {
-            false
-        }
+        })
     }
 
     pub fn load_current_account() -> Result<AppConfig, Error> {
