@@ -39,10 +39,24 @@ pub fn switch_account(config: &AppConfig) -> Result<(), errors::SaveAccountConfi
     config.save_account_config()
 }
 
-pub fn list_accounts() -> Result<Vec<String>, Error> {
-    let base_path = AppConfig::default_base_path()?;
-    fs::create_dir_all(&base_path).map_err(|err| Error::CreateBaseDir(base_path.clone(), err))?;
-    let entries = fs::read_dir(base_path).map_err(Error::ListFiles)?;
+pub fn list_accounts() -> Result<Vec<String>, errors::ListAccounts> {
+    let base_path =
+        AppConfig::default_base_path().map_err(errors::ListAccounts::DefaultBasePath)?;
+    if let Err(source) = fs::create_dir_all(&base_path) {
+        return Err(errors::ListAccounts::CreateBaseDir {
+            path: base_path,
+            source,
+        });
+    }
+    let entries = match fs::read_dir(&base_path) {
+        Ok(entries) => entries,
+        Err(source) => {
+            return Err(errors::ListAccounts::ListFiles {
+                path: base_path,
+                source,
+            })
+        }
+    };
 
     let mut accounts: Vec<String> = entries
         .filter_map(Result::ok)

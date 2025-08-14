@@ -18,7 +18,7 @@ pub fn list() -> Result<(), Error> {
 
 #[derive(Debug)]
 pub enum Error {
-    ListAccounts(app_config::Error),
+    ListAccounts(app_config::errors::ListAccounts),
     NoAccounts,
 }
 

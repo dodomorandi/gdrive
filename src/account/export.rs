@@ -45,7 +45,7 @@ pub fn export(config: &Config) -> Result<(), Error> {
 
 #[derive(Debug)]
 pub enum Error {
-    ListAccounts(app_config::Error),
+    ListAccounts(app_config::errors::ListAccounts),
     InitAccount(app_config::errors::InitAccount),
     AccountNotFound,
     CreateArchive(account_archive::Error),

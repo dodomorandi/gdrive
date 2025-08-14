@@ -26,7 +26,7 @@ pub fn switch(config: &Config) -> Result<(), Error> {
 
 #[derive(Debug)]
 pub enum Error {
-    ListAccounts(app_config::Error),
+    ListAccounts(app_config::errors::ListAccounts),
     AccountNotFound,
     InitAccount(app_config::errors::InitAccount),
     SwitchAccount(app_config::errors::SaveAccountConfig),

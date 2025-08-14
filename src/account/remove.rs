@@ -25,7 +25,7 @@ pub fn remove(config: &Config) -> Result<(), Error> {
 
 #[derive(Debug)]
 pub enum Error {
-    ListAccounts(app_config::Error),
+    ListAccounts(app_config::errors::ListAccounts),
     AccountNotFound,
     InitAccount(app_config::errors::InitAccount),
     RemoveAccount(app_config::Error),
@@ -34,9 +34,10 @@ pub enum Error {
 impl error::Error for Error {
     fn source(&self) -> Option<&(dyn error::Error + 'static)> {
         match self {
-            Error::ListAccounts(source) | Error::RemoveAccount(source) => Some(source),
+            Error::ListAccounts(source) => Some(source),
             Error::InitAccount(source) => Some(source),
             Error::AccountNotFound => None,
+            Error::RemoveAccount(source) => Some(source),
         }
     }
 }

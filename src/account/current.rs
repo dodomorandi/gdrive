@@ -18,7 +18,7 @@ pub fn current() -> Result<(), Error> {
 
 #[derive(Debug)]
 pub enum Error {
-    List(app_config::Error),
+    List(app_config::errors::ListAccounts),
     LoadCurrent(app_config::Error),
     NoAccounts,
 }
@@ -26,7 +26,8 @@ pub enum Error {
 impl error::Error for Error {
     fn source(&self) -> Option<&(dyn error::Error + 'static)> {
         match self {
-            Error::List(error) | Error::LoadCurrent(error) => Some(error),
+            Error::List(error) => Some(error),
+            Error::LoadCurrent(error) => Some(error),
             Error::NoAccounts => None,
         }
     }

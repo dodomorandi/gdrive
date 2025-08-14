@@ -184,3 +184,35 @@ impl Error for SaveAccountConfig {
         }
     }
 }
+
+#[derive(Debug)]
+pub enum ListAccounts {
+    DefaultBasePath(HomeDirNotFound),
+    CreateBaseDir { path: PathBuf, source: io::Error },
+    ListFiles { path: PathBuf, source: io::Error },
+}
+
+impl Display for ListAccounts {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ListAccounts::DefaultBasePath(_) => f.write_str("unable to get default base path"),
+            ListAccounts::CreateBaseDir { path, source: _ } => {
+                write!(f, "unable to create base dir {}", path.display())
+            }
+            ListAccounts::ListFiles { path, source: _ } => {
+                write!(f, "unable to list files on base dir {}", path.display())
+            }
+        }
+    }
+}
+
+impl Error for ListAccounts {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            ListAccounts::DefaultBasePath(source) => Some(source),
+            ListAccounts::CreateBaseDir { source, .. } | ListAccounts::ListFiles { source, .. } => {
+                Some(source)
+            }
+        }
+    }
+}

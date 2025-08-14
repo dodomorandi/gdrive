@@ -37,7 +37,7 @@ pub fn import(config: &Config) -> Result<(), Error> {
 #[derive(Debug)]
 pub enum Error {
     ReadAccountName(account_archive::Error),
-    ListAccounts(app_config::Error),
+    ListAccounts(app_config::errors::ListAccounts),
     AccountExists(String),
     DefaultBasePath(app_config::errors::HomeDirNotFound),
     Unpack(account_archive::Error),
@@ -50,7 +50,8 @@ impl error::Error for Error {
         match self {
             Error::AccountExists(_) => None,
             Error::ReadAccountName(error) | Error::Unpack(error) => Some(error),
-            Error::ListAccounts(error) | Error::LoadAccount(error) => Some(error),
+            Error::ListAccounts(error) => Some(error),
+            Error::LoadAccount(error) => Some(error),
             Error::DefaultBasePath(error) => Some(error),
             Error::SwitchAccount(error) => Some(error),
         }
