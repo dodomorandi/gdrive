@@ -323,3 +323,18 @@ impl Error for RemoveAccount {
         }
     }
 }
+
+#[derive(Debug)]
+pub struct LoadAccount(pub HomeDirNotFound);
+
+impl Display for LoadAccount {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str("unable to load account")
+    }
+}
+
+impl Error for LoadAccount {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        Some(&self.0)
+    }
+}

@@ -41,7 +41,7 @@ pub enum Error {
     AccountExists(String),
     DefaultBasePath(app_config::errors::HomeDirNotFound),
     Unpack(account_archive::Error),
-    LoadAccount(app_config::Error),
+    LoadAccount(app_config::errors::LoadAccount),
     SwitchAccount(app_config::errors::SaveAccountConfig),
 }
 
