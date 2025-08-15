@@ -16,12 +16,6 @@ impl Display for DefaultBasePath {
 
 impl Error for DefaultBasePath {}
 
-impl From<DefaultBasePath> for super::Error {
-    fn from(DefaultBasePath: DefaultBasePath) -> Self {
-        super::Error::HomeDirNotFound
-    }
-}
-
 #[derive(Debug)]
 pub struct CreateAccountDir(pub io::Error);
 
@@ -38,12 +32,6 @@ impl Display for CreateAccountDir {
 impl Error for CreateAccountDir {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         Some(&self.0)
-    }
-}
-
-impl From<CreateAccountDir> for super::Error {
-    fn from(value: CreateAccountDir) -> Self {
-        super::Error::CreateConfigDir(value.0)
     }
 }
 
@@ -85,15 +73,6 @@ impl From<CreateAccountDir> for InitAccount {
     }
 }
 
-impl From<InitAccount> for super::Error {
-    fn from(value: InitAccount) -> Self {
-        match value {
-            InitAccount::DefaultBasePath(DefaultBasePath) => super::Error::HomeDirNotFound,
-            InitAccount::CreateAccountDir(source) => super::Error::CreateConfigDir(source),
-        }
-    }
-}
-
 #[derive(Debug)]
 pub enum SaveSecret {
     Serialize(serde_json::Error),
@@ -116,15 +95,6 @@ impl Error for SaveSecret {
         match self {
             SaveSecret::Serialize(source) => Some(source),
             SaveSecret::Write { source, .. } => Some(source),
-        }
-    }
-}
-
-impl From<SaveSecret> for super::Error {
-    fn from(value: SaveSecret) -> Self {
-        match value {
-            SaveSecret::Serialize(error) => super::Error::SerializeSecret(error),
-            SaveSecret::Write { source, .. } => super::Error::WriteSecret(source),
         }
     }
 }
@@ -253,17 +223,6 @@ impl Error for LoadAccountConfig {
             LoadAccountConfig::AccountConfigMissing => None,
             LoadAccountConfig::ReadAccountConfig { source, .. } => Some(source),
             LoadAccountConfig::Deserialize { source, .. } => Some(source),
-        }
-    }
-}
-
-impl From<LoadAccountConfig> for super::Error {
-    fn from(value: LoadAccountConfig) -> Self {
-        match value {
-            LoadAccountConfig::DefaultBasePath(DefaultBasePath) => Self::HomeDirNotFound,
-            LoadAccountConfig::AccountConfigMissing => Self::AccountConfigMissing,
-            LoadAccountConfig::ReadAccountConfig { source, .. } => Self::ReadAccountConfig(source),
-            LoadAccountConfig::Deserialize { source, .. } => Self::DeserializeAccountConfig(source),
         }
     }
 }

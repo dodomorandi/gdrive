@@ -2,9 +2,6 @@ pub mod errors;
 
 use serde::Deserialize;
 use serde::Serialize;
-use std::error;
-use std::fmt::Display;
-use std::fmt::Formatter;
 use std::fs;
 use std::io;
 use std::ops::Not;
@@ -262,108 +259,4 @@ pub fn set_file_permissions(path: &Path) -> Result<(), io::Error> {
     }
 
     Ok(())
-}
-
-#[derive(Debug)]
-pub enum Error {
-    HomeDirNotFound,
-    CreateConfigDir(io::Error),
-    ReadAccountConfig(io::Error),
-    AccountConfigMissing,
-    ParseAccountConfig(serde_json::Error),
-    SerializeAccountConfig(serde_json::Error),
-    WriteAccountConfig(io::Error),
-    SerializeSecret(serde_json::Error),
-    WriteSecret(io::Error),
-    ReadSecret(io::Error),
-    DeserializeSecret(serde_json::Error),
-    DeserializeAccountConfig(serde_json::Error),
-    CopyTokens(io::Error),
-    ListFiles(io::Error),
-    RemoveAccountDir(io::Error),
-    RemoveAccountConfig(io::Error),
-    CreateBaseDir(PathBuf, io::Error),
-}
-
-impl error::Error for Error {}
-
-impl Display for Error {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Error::HomeDirNotFound => {
-                write!(f, "Home directory not found")
-            }
-
-            Error::CreateConfigDir(err) => {
-                write!(f, "Failed to create config directory: {err}")
-            }
-
-            Error::ReadAccountConfig(err) => {
-                write!(f, "Failed to read account config: {err}")
-            }
-
-            Error::AccountConfigMissing => {
-                writeln!(f, "No account has been selected")?;
-                writeln!(f, "Use `gdrive account list` to show all accounts.")?;
-                write!(f, "Use `gdrive account switch` to select an account.")
-            }
-
-            Error::ParseAccountConfig(err) => {
-                write!(f, "Failed to parse account config: {err}")
-            }
-
-            Error::SerializeAccountConfig(err) => {
-                write!(f, "Failed to serialize account config: {err}")
-            }
-
-            Error::WriteAccountConfig(err) => {
-                write!(f, "Failed to write account config: {err}")
-            }
-
-            Error::SerializeSecret(err) => {
-                write!(f, "Failed to serialize secret: {err}")
-            }
-
-            Error::WriteSecret(err) => {
-                write!(f, "Failed to write secret: {err}")
-            }
-
-            Error::ReadSecret(err) => {
-                write!(f, "Failed to read secret: {err}")
-            }
-
-            Error::DeserializeSecret(err) => {
-                write!(f, "Failed to deserialize secret: {err}")
-            }
-
-            Error::DeserializeAccountConfig(err) => {
-                write!(f, "Failed to deserialize account config: {err}")
-            }
-
-            Error::CopyTokens(err) => {
-                write!(f, "Failed to copy tokens: {err}")
-            }
-
-            Error::ListFiles(err) => {
-                write!(f, "Failed to list files: {err}")
-            }
-
-            Error::RemoveAccountDir(err) => {
-                write!(f, "Failed to remove account directory: {err}")
-            }
-
-            Error::RemoveAccountConfig(err) => {
-                write!(f, "Failed to remove account config: {err}")
-            }
-
-            Error::CreateBaseDir(path, err) => {
-                write!(
-                    f,
-                    "Failed to create directory '{}': {}",
-                    path.display(),
-                    err
-                )
-            }
-        }
-    }
 }
