@@ -85,11 +85,22 @@ impl Display for Error {
             Error::UploadFile(err) => {
                 write!(f, "Failed to upload file: {err}")
             }
-            Error::UnsupportedFileType => write!(
-                f,
-                "Unsupported file type, supported file types: {}",
-                DocType::supported_import_types().join(", ")
-            ),
+            Error::UnsupportedFileType => {
+                const _: () = const {
+                    assert!(
+                        !DocType::SUPPORTED_INPUT_TYPES.is_empty(),
+                        "DocType::SUPPORTED_INPUT_TYPES should not be empty"
+                    );
+                };
+
+                f.write_str("Unsupported file type, supported file types: ")?;
+                let mut supported_types = DocType::SUPPORTED_INPUT_TYPES.iter();
+                write!(f, "{}", supported_types.next().unwrap())?;
+                for supported_type in supported_types {
+                    write!(f, ", {supported_type}")?;
+                }
+                Ok(())
+            }
             Error::GetMime(doc_type) => {
                 write!(f, "Failed to get mime type from document type: {doc_type}")
             }

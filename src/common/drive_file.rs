@@ -118,14 +118,6 @@ impl DocType {
     }
 
     #[must_use]
-    pub fn supported_import_types() -> Vec<String> {
-        Self::IMPORT_EXTENSION_MAP
-            .iter()
-            .map(|(ext, _)| ext.to_string())
-            .collect()
-    }
-
-    #[must_use]
     pub fn default_export_type(&self) -> FileExtension {
         match self {
             DocType::Spreadsheet => FileExtension::Csv,
