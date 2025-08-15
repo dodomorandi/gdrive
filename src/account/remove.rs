@@ -28,7 +28,7 @@ pub enum Error {
     ListAccounts(app_config::errors::ListAccounts),
     AccountNotFound,
     InitAccount(app_config::errors::InitAccount),
-    RemoveAccount(app_config::Error),
+    RemoveAccount(app_config::errors::RemoveAccount),
 }
 
 impl error::Error for Error {

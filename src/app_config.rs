@@ -107,13 +107,22 @@ impl AppConfig {
         Ok(config)
     }
 
-    pub fn remove_account(&self) -> Result<(), Error> {
+    pub fn remove_account(&self) -> Result<(), errors::RemoveAccount> {
         let path = self.account_base_path();
-        fs::remove_dir_all(&path).map_err(Error::RemoveAccountDir)?;
+        if let Err(source) = fs::remove_dir_all(&path) {
+            return Err(errors::RemoveAccount::RemoveDirectory { path, source });
+        }
 
-        let account_config = AppConfig::load_account_config()?;
+        let account_config =
+            AppConfig::load_account_config().map_err(errors::RemoveAccount::LoadConfig)?;
         if self.account.name == account_config.current {
-            fs::remove_file(self.account_config_path()).map_err(Error::RemoveAccountConfig)?;
+            let config_path = self.account_config_path();
+            if let Err(source) = fs::remove_file(&config_path) {
+                return Err(errors::RemoveAccount::RemoveConfig {
+                    path: config_path,
+                    source,
+                });
+            }
         }
 
         Ok(())

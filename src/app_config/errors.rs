@@ -292,3 +292,34 @@ impl Error for LoadCurrentAccount {
         }
     }
 }
+
+#[derive(Debug)]
+pub enum RemoveAccount {
+    RemoveDirectory { path: PathBuf, source: io::Error },
+    LoadConfig(LoadAccountConfig),
+    RemoveConfig { path: PathBuf, source: io::Error },
+}
+
+impl Display for RemoveAccount {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            RemoveAccount::RemoveDirectory { path, source: _ } => {
+                write!(f, "unable to remove account directory '{}'", path.display())
+            }
+            RemoveAccount::LoadConfig(_) => f.write_str("unable to load account config"),
+            RemoveAccount::RemoveConfig { path, source: _ } => {
+                write!(f, "unable to remove config file '{}'", path.display())
+            }
+        }
+    }
+}
+
+impl Error for RemoveAccount {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            RemoveAccount::RemoveDirectory { source, .. }
+            | RemoveAccount::RemoveConfig { source, .. } => Some(source),
+            RemoveAccount::LoadConfig(source) => Some(source),
+        }
+    }
+}
