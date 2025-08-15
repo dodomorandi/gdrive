@@ -228,22 +228,24 @@ impl FromStr for ChunkSize {
 
 impl Display for ChunkSize {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            ChunkSize::Approx1 => write!(f, "1"),
-            ChunkSize::Approx2 => write!(f, "2"),
-            ChunkSize::Approx4 => write!(f, "4"),
-            ChunkSize::Approx8 => write!(f, "8"),
-            ChunkSize::Approx16 => write!(f, "16"),
-            ChunkSize::Approx32 => write!(f, "32"),
-            ChunkSize::Approx64 => write!(f, "64"),
-            ChunkSize::Approx128 => write!(f, "128"),
-            ChunkSize::Approx256 => write!(f, "256"),
-            ChunkSize::Approx512 => write!(f, "512"),
-            ChunkSize::Approx1024 => write!(f, "1024"),
-            ChunkSize::Approx2048 => write!(f, "2048"),
-            ChunkSize::Approx4096 => write!(f, "4096"),
-            ChunkSize::Approx8192 => write!(f, "8192"),
-        }
+        let s = match self {
+            ChunkSize::Approx1 => "1",
+            ChunkSize::Approx2 => "2",
+            ChunkSize::Approx4 => "4",
+            ChunkSize::Approx8 => "8",
+            ChunkSize::Approx16 => "16",
+            ChunkSize::Approx32 => "32",
+            ChunkSize::Approx64 => "64",
+            ChunkSize::Approx128 => "128",
+            ChunkSize::Approx256 => "256",
+            ChunkSize::Approx512 => "512",
+            ChunkSize::Approx1024 => "1024",
+            ChunkSize::Approx2048 => "2048",
+            ChunkSize::Approx4096 => "4096",
+            ChunkSize::Approx8192 => "8192",
+        };
+
+        f.write_str(s)
     }
 }
 
