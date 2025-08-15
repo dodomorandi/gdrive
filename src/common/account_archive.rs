@@ -16,11 +16,7 @@ pub fn create(src_path: &Path, archive_path: &Path) -> Result<(), Error> {
         return Err(Error::PathNotDir(src_path.to_owned()));
     }
 
-    if archive_path.exists() {
-        return Err(Error::PathAlreadyExists(archive_path.to_owned()));
-    }
-
-    let archive_file = File::create(archive_path).map_err(Error::CreateFile)?;
+    let archive_file = File::create_new(archive_path).map_err(Error::CreateFile)?;
     let mut builder = tar::Builder::new(archive_file);
 
     let src_dir_name = src_path
