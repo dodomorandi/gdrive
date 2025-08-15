@@ -1,12 +1,29 @@
 use mime::Mime;
 use std::fmt;
 use std::path::Path;
+use std::sync::LazyLock;
 
 pub const MIME_TYPE_DRIVE_FOLDER: &str = "application/vnd.google-apps.folder";
 pub const MIME_TYPE_DRIVE_DOCUMENT: &str = "application/vnd.google-apps.document";
 pub const MIME_TYPE_DRIVE_SHORTCUT: &str = "application/vnd.google-apps.shortcut";
 pub const MIME_TYPE_DRIVE_SPREADSHEET: &str = "application/vnd.google-apps.spreadsheet";
 pub const MIME_TYPE_DRIVE_PRESENTATION: &str = "application/vnd.google-apps.presentation";
+
+pub static MIME_TYPE_DRIVE_DOCUMENT_MIME: LazyLock<Mime> = LazyLock::new(|| {
+    MIME_TYPE_DRIVE_DOCUMENT
+        .parse()
+        .expect("drive document should be a valid mime type")
+});
+pub static MIME_TYPE_DRIVE_SPREADSHEET_MIME: LazyLock<Mime> = LazyLock::new(|| {
+    MIME_TYPE_DRIVE_SPREADSHEET
+        .parse()
+        .expect("drive spreadsheet should be a valid mime type")
+});
+pub static MIME_TYPE_DRIVE_PRESENTATION_MIME: LazyLock<Mime> = LazyLock::new(|| {
+    MIME_TYPE_DRIVE_PRESENTATION
+        .parse()
+        .expect("drive presentation should be a valid mime type")
+});
 
 pub const EXTENSION_DOC: &str = "doc";
 pub const EXTENSION_DOCX: &str = "docx";
@@ -161,11 +178,11 @@ impl DocType {
     }
 
     #[must_use]
-    pub fn mime(&self) -> Option<Mime> {
+    pub fn mime(&self) -> &'static Mime {
         match self {
-            DocType::Document => MIME_TYPE_DRIVE_DOCUMENT.parse().ok(),
-            DocType::Spreadsheet => MIME_TYPE_DRIVE_SPREADSHEET.parse().ok(),
-            DocType::Presentation => MIME_TYPE_DRIVE_PRESENTATION.parse().ok(),
+            DocType::Document => &MIME_TYPE_DRIVE_DOCUMENT_MIME,
+            DocType::Spreadsheet => &MIME_TYPE_DRIVE_SPREADSHEET_MIME,
+            DocType::Presentation => &MIME_TYPE_DRIVE_PRESENTATION_MIME,
         }
     }
 }

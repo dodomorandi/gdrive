@@ -26,7 +26,7 @@ pub async fn import(config: Config) -> Result<(), Error> {
 
     let doc_type =
         drive_file::DocType::from_file_path(&config.file_path).ok_or(Error::UnsupportedFileType)?;
-    let mime_type = doc_type.mime().ok_or(Error::GetMime(doc_type))?;
+    let mime_type = doc_type.mime();
 
     let file = fs::File::open(&config.file_path)
         .map_err(|err| Error::OpenFile(config.file_path.clone(), err))?;
@@ -35,7 +35,7 @@ pub async fn import(config: Config) -> Result<(), Error> {
         &file,
         &file_info::Config {
             file_path: config.file_path.clone(),
-            mime_type: Some(mime_type),
+            mime_type: Some(mime_type.clone()),
             parents: config.parents.clone(),
         },
     )
@@ -69,7 +69,6 @@ pub enum Error {
     FileInfo(file_info::Error),
     UploadFile(google_drive3::Error),
     UnsupportedFileType,
-    GetMime(drive_file::DocType),
 }
 
 impl error::Error for Error {}
@@ -100,9 +99,6 @@ impl Display for Error {
                     write!(f, ", {supported_type}")?;
                 }
                 Ok(())
-            }
-            Error::GetMime(doc_type) => {
-                write!(f, "Failed to get mime type from document type: {doc_type}")
             }
         }
     }
