@@ -1,10 +1,6 @@
 pub mod errors;
 
-use std::error;
-use std::fmt::Display;
-use std::fmt::Formatter;
 use std::fs::File;
-use std::io;
 use std::ops::Not;
 use std::path::Path;
 use std::path::PathBuf;
@@ -83,71 +79,4 @@ pub fn get_account_name(archive_path: &Path) -> Result<String, errors::GetAccoun
     }
 
     Ok(name)
-}
-
-#[derive(Debug)]
-pub enum Error {
-    CreateFile(io::Error),
-    PathDoesNotExist(PathBuf),
-    PathNotDir(PathBuf),
-    PathAlreadyExists(PathBuf),
-    AppendDir(PathBuf, io::Error),
-    FinishArchive(PathBuf, io::Error),
-    OpenFile(io::Error),
-    ReadEntries(io::Error),
-    NoDirectories,
-    MultipleDirectories,
-    Unpack(io::Error),
-}
-
-impl error::Error for Error {}
-
-impl Display for Error {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Error::CreateFile(err) => {
-                write!(f, "Failed to create file: {err}")
-            }
-
-            Error::PathDoesNotExist(path) => {
-                write!(f, "'{}' does not exist", path.display())
-            }
-
-            Error::PathNotDir(path) => {
-                write!(f, "'{}' is not a directory", path.display())
-            }
-
-            Error::PathAlreadyExists(path) => {
-                write!(f, "'{}' already exists", path.display())
-            }
-
-            Error::AppendDir(path, err) => {
-                write!(f, "Failed to add {} to archive: {}", path.display(), err)
-            }
-
-            Error::FinishArchive(path, err) => {
-                write!(f, "Failed to create archive '{}': {}", path.display(), err)
-            }
-
-            Error::OpenFile(err) => {
-                write!(f, "Failed to open archive: {err}")
-            }
-
-            Error::ReadEntries(err) => {
-                write!(f, "Failed to read archive entries: {err}")
-            }
-
-            Error::NoDirectories => {
-                write!(f, "Archive contains no directories")
-            }
-
-            Error::MultipleDirectories => {
-                write!(f, "Archive contains multiple directories")
-            }
-
-            Error::Unpack(err) => {
-                write!(f, "Failed to unpack archive: {err}")
-            }
-        }
-    }
 }
