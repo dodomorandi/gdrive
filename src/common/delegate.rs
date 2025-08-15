@@ -1,4 +1,5 @@
 use bytesize::ByteSize;
+use error_trace::ErrorTrace;
 use google_drive3::hyper;
 use google_drive3::hyper::http;
 use std::fmt::Display;
@@ -83,7 +84,7 @@ impl google_drive3::client::Delegate for UploadDelegate {
 
     fn http_error(&mut self, err: &hyper::Error) -> google_drive3::client::Retry {
         if self.config.print_chunk_errors {
-            eprintln!("Warning: Failed attempt to upload chunk: {err}");
+            eprintln!("Warning: Failed attempt to upload chunk: {}", err.trace());
         }
         self.backoff.retry()
     }
