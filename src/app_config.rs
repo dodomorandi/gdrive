@@ -22,6 +22,7 @@ pub struct AppConfig {
     account_config_path: OnceLock<PathBuf>,
     account_base_path: OnceLock<PathBuf>,
     secret_path: OnceLock<PathBuf>,
+    tokens_path: OnceLock<PathBuf>,
 }
 
 pub fn add_account(
@@ -81,6 +82,7 @@ impl AppConfig {
             account_config_path: OnceLock::new(),
             account_base_path: OnceLock::new(),
             secret_path: OnceLock::new(),
+            tokens_path: OnceLock::new(),
         }
     }
 
@@ -234,8 +236,9 @@ impl AppConfig {
     }
 
     #[must_use]
-    pub fn tokens_path(&self) -> PathBuf {
-        self.account_base_path().join(TOKENS_CONFIG_NAME)
+    pub fn tokens_path(&self) -> &Path {
+        self.tokens_path
+            .get_or_init(|| self.account_base_path().join(TOKENS_CONFIG_NAME))
     }
 
     pub fn default_base_path() -> Result<PathBuf, errors::DefaultBasePath> {

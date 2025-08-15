@@ -11,7 +11,7 @@ use std::io;
 pub async fn get_hub() -> Result<Hub, Error> {
     let app_cfg = AppConfig::load_current_account().map_err(Error::LoadCurrentAccount)?;
     let secret = app_cfg.load_secret().map_err(Error::LoadSecret)?;
-    let auth = Auth::new(&secret, &app_cfg.tokens_path())
+    let auth = Auth::new(&secret, app_cfg.tokens_path())
         .await
         .map_err(Error::Auth)?;
 
