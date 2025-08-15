@@ -168,6 +168,26 @@ impl DocType {
     }
 }
 
+const _: () = const {
+    let mut i = 0;
+    while i < DocType::IMPORT_EXTENSION_MAP.len() {
+        let extension_i = DocType::IMPORT_EXTENSION_MAP[i].0;
+
+        let mut j = i + 1;
+        while j < DocType::IMPORT_EXTENSION_MAP.len() {
+            let extension_j = DocType::IMPORT_EXTENSION_MAP[j].0;
+            assert!(
+                !extension_i.eq_const(extension_j),
+                "IMPORT_EXTENSION_MAP cannot contain duplicated file extensions"
+            );
+
+            j += 1;
+        }
+
+        i += 1;
+    }
+};
+
 impl fmt::Display for DocType {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
@@ -200,6 +220,34 @@ pub enum FileExtension {
     Odp,
     Epub,
     Txt,
+}
+
+impl FileExtension {
+    const fn eq_const(self, other: Self) -> bool {
+        matches!(
+            (self, other),
+            (Self::Doc, Self::Doc)
+                | (Self::Docx, Self::Docx)
+                | (Self::Odt, Self::Odt)
+                | (Self::Jpg, Self::Jpg)
+                | (Self::Jpeg, Self::Jpeg)
+                | (Self::Gif, Self::Gif)
+                | (Self::Png, Self::Png)
+                | (Self::Rtf, Self::Rtf)
+                | (Self::Pdf, Self::Pdf)
+                | (Self::Html, Self::Html)
+                | (Self::Xls, Self::Xls)
+                | (Self::Xlsx, Self::Xlsx)
+                | (Self::Csv, Self::Csv)
+                | (Self::Tsv, Self::Tsv)
+                | (Self::Ods, Self::Ods)
+                | (Self::Ppt, Self::Ppt)
+                | (Self::Pptx, Self::Pptx)
+                | (Self::Odp, Self::Odp)
+                | (Self::Epub, Self::Epub)
+                | (Self::Txt, Self::Txt)
+        )
+    }
 }
 
 impl fmt::Display for FileExtension {
