@@ -76,3 +76,33 @@ impl Error for Unpack {
         }
     }
 }
+
+#[derive(Debug)]
+pub enum GetAccountName {
+    Open(io::Error),
+    ReadEntries(io::Error),
+    NoDirectories,
+    MultipleDirectories,
+}
+
+impl Display for GetAccountName {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let s = match self {
+            GetAccountName::Open(_) => "unable to open archive file",
+            GetAccountName::ReadEntries(_) => "unable to read entries from archive",
+            GetAccountName::NoDirectories => "archive contains no directories",
+            GetAccountName::MultipleDirectories => "archive contains more than one directory",
+        };
+
+        f.write_str(s)
+    }
+}
+
+impl Error for GetAccountName {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            GetAccountName::Open(source) | GetAccountName::ReadEntries(source) => Some(source),
+            GetAccountName::NoDirectories | GetAccountName::MultipleDirectories => None,
+        }
+    }
+}

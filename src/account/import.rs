@@ -36,7 +36,7 @@ pub fn import(config: &Config) -> Result<(), Error> {
 
 #[derive(Debug)]
 pub enum Error {
-    ReadAccountName(account_archive::Error),
+    ReadAccountName(account_archive::errors::GetAccountName),
     ListAccounts(app_config::errors::ListAccounts),
     AccountExists(String),
     DefaultBasePath(app_config::errors::DefaultBasePath),

@@ -56,10 +56,12 @@ pub fn unpack(archive_path: &Path, dst_path: &Path) -> Result<(), errors::Unpack
     archive.unpack(dst_path).map_err(errors::Unpack::Unpack)
 }
 
-pub fn get_account_name(archive_path: &Path) -> Result<String, Error> {
-    let archive_file = File::open(archive_path).map_err(Error::OpenFile)?;
+pub fn get_account_name(archive_path: &Path) -> Result<String, errors::GetAccountName> {
+    let archive_file = File::open(archive_path).map_err(errors::GetAccountName::Open)?;
     let mut archive = tar::Archive::new(archive_file);
-    let entries = archive.entries().map_err(Error::ReadEntries)?;
+    let entries = archive
+        .entries()
+        .map_err(errors::GetAccountName::ReadEntries)?;
 
     let dir_names: Vec<String> = entries
         .filter_map(|entry| {
@@ -77,8 +79,8 @@ pub fn get_account_name(archive_path: &Path) -> Result<String, Error> {
 
     match &dir_names[..] {
         [name] => Ok(name.to_string()),
-        [] => Err(Error::NoDirectories),
-        _ => Err(Error::MultipleDirectories),
+        [] => Err(errors::GetAccountName::NoDirectories),
+        _ => Err(errors::GetAccountName::MultipleDirectories),
     }
 }
 
