@@ -278,6 +278,7 @@ impl Account {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Secret {
     pub client_id: String,
+    // TODO: zeroize this string on Drop
     pub client_secret: String,
 }
 
