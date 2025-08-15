@@ -207,8 +207,8 @@ impl AppConfig {
         self.account_base_path().join(TOKENS_CONFIG_NAME)
     }
 
-    pub fn default_base_path() -> Result<PathBuf, errors::HomeDirNotFound> {
-        let home_path = home::home_dir().ok_or(errors::HomeDirNotFound)?;
+    pub fn default_base_path() -> Result<PathBuf, errors::DefaultBasePath> {
+        let home_path = home::home_dir().ok_or(errors::DefaultBasePath)?;
         let base_path = home_path
             .join(SYSTEM_CONFIG_DIR_NAME)
             .join(BASE_PATH_DIR_NAME);

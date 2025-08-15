@@ -6,18 +6,18 @@ use std::{
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct HomeDirNotFound;
+pub struct DefaultBasePath;
 
-impl Display for HomeDirNotFound {
+impl Display for DefaultBasePath {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str("home directory not found")
+        f.write_str("unable to get default base path, home directory not found")
     }
 }
 
-impl Error for HomeDirNotFound {}
+impl Error for DefaultBasePath {}
 
-impl From<HomeDirNotFound> for super::Error {
-    fn from(HomeDirNotFound: HomeDirNotFound) -> Self {
+impl From<DefaultBasePath> for super::Error {
+    fn from(DefaultBasePath: DefaultBasePath) -> Self {
         super::Error::HomeDirNotFound
     }
 }
@@ -49,7 +49,7 @@ impl From<CreateAccountDir> for super::Error {
 
 #[derive(Debug)]
 pub enum InitAccount {
-    DefaultBasePath(HomeDirNotFound),
+    DefaultBasePath(DefaultBasePath),
     CreateAccountDir(io::Error),
 }
 
@@ -73,8 +73,8 @@ impl Error for InitAccount {
     }
 }
 
-impl From<HomeDirNotFound> for InitAccount {
-    fn from(value: HomeDirNotFound) -> Self {
+impl From<DefaultBasePath> for InitAccount {
+    fn from(value: DefaultBasePath) -> Self {
         InitAccount::DefaultBasePath(value)
     }
 }
@@ -88,7 +88,7 @@ impl From<CreateAccountDir> for InitAccount {
 impl From<InitAccount> for super::Error {
     fn from(value: InitAccount) -> Self {
         match value {
-            InitAccount::DefaultBasePath(HomeDirNotFound) => super::Error::HomeDirNotFound,
+            InitAccount::DefaultBasePath(DefaultBasePath) => super::Error::HomeDirNotFound,
             InitAccount::CreateAccountDir(source) => super::Error::CreateConfigDir(source),
         }
     }
@@ -187,7 +187,7 @@ impl Error for SaveAccountConfig {
 
 #[derive(Debug)]
 pub enum ListAccounts {
-    DefaultBasePath(HomeDirNotFound),
+    DefaultBasePath(DefaultBasePath),
     CreateBaseDir { path: PathBuf, source: io::Error },
     ListFiles { path: PathBuf, source: io::Error },
 }
@@ -219,7 +219,7 @@ impl Error for ListAccounts {
 
 #[derive(Debug)]
 pub enum LoadAccountConfig {
-    DefaultBasePath(HomeDirNotFound),
+    DefaultBasePath(DefaultBasePath),
     AccountConfigMissing,
     ReadAccountConfig {
         path: PathBuf,
@@ -260,7 +260,7 @@ impl Error for LoadAccountConfig {
 impl From<LoadAccountConfig> for super::Error {
     fn from(value: LoadAccountConfig) -> Self {
         match value {
-            LoadAccountConfig::DefaultBasePath(HomeDirNotFound) => Self::HomeDirNotFound,
+            LoadAccountConfig::DefaultBasePath(DefaultBasePath) => Self::HomeDirNotFound,
             LoadAccountConfig::AccountConfigMissing => Self::AccountConfigMissing,
             LoadAccountConfig::ReadAccountConfig { source, .. } => Self::ReadAccountConfig(source),
             LoadAccountConfig::Deserialize { source, .. } => Self::DeserializeAccountConfig(source),
@@ -270,7 +270,7 @@ impl From<LoadAccountConfig> for super::Error {
 
 #[derive(Debug)]
 pub enum LoadCurrentAccount {
-    DefaultBasePath(HomeDirNotFound),
+    DefaultBasePath(DefaultBasePath),
     LoadAccountConfig(LoadAccountConfig),
 }
 
@@ -325,7 +325,7 @@ impl Error for RemoveAccount {
 }
 
 #[derive(Debug)]
-pub struct LoadAccount(pub HomeDirNotFound);
+pub struct LoadAccount(pub DefaultBasePath);
 
 impl Display for LoadAccount {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
