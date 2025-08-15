@@ -26,7 +26,7 @@ pub async fn import(config: Config) -> Result<(), Error> {
 
     let doc_type =
         drive_file::DocType::from_file_path(&config.file_path).ok_or(Error::UnsupportedFileType)?;
-    let mime_type = doc_type.mime().ok_or(Error::GetMime(doc_type.clone()))?;
+    let mime_type = doc_type.mime().ok_or(Error::GetMime(doc_type))?;
 
     let file = fs::File::open(&config.file_path)
         .map_err(|err| Error::OpenFile(config.file_path.clone(), err))?;

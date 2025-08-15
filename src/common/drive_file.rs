@@ -53,7 +53,7 @@ pub const MIME_TYPE_ODP: &str = "application/vnd.oasis.opendocument.presentation
 pub const MIME_TYPE_EPUB: &str = "application/epub+zip";
 pub const MIME_TYPE_TXT: &str = "text/plain";
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DocType {
     Document,
     Spreadsheet,
@@ -88,9 +88,9 @@ impl DocType {
 
         Self::IMPORT_EXTENSION_MAP
             .iter()
-            .find_map(|(ext, doc_type)| {
-                if ext == &extension {
-                    Some(doc_type.clone())
+            .find_map(|&(ext, doc_type)| {
+                if ext == extension {
+                    Some(doc_type)
                 } else {
                     None
                 }
@@ -124,8 +124,8 @@ impl DocType {
     }
 
     #[must_use]
-    pub fn can_export_to(&self, extension: &FileExtension) -> bool {
-        self.supported_export_types().contains(extension)
+    pub fn can_export_to(&self, extension: FileExtension) -> bool {
+        self.supported_export_types().contains(&extension)
     }
 
     #[must_use]
@@ -178,7 +178,7 @@ impl fmt::Display for DocType {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum FileExtension {
     Doc,
     Docx,

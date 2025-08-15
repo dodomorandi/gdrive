@@ -39,13 +39,13 @@ pub async fn export(config: Config) -> Result<(), Error> {
         .ok_or(Error::UnsupportedDriveMime(drive_mime.clone()))?;
 
     let extension = FileExtension::from_path(&config.file_path)
-        .ok_or(Error::UnsupportedExportExtension(doc_type.clone()))?;
+        .ok_or(Error::UnsupportedExportExtension(doc_type))?;
 
-    err_if_unsupported(&doc_type, &extension)?;
+    err_if_unsupported(doc_type, extension)?;
 
     let mime_type = extension
         .get_export_mime()
-        .ok_or(Error::GetFileExtensionMime(extension.clone()))?;
+        .ok_or(Error::GetFileExtensionMime(extension))?;
 
     let body = export_file(&hub, &config.file_id, &mime_type)
         .await
@@ -150,10 +150,10 @@ fn err_if_file_exists(config: &Config) -> Result<(), Error> {
     }
 }
 
-fn err_if_unsupported(doc_type: &DocType, extension: &FileExtension) -> Result<(), Error> {
+fn err_if_unsupported(doc_type: DocType, extension: FileExtension) -> Result<(), Error> {
     if doc_type.can_export_to(extension) {
         Ok(())
     } else {
-        Err(Error::UnsupportedExportExtension(doc_type.clone()))
+        Err(Error::UnsupportedExportExtension(doc_type))
     }
 }
