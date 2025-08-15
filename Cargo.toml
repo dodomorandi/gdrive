@@ -2,6 +2,7 @@
 name = "gdrive"
 version = "3.9.1"
 edition = "2021"
+rust-version = "1.88"
 
 [dependencies]
 async-recursion = "1.0.2"
