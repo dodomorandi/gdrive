@@ -82,6 +82,16 @@ impl DocType {
         (FileExtension::Odp, DocType::Presentation),
     ];
 
+    pub const SUPPORTED_INPUT_TYPES: [FileExtension; Self::IMPORT_EXTENSION_MAP.len()] = const {
+        let mut out = [FileExtension::Doc; Self::IMPORT_EXTENSION_MAP.len()];
+        let mut index = 0;
+        while index < Self::IMPORT_EXTENSION_MAP.len() {
+            out[index] = Self::IMPORT_EXTENSION_MAP[index].0;
+            index += 1;
+        }
+        out
+    };
+
     #[must_use]
     pub fn from_file_path(path: &Path) -> Option<DocType> {
         let extension = FileExtension::from_path(path)?;
