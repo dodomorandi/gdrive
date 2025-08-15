@@ -9,6 +9,11 @@ use std::ops::Not;
 use std::path::Path;
 use std::path::PathBuf;
 
+/// Creates an archive of the given source directory.
+///
+/// # Panics
+///
+/// The function panics if `src_path` terminates with a `..`.
 pub fn create(src_path: &Path, archive_path: &Path) -> Result<(), errors::Create> {
     if src_path.exists().not() {
         return Err(errors::Create::SrcPathDoesNotExist);
@@ -23,11 +28,9 @@ pub fn create(src_path: &Path, archive_path: &Path) -> Result<(), errors::Create
 
     let src_dir_name = src_path
         .file_name()
-        .unwrap_or_default()
-        .to_string_lossy()
-        .to_string();
+        .expect("`src_path` should not terminate with `..`");
 
-    if let Err(source) = builder.append_dir_all(&src_dir_name, src_path) {
+    if let Err(source) = builder.append_dir_all(src_dir_name, src_path) {
         return Err(errors::Create::AppendDir {
             dir_path: PathBuf::from(src_dir_name),
             source,
