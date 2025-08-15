@@ -21,6 +21,7 @@ pub struct AppConfig {
     pub account: Account,
     account_config_path: OnceLock<PathBuf>,
     account_base_path: OnceLock<PathBuf>,
+    secret_path: OnceLock<PathBuf>,
 }
 
 pub fn add_account(
@@ -79,6 +80,7 @@ impl AppConfig {
             account,
             account_config_path: OnceLock::new(),
             account_base_path: OnceLock::new(),
+            secret_path: OnceLock::new(),
         }
     }
 
@@ -143,11 +145,14 @@ impl AppConfig {
         let content =
             serde_json::to_string_pretty(&secret).map_err(errors::SaveSecret::Serialize)?;
         let path = self.secret_path();
-        if let Err(source) = fs::write(&path, content) {
-            return Err(errors::SaveSecret::Write { path, source });
+        if let Err(source) = fs::write(path, content) {
+            return Err(errors::SaveSecret::Write {
+                path: path.to_path_buf(),
+                source,
+            });
         }
 
-        if let Err(err) = set_file_permissions(&path) {
+        if let Err(err) = set_file_permissions(path) {
             eprintln!("Warning: Failed to set file permissions on secrets file: {err}");
         }
 
@@ -156,9 +161,14 @@ impl AppConfig {
 
     pub fn load_secret(&self) -> Result<Secret, errors::LoadSecret> {
         let path = self.secret_path();
-        let content = match fs::read_to_string(&path) {
+        let content = match fs::read_to_string(path) {
             Ok(content) => content,
-            Err(source) => return Err(errors::LoadSecret::Read { path, source }),
+            Err(source) => {
+                return Err(errors::LoadSecret::Read {
+                    path: path.to_path_buf(),
+                    source,
+                })
+            }
         };
         match serde_json::from_str(&content) {
             Ok(secret) => Ok(secret),
@@ -218,8 +228,9 @@ impl AppConfig {
     }
 
     #[must_use]
-    pub fn secret_path(&self) -> PathBuf {
-        self.account_base_path().join(SECRET_CONFIG_NAME)
+    pub fn secret_path(&self) -> &Path {
+        self.secret_path
+            .get_or_init(|| self.account_base_path().join(SECRET_CONFIG_NAME))
     }
 
     #[must_use]
