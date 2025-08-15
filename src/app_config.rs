@@ -143,9 +143,16 @@ impl AppConfig {
         Ok(())
     }
 
-    pub fn load_secret(&self) -> Result<Secret, Error> {
-        let content = fs::read_to_string(self.secret_path()).map_err(Error::ReadSecret)?;
-        serde_json::from_str(&content).map_err(Error::DeserializeSecret)
+    pub fn load_secret(&self) -> Result<Secret, errors::LoadSecret> {
+        let path = self.secret_path();
+        let content = match fs::read_to_string(&path) {
+            Ok(content) => content,
+            Err(source) => return Err(errors::LoadSecret::Read { path, source }),
+        };
+        match serde_json::from_str(&content) {
+            Ok(secret) => Ok(secret),
+            Err(source) => Err(errors::LoadSecret::Deserialize { content, source }),
+        }
     }
 
     pub fn load_account_config() -> Result<AccountConfig, errors::LoadAccountConfig> {

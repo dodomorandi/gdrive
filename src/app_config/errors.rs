@@ -338,3 +338,37 @@ impl Error for LoadAccount {
         Some(&self.0)
     }
 }
+
+#[derive(Debug)]
+pub enum LoadSecret {
+    Read {
+        path: PathBuf,
+        source: io::Error,
+    },
+    Deserialize {
+        content: String,
+        source: serde_json::Error,
+    },
+}
+
+impl Display for LoadSecret {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            LoadSecret::Read { path, source: _ } => {
+                write!(f, "unable to read the content of file '{}'", path.display())
+            }
+            LoadSecret::Deserialize { content, source: _ } => {
+                write!(f, "unable to serialize the content '{content}'")
+            }
+        }
+    }
+}
+
+impl Error for LoadSecret {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            LoadSecret::Read { source, .. } => Some(source),
+            LoadSecret::Deserialize { source, .. } => Some(source),
+        }
+    }
+}
