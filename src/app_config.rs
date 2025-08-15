@@ -20,6 +20,7 @@ pub struct AppConfig {
     pub base_path: PathBuf,
     pub account: Account,
     account_config_path: OnceLock<PathBuf>,
+    account_base_path: OnceLock<PathBuf>,
 }
 
 pub fn add_account(
@@ -77,6 +78,7 @@ impl AppConfig {
             base_path,
             account,
             account_config_path: OnceLock::new(),
+            account_base_path: OnceLock::new(),
         }
     }
 
@@ -115,8 +117,11 @@ impl AppConfig {
 
     pub fn remove_account(&self) -> Result<(), errors::RemoveAccount> {
         let path = self.account_base_path();
-        if let Err(source) = fs::remove_dir_all(&path) {
-            return Err(errors::RemoveAccount::RemoveDirectory { path, source });
+        if let Err(source) = fs::remove_dir_all(path) {
+            return Err(errors::RemoveAccount::RemoveDirectory {
+                path: path.to_path_buf(),
+                source,
+            });
         }
 
         let account_config =
@@ -207,8 +212,9 @@ impl AppConfig {
     }
 
     #[must_use]
-    pub fn account_base_path(&self) -> PathBuf {
-        self.base_path.join(&self.account.name)
+    pub fn account_base_path(&self) -> &Path {
+        self.account_base_path
+            .get_or_init(|| self.base_path.join(&self.account.name))
     }
 
     #[must_use]
@@ -231,7 +237,7 @@ impl AppConfig {
 
     fn create_account_dir(&self) -> Result<(), errors::CreateAccountDir> {
         let path = self.account_base_path();
-        fs::create_dir_all(&path).map_err(errors::CreateAccountDir)?;
+        fs::create_dir_all(path).map_err(errors::CreateAccountDir)?;
         Ok(())
     }
 }
