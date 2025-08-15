@@ -70,6 +70,11 @@ pub fn list_accounts() -> Result<Vec<String>, errors::ListAccounts> {
 
 impl AppConfig {
     #[must_use]
+    fn new(base_path: PathBuf, account: Account) -> Self {
+        AppConfig { base_path, account }
+    }
+
+    #[must_use]
     pub fn has_current_account() -> bool {
         AppConfig::default_base_path().is_ok_and(|base_path| {
             let account_config_path = base_path.join(ACCOUNT_CONFIG_NAME);
@@ -83,22 +88,20 @@ impl AppConfig {
         let account_config = AppConfig::load_account_config()
             .map_err(errors::LoadCurrentAccount::LoadAccountConfig)?;
         let account = Account::new(&account_config.current);
-        let config = AppConfig { base_path, account };
-        Ok(config)
+        Ok(AppConfig::new(base_path, account))
     }
 
     pub fn load_account(account_name: &str) -> Result<AppConfig, errors::LoadAccount> {
         let base_path = AppConfig::default_base_path().map_err(errors::LoadAccount)?;
         let account = Account::new(account_name);
-        let config = AppConfig { base_path, account };
-        Ok(config)
+        Ok(AppConfig::new(base_path, account))
     }
 
     pub fn init_account(account_name: &str) -> Result<AppConfig, errors::InitAccount> {
         let base_path = AppConfig::default_base_path()?;
         let account = Account::new(account_name);
 
-        let config = AppConfig { base_path, account };
+        let config = AppConfig::new(base_path, account);
         config.create_account_dir()?;
 
         Ok(config)
