@@ -46,3 +46,33 @@ impl Error for Create {
         }
     }
 }
+
+#[derive(Debug)]
+pub enum Unpack {
+    ArchivePathDoesNotExist,
+    DstDoesNotExist,
+    Open(io::Error),
+    Unpack(io::Error),
+}
+
+impl Display for Unpack {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let s = match self {
+            Unpack::ArchivePathDoesNotExist => "archive path does not exist",
+            Unpack::DstDoesNotExist => "destination path does not exist",
+            Unpack::Open(_) => "unable to open the archive file",
+            Unpack::Unpack(_) => "unable to unpack the archive",
+        };
+
+        f.write_str(s)
+    }
+}
+
+impl Error for Unpack {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            Unpack::ArchivePathDoesNotExist | Unpack::DstDoesNotExist => None,
+            Unpack::Open(source) | Unpack::Unpack(source) => Some(source),
+        }
+    }
+}

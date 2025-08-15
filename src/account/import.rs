@@ -40,7 +40,7 @@ pub enum Error {
     ListAccounts(app_config::errors::ListAccounts),
     AccountExists(String),
     DefaultBasePath(app_config::errors::DefaultBasePath),
-    Unpack(account_archive::Error),
+    Unpack(account_archive::errors::Unpack),
     LoadAccount(app_config::errors::LoadAccount),
     SwitchAccount(app_config::errors::SaveAccountConfig),
 }
@@ -49,7 +49,8 @@ impl error::Error for Error {
     fn source(&self) -> Option<&(dyn error::Error + 'static)> {
         match self {
             Error::AccountExists(_) => None,
-            Error::ReadAccountName(error) | Error::Unpack(error) => Some(error),
+            Error::ReadAccountName(error) => Some(error),
+            Error::Unpack(error) => Some(error),
             Error::ListAccounts(error) => Some(error),
             Error::LoadAccount(error) => Some(error),
             Error::DefaultBasePath(error) => Some(error),

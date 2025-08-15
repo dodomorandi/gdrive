@@ -42,18 +42,18 @@ pub fn create(src_path: &Path, archive_path: &Path) -> Result<(), errors::Create
     Ok(())
 }
 
-pub fn unpack(archive_path: &Path, dst_path: &Path) -> Result<(), Error> {
+pub fn unpack(archive_path: &Path, dst_path: &Path) -> Result<(), errors::Unpack> {
     if archive_path.exists().not() {
-        return Err(Error::PathDoesNotExist(archive_path.to_owned()));
+        return Err(errors::Unpack::ArchivePathDoesNotExist);
     }
 
     if dst_path.exists().not() {
-        return Err(Error::PathDoesNotExist(dst_path.to_owned()));
+        return Err(errors::Unpack::DstDoesNotExist);
     }
 
-    let archive_file = File::open(archive_path).map_err(Error::OpenFile)?;
+    let archive_file = File::open(archive_path).map_err(errors::Unpack::Open)?;
     let mut archive = tar::Archive::new(archive_file);
-    archive.unpack(dst_path).map_err(Error::Unpack)
+    archive.unpack(dst_path).map_err(errors::Unpack::Unpack)
 }
 
 pub fn get_account_name(archive_path: &Path) -> Result<String, Error> {
