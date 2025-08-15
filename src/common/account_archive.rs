@@ -3,13 +3,22 @@ use std::fmt::Display;
 use std::fmt::Formatter;
 use std::fs::File;
 use std::io;
+use std::ops::Not;
 use std::path::Path;
 use std::path::PathBuf;
 
 pub fn create(src_path: &Path, archive_path: &Path) -> Result<(), Error> {
-    err_if_not_exists(src_path)?;
-    err_if_not_dir(src_path)?;
-    err_if_exists(archive_path)?;
+    if src_path.exists().not() {
+        return Err(Error::PathDoesNotExist(src_path.to_owned()));
+    }
+
+    if src_path.is_dir().not() {
+        return Err(Error::PathNotDir(src_path.to_owned()));
+    }
+
+    if archive_path.exists() {
+        return Err(Error::PathAlreadyExists(archive_path.to_owned()));
+    }
 
     let archive_file = File::create(archive_path).map_err(Error::CreateFile)?;
     let mut builder = tar::Builder::new(archive_file);
@@ -32,8 +41,13 @@ pub fn create(src_path: &Path, archive_path: &Path) -> Result<(), Error> {
 }
 
 pub fn unpack(archive_path: &Path, dst_path: &Path) -> Result<(), Error> {
-    err_if_not_exists(archive_path)?;
-    err_if_not_exists(dst_path)?;
+    if archive_path.exists().not() {
+        return Err(Error::PathDoesNotExist(archive_path.to_owned()));
+    }
+
+    if dst_path.exists().not() {
+        return Err(Error::PathDoesNotExist(dst_path.to_owned()));
+    }
 
     let archive_file = File::open(archive_path).map_err(Error::OpenFile)?;
     let mut archive = tar::Archive::new(archive_file);
@@ -130,29 +144,5 @@ impl Display for Error {
                 write!(f, "Failed to unpack archive: {err}")
             }
         }
-    }
-}
-
-fn err_if_not_exists(path: &Path) -> Result<(), Error> {
-    if path.exists() {
-        Ok(())
-    } else {
-        Err(Error::PathDoesNotExist(path.to_owned()))
-    }
-}
-
-fn err_if_not_dir(path: &Path) -> Result<(), Error> {
-    if path.is_dir() {
-        Ok(())
-    } else {
-        Err(Error::PathNotDir(path.to_owned()))
-    }
-}
-
-fn err_if_exists(path: &Path) -> Result<(), Error> {
-    if path.exists() {
-        Err(Error::PathAlreadyExists(path.to_owned()))
-    } else {
-        Ok(())
     }
 }
