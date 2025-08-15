@@ -2,7 +2,7 @@ use bytesize::ByteSize;
 use error_trace::ErrorTrace;
 use google_drive3::hyper;
 use google_drive3::hyper::http;
-use std::fmt::Display;
+use std::fmt::{self, Display};
 use std::str::FromStr;
 use std::time::Duration;
 
@@ -203,7 +203,7 @@ impl ChunkSize {
 }
 
 impl FromStr for ChunkSize {
-    type Err = String;
+    type Err = InvalidChunkSize;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
@@ -221,13 +221,13 @@ impl FromStr for ChunkSize {
             "2048" => Ok(ChunkSize::Approx2048),
             "4096" => Ok(ChunkSize::Approx4096),
             "8192" => Ok(ChunkSize::Approx8192),
-            _ => Err("Not a valid chunk size, must be a power of 2 between 1 and 8192".to_string()),
+            _ => Err(InvalidChunkSize),
         }
     }
 }
 
 impl Display for ChunkSize {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             ChunkSize::Approx1 => write!(f, "1"),
             ChunkSize::Approx2 => write!(f, "2"),
@@ -246,3 +246,14 @@ impl Display for ChunkSize {
         }
     }
 }
+
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+pub struct InvalidChunkSize;
+
+impl Display for InvalidChunkSize {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str("not a valid chunk size, must be a power of 2 between 1 and 8192")
+    }
+}
+
+impl std::error::Error for InvalidChunkSize {}
