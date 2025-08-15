@@ -131,9 +131,9 @@ impl DocType {
     }
 
     #[must_use]
-    pub fn supported_export_types(&self) -> Vec<FileExtension> {
+    pub fn supported_export_types(&self) -> &'static [FileExtension] {
         match self {
-            DocType::Document => vec![
+            DocType::Document => &[
                 FileExtension::Pdf,
                 FileExtension::Odt,
                 FileExtension::Docx,
@@ -143,7 +143,7 @@ impl DocType {
                 FileExtension::Html,
             ],
 
-            DocType::Spreadsheet => vec![
+            DocType::Spreadsheet => &[
                 FileExtension::Csv,
                 FileExtension::Tsv,
                 FileExtension::Ods,
@@ -151,7 +151,7 @@ impl DocType {
                 FileExtension::Pdf,
             ],
 
-            DocType::Presentation => vec![
+            DocType::Presentation => &[
                 FileExtension::Pdf,
                 FileExtension::Pptx,
                 FileExtension::Odp,
