@@ -9,7 +9,7 @@ use std::fmt::Formatter;
 use std::io;
 
 pub async fn get_hub() -> Result<Hub, Error> {
-    let app_cfg = AppConfig::load_current_account().map_err(Error::AppConfig)?;
+    let app_cfg = AppConfig::load_current_account().map_err(Error::LoadCurrentAccount)?;
     let secret = app_cfg.load_secret().map_err(Error::AppConfig)?;
     let auth = Auth::new(&secret, &app_cfg.tokens_path())
         .await
@@ -22,6 +22,7 @@ pub async fn get_hub() -> Result<Hub, Error> {
 
 #[derive(Debug)]
 pub enum Error {
+    LoadCurrentAccount(app_config::errors::LoadCurrentAccount),
     AppConfig(app_config::Error),
     Auth(io::Error),
     Hub(io::Error),
@@ -30,6 +31,7 @@ pub enum Error {
 impl error::Error for Error {
     fn source(&self) -> Option<&(dyn error::Error + 'static)> {
         match self {
+            Error::LoadCurrentAccount(source) => Some(source),
             Error::Hub(error) => Some(error),
             // TODO: fix display and put sources here
             _ => None,
@@ -40,6 +42,7 @@ impl error::Error for Error {
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         match self {
+            Error::LoadCurrentAccount(_) => f.write_str("unable to load current account"),
             Error::AppConfig(err) => write!(f, "{err}"),
             Error::Auth(err) => write!(f, "Auth error: {err}"),
             Error::Hub(_) => f.write_str("unable to create Google Drive hub"),

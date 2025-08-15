@@ -267,3 +267,28 @@ impl From<LoadAccountConfig> for super::Error {
         }
     }
 }
+
+#[derive(Debug)]
+pub enum LoadCurrentAccount {
+    DefaultBasePath(HomeDirNotFound),
+    LoadAccountConfig(LoadAccountConfig),
+}
+
+impl Display for LoadCurrentAccount {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let s = match self {
+            LoadCurrentAccount::DefaultBasePath(_) => "unable to get default base path",
+            LoadCurrentAccount::LoadAccountConfig(_) => "unable to load account config",
+        };
+        f.write_str(s)
+    }
+}
+
+impl Error for LoadCurrentAccount {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            LoadCurrentAccount::DefaultBasePath(source) => Some(source),
+            LoadCurrentAccount::LoadAccountConfig(source) => Some(source),
+        }
+    }
+}

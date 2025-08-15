@@ -19,7 +19,7 @@ pub fn current() -> Result<(), Error> {
 #[derive(Debug)]
 pub enum Error {
     List(app_config::errors::ListAccounts),
-    LoadCurrent(app_config::Error),
+    LoadCurrent(app_config::errors::LoadCurrentAccount),
     NoAccounts,
 }
 

@@ -80,9 +80,11 @@ impl AppConfig {
         })
     }
 
-    pub fn load_current_account() -> Result<AppConfig, Error> {
-        let base_path = AppConfig::default_base_path()?;
-        let account_config = AppConfig::load_account_config()?;
+    pub fn load_current_account() -> Result<AppConfig, errors::LoadCurrentAccount> {
+        let base_path =
+            AppConfig::default_base_path().map_err(errors::LoadCurrentAccount::DefaultBasePath)?;
+        let account_config = AppConfig::load_account_config()
+            .map_err(errors::LoadCurrentAccount::LoadAccountConfig)?;
         let account = Account::new(&account_config.current);
         let config = AppConfig { base_path, account };
         Ok(config)
