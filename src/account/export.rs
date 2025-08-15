@@ -48,7 +48,7 @@ pub enum Error {
     ListAccounts(app_config::errors::ListAccounts),
     InitAccount(app_config::errors::InitAccount),
     AccountNotFound,
-    CreateArchive(account_archive::Error),
+    CreateArchive(account_archive::errors::Create),
 }
 
 impl error::Error for Error {

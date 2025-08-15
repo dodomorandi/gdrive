@@ -1,3 +1,5 @@
+pub mod errors;
+
 use std::error;
 use std::fmt::Display;
 use std::fmt::Formatter;
@@ -7,16 +9,16 @@ use std::ops::Not;
 use std::path::Path;
 use std::path::PathBuf;
 
-pub fn create(src_path: &Path, archive_path: &Path) -> Result<(), Error> {
+pub fn create(src_path: &Path, archive_path: &Path) -> Result<(), errors::Create> {
     if src_path.exists().not() {
-        return Err(Error::PathDoesNotExist(src_path.to_owned()));
+        return Err(errors::Create::SrcPathDoesNotExist);
     }
 
     if src_path.is_dir().not() {
-        return Err(Error::PathNotDir(src_path.to_owned()));
+        return Err(errors::Create::SrcPathNotDirectory);
     }
 
-    let archive_file = File::create_new(archive_path).map_err(Error::CreateFile)?;
+    let archive_file = File::create_new(archive_path).map_err(errors::Create::CreateArchive)?;
     let mut builder = tar::Builder::new(archive_file);
 
     let src_dir_name = src_path
@@ -25,13 +27,14 @@ pub fn create(src_path: &Path, archive_path: &Path) -> Result<(), Error> {
         .to_string_lossy()
         .to_string();
 
-    builder
-        .append_dir_all(&src_dir_name, src_path)
-        .map_err(|err| Error::AppendDir(src_path.to_path_buf(), err))?;
+    if let Err(source) = builder.append_dir_all(&src_dir_name, src_path) {
+        return Err(errors::Create::AppendDir {
+            dir_path: PathBuf::from(src_dir_name),
+            source,
+        });
+    }
 
-    builder
-        .finish()
-        .map_err(|err| Error::FinishArchive(archive_path.to_path_buf(), err))?;
+    builder.finish().map_err(errors::Create::FinishArchive)?;
 
     Ok(())
 }
