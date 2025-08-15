@@ -36,7 +36,11 @@ impl UploadDelegate {
     fn print_chunk_info(&self, chunk: &google_drive3::client::ContentRange) {
         if self.config.print_chunk_info {
             if let Some(range) = &chunk.range {
-                let chunk_size = range.last - range.first + 1;
+                let chunk_size = if range.last < u64::MAX {
+                    (range.last + 1).saturating_sub(range.first)
+                } else {
+                    (range.last - range.first).saturating_sub(1)
+                };
 
                 let action = if Some(chunk) == self.previous_chunk.as_ref() {
                     "Retrying"
