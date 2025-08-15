@@ -181,22 +181,24 @@ pub enum ChunkSize {
 impl ChunkSize {
     #[must_use]
     pub fn in_bytes(&self) -> u64 {
-        match self {
-            ChunkSize::Approx1 => u64::pow(2, 20),
-            ChunkSize::Approx2 => u64::pow(2, 21),
-            ChunkSize::Approx4 => u64::pow(2, 22),
-            ChunkSize::Approx8 => u64::pow(2, 23),
-            ChunkSize::Approx16 => u64::pow(2, 24),
-            ChunkSize::Approx32 => u64::pow(2, 25),
-            ChunkSize::Approx64 => u64::pow(2, 26),
-            ChunkSize::Approx128 => u64::pow(2, 27),
-            ChunkSize::Approx256 => u64::pow(2, 28),
-            ChunkSize::Approx512 => u64::pow(2, 29),
-            ChunkSize::Approx1024 => u64::pow(2, 30),
-            ChunkSize::Approx2048 => u64::pow(2, 31),
-            ChunkSize::Approx4096 => u64::pow(2, 32),
-            ChunkSize::Approx8192 => u64::pow(2, 33),
-        }
+        let exponent = match self {
+            ChunkSize::Approx1 => 20,
+            ChunkSize::Approx2 => 21,
+            ChunkSize::Approx4 => 22,
+            ChunkSize::Approx8 => 23,
+            ChunkSize::Approx16 => 24,
+            ChunkSize::Approx32 => 25,
+            ChunkSize::Approx64 => 26,
+            ChunkSize::Approx128 => 27,
+            ChunkSize::Approx256 => 28,
+            ChunkSize::Approx512 => 29,
+            ChunkSize::Approx1024 => 30,
+            ChunkSize::Approx2048 => 31,
+            ChunkSize::Approx4096 => 32,
+            ChunkSize::Approx8192 => 33,
+        };
+
+        u64::pow(2, exponent)
     }
 }
 
