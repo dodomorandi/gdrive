@@ -63,25 +63,26 @@ pub fn get_account_name(archive_path: &Path) -> Result<String, errors::GetAccoun
         .entries()
         .map_err(errors::GetAccountName::ReadEntries)?;
 
-    let dir_names: Vec<String> = entries
-        .filter_map(|entry| {
-            let entry = entry.ok()?;
-            let path = entry.path().ok()?;
+    let mut dir_names = entries.filter_map(|entry| {
+        let entry = entry.ok()?;
+        let path = entry.path().ok()?;
 
-            if entry.header().entry_type() == tar::EntryType::Directory {
-                let file_name = path.file_name()?;
-                Some(file_name.to_string_lossy().to_string())
-            } else {
-                None
-            }
-        })
-        .collect();
+        if entry.header().entry_type() == tar::EntryType::Directory {
+            let file_name = path.file_name()?;
+            Some(file_name.to_string_lossy().to_string())
+        } else {
+            None
+        }
+    });
 
-    match &dir_names[..] {
-        [name] => Ok(name.to_string()),
-        [] => Err(errors::GetAccountName::NoDirectories),
-        _ => Err(errors::GetAccountName::MultipleDirectories),
+    let name = dir_names
+        .next()
+        .ok_or(errors::GetAccountName::NoDirectories)?;
+    if dir_names.next().is_some() {
+        return Err(errors::GetAccountName::MultipleDirectories);
     }
+
+    Ok(name)
 }
 
 #[derive(Debug)]
