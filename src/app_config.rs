@@ -7,6 +7,7 @@ use std::io;
 use std::ops::Not;
 use std::path::Path;
 use std::path::PathBuf;
+use std::sync::OnceLock;
 
 const SYSTEM_CONFIG_DIR_NAME: &str = ".config";
 const BASE_PATH_DIR_NAME: &str = "gdrive3";
@@ -18,6 +19,7 @@ const TOKENS_CONFIG_NAME: &str = "tokens.json";
 pub struct AppConfig {
     pub base_path: PathBuf,
     pub account: Account,
+    account_config_path: OnceLock<PathBuf>,
 }
 
 pub fn add_account(
@@ -71,7 +73,11 @@ pub fn list_accounts() -> Result<Vec<String>, errors::ListAccounts> {
 impl AppConfig {
     #[must_use]
     fn new(base_path: PathBuf, account: Account) -> Self {
-        AppConfig { base_path, account }
+        AppConfig {
+            base_path,
+            account,
+            account_config_path: OnceLock::new(),
+        }
     }
 
     #[must_use]
@@ -117,9 +123,9 @@ impl AppConfig {
             AppConfig::load_account_config().map_err(errors::RemoveAccount::LoadConfig)?;
         if self.account.name == account_config.current {
             let config_path = self.account_config_path();
-            if let Err(source) = fs::remove_file(&config_path) {
+            if let Err(source) = fs::remove_file(config_path) {
                 return Err(errors::RemoveAccount::RemoveConfig {
-                    path: config_path,
+                    path: config_path.to_path_buf(),
                     source,
                 });
             }
@@ -185,18 +191,19 @@ impl AppConfig {
         let content = serde_json::to_string_pretty(&account_config)
             .map_err(errors::SaveAccountConfig::Serialize)?;
         let account_config_path = self.account_config_path();
-        match fs::write(&account_config_path, content) {
+        match fs::write(account_config_path, content) {
             Ok(()) => Ok(()),
             Err(source) => Err(errors::SaveAccountConfig::Write {
-                path: account_config_path,
+                path: account_config_path.to_path_buf(),
                 source,
             }),
         }
     }
 
     #[must_use]
-    pub fn account_config_path(&self) -> PathBuf {
-        self.base_path.join(ACCOUNT_CONFIG_NAME)
+    pub fn account_config_path(&self) -> &Path {
+        self.account_config_path
+            .get_or_init(|| self.base_path.join(ACCOUNT_CONFIG_NAME))
     }
 
     #[must_use]
