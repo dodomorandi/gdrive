@@ -7,6 +7,7 @@ use std::fmt::Display;
 use std::fmt::Formatter;
 use std::fs;
 use std::io;
+use std::ops::Not;
 use std::path::Path;
 use std::path::PathBuf;
 
@@ -136,15 +137,26 @@ impl AppConfig {
         serde_json::from_str(&content).map_err(Error::DeserializeSecret)
     }
 
-    pub fn load_account_config() -> Result<AccountConfig, Error> {
-        let base_path = AppConfig::default_base_path()?;
+    pub fn load_account_config() -> Result<AccountConfig, errors::LoadAccountConfig> {
+        let base_path =
+            AppConfig::default_base_path().map_err(errors::LoadAccountConfig::DefaultBasePath)?;
         let account_config_path = base_path.join(ACCOUNT_CONFIG_NAME);
-        account_config_path
-            .exists()
-            .then_some(())
-            .ok_or(Error::AccountConfigMissing)?;
-        let content = fs::read_to_string(account_config_path).map_err(Error::ReadAccountConfig)?;
-        serde_json::from_str(&content).map_err(Error::DeserializeAccountConfig)
+        if account_config_path.exists().not() {
+            return Err(errors::LoadAccountConfig::AccountConfigMissing);
+        }
+        let content = match fs::read_to_string(&account_config_path) {
+            Ok(content) => content,
+            Err(source) => {
+                return Err(errors::LoadAccountConfig::ReadAccountConfig {
+                    source,
+                    path: account_config_path,
+                })
+            }
+        };
+        match serde_json::from_str(&content) {
+            Ok(config) => Ok(config),
+            Err(source) => Err(errors::LoadAccountConfig::Deserialize { content, source }),
+        }
     }
 
     pub fn save_account_config(&self) -> Result<(), errors::SaveAccountConfig> {

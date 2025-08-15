@@ -216,3 +216,54 @@ impl Error for ListAccounts {
         }
     }
 }
+
+#[derive(Debug)]
+pub enum LoadAccountConfig {
+    DefaultBasePath(HomeDirNotFound),
+    AccountConfigMissing,
+    ReadAccountConfig {
+        path: PathBuf,
+        source: io::Error,
+    },
+    Deserialize {
+        content: String,
+        source: serde_json::Error,
+    },
+}
+
+impl Display for LoadAccountConfig {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            LoadAccountConfig::DefaultBasePath(_) => f.write_str("unable to get default base path"),
+            LoadAccountConfig::AccountConfigMissing => f.write_str("account config is missing"),
+            LoadAccountConfig::ReadAccountConfig { path, source: _ } => {
+                write!(f, "cannot read config from path '{}'", path.display())
+            }
+            LoadAccountConfig::Deserialize { content, source: _ } => {
+                write!(f, "cannot deserialize config content '{content}'")
+            }
+        }
+    }
+}
+
+impl Error for LoadAccountConfig {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            LoadAccountConfig::DefaultBasePath(source) => Some(source),
+            LoadAccountConfig::AccountConfigMissing => None,
+            LoadAccountConfig::ReadAccountConfig { source, .. } => Some(source),
+            LoadAccountConfig::Deserialize { source, .. } => Some(source),
+        }
+    }
+}
+
+impl From<LoadAccountConfig> for super::Error {
+    fn from(value: LoadAccountConfig) -> Self {
+        match value {
+            LoadAccountConfig::DefaultBasePath(HomeDirNotFound) => Self::HomeDirNotFound,
+            LoadAccountConfig::AccountConfigMissing => Self::AccountConfigMissing,
+            LoadAccountConfig::ReadAccountConfig { source, .. } => Self::ReadAccountConfig(source),
+            LoadAccountConfig::Deserialize { source, .. } => Self::DeserializeAccountConfig(source),
+        }
+    }
+}
