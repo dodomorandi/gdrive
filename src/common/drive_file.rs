@@ -3,27 +3,33 @@ use std::fmt;
 use std::path::Path;
 use std::sync::LazyLock;
 
+macro_rules! create_mime_from_str {
+    (
+        $(
+            $value:expr => $mime:ident : $mime_name:literal
+        ),+ $(,)?
+    ) => {
+        $(
+            pub static $mime: LazyLock<Mime> = LazyLock::new(|| {
+                $value
+                    .parse()
+                    .expect(concat!($mime_name, " should be a valid mime type"))
+            });
+        )+
+    };
+}
+
 pub const MIME_TYPE_DRIVE_FOLDER: &str = "application/vnd.google-apps.folder";
 pub const MIME_TYPE_DRIVE_DOCUMENT: &str = "application/vnd.google-apps.document";
 pub const MIME_TYPE_DRIVE_SHORTCUT: &str = "application/vnd.google-apps.shortcut";
 pub const MIME_TYPE_DRIVE_SPREADSHEET: &str = "application/vnd.google-apps.spreadsheet";
 pub const MIME_TYPE_DRIVE_PRESENTATION: &str = "application/vnd.google-apps.presentation";
 
-pub static MIME_TYPE_DRIVE_DOCUMENT_MIME: LazyLock<Mime> = LazyLock::new(|| {
-    MIME_TYPE_DRIVE_DOCUMENT
-        .parse()
-        .expect("drive document should be a valid mime type")
-});
-pub static MIME_TYPE_DRIVE_SPREADSHEET_MIME: LazyLock<Mime> = LazyLock::new(|| {
-    MIME_TYPE_DRIVE_SPREADSHEET
-        .parse()
-        .expect("drive spreadsheet should be a valid mime type")
-});
-pub static MIME_TYPE_DRIVE_PRESENTATION_MIME: LazyLock<Mime> = LazyLock::new(|| {
-    MIME_TYPE_DRIVE_PRESENTATION
-        .parse()
-        .expect("drive presentation should be a valid mime type")
-});
+create_mime_from_str!(
+    MIME_TYPE_DRIVE_DOCUMENT => MIME_TYPE_DRIVE_DOCUMENT_MIME: "drive document" ,
+    MIME_TYPE_DRIVE_SPREADSHEET => MIME_TYPE_DRIVE_SPREADSHEET_MIME: "drive spreadsheet",
+    MIME_TYPE_DRIVE_PRESENTATION => MIME_TYPE_DRIVE_PRESENTATION_MIME: "drive presentation",
+);
 
 pub const EXTENSION_DOC: &str = "doc";
 pub const EXTENSION_DOCX: &str = "docx";
