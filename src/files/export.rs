@@ -43,11 +43,9 @@ pub async fn export(config: Config) -> Result<(), Error> {
 
     err_if_unsupported(doc_type, extension)?;
 
-    let mime_type = extension
-        .get_export_mime()
-        .ok_or(Error::GetFileExtensionMime(extension))?;
+    let mime_type = extension.get_export_mime();
 
-    let body = export_file(&hub, &config.file_id, &mime_type)
+    let body = export_file(&hub, &config.file_id, mime_type)
         .await
         .map_err(|err| Error::ExportFile(Box::new(err)))?;
 

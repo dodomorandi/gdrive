@@ -356,28 +356,28 @@ impl FileExtension {
     }
 
     #[must_use]
-    pub fn get_export_mime(&self) -> Option<Mime> {
+    pub fn get_export_mime(&self) -> &'static Mime {
         match self {
-            FileExtension::Doc => MIME_TYPE_DOC.parse().ok(),
-            FileExtension::Docx => MIME_TYPE_DOCX.parse().ok(),
-            FileExtension::Odt => MIME_TYPE_ODT.parse().ok(),
-            FileExtension::Jpg => MIME_TYPE_JPG.parse().ok(),
-            FileExtension::Jpeg => MIME_TYPE_JPEG.parse().ok(),
-            FileExtension::Gif => MIME_TYPE_GIF.parse().ok(),
-            FileExtension::Png => MIME_TYPE_PNG.parse().ok(),
-            FileExtension::Rtf => MIME_TYPE_RTF.parse().ok(),
-            FileExtension::Pdf => MIME_TYPE_PDF.parse().ok(),
-            FileExtension::Html => MIME_TYPE_HTML.parse().ok(),
-            FileExtension::Xls => MIME_TYPE_XLS.parse().ok(),
-            FileExtension::Xlsx => MIME_TYPE_XLSX.parse().ok(),
-            FileExtension::Csv => MIME_TYPE_CSV.parse().ok(),
-            FileExtension::Tsv => MIME_TYPE_TSV.parse().ok(),
-            FileExtension::Ods => MIME_TYPE_ODS.parse().ok(),
-            FileExtension::Ppt => MIME_TYPE_PPT.parse().ok(),
-            FileExtension::Pptx => MIME_TYPE_PPTX.parse().ok(),
-            FileExtension::Odp => MIME_TYPE_ODP.parse().ok(),
-            FileExtension::Epub => MIME_TYPE_EPUB.parse().ok(),
-            FileExtension::Txt => MIME_TYPE_TXT.parse().ok(),
+            FileExtension::Doc => &MIME_TYPE_DOC_MIME,
+            FileExtension::Docx => &MIME_TYPE_DOCX_MIME,
+            FileExtension::Odt => &MIME_TYPE_ODT_MIME,
+            FileExtension::Jpg => &MIME_TYPE_JPG_MIME,
+            FileExtension::Jpeg => &MIME_TYPE_JPEG_MIME,
+            FileExtension::Gif => &MIME_TYPE_GIF_MIME,
+            FileExtension::Png => &MIME_TYPE_PNG_MIME,
+            FileExtension::Rtf => &MIME_TYPE_RTF_MIME,
+            FileExtension::Pdf => &MIME_TYPE_PDF_MIME,
+            FileExtension::Html => &MIME_TYPE_HTML_MIME,
+            FileExtension::Xls => &MIME_TYPE_XLS_MIME,
+            FileExtension::Xlsx => &MIME_TYPE_XLSX_MIME,
+            FileExtension::Csv => &MIME_TYPE_CSV_MIME,
+            FileExtension::Tsv => &MIME_TYPE_TSV_MIME,
+            FileExtension::Ods => &MIME_TYPE_ODS_MIME,
+            FileExtension::Ppt => &MIME_TYPE_PPT_MIME,
+            FileExtension::Pptx => &MIME_TYPE_PPTX_MIME,
+            FileExtension::Odp => &MIME_TYPE_ODP_MIME,
+            FileExtension::Epub => &MIME_TYPE_EPUB_MIME,
+            FileExtension::Txt => &MIME_TYPE_TXT_MIME,
         }
     }
 }
