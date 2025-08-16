@@ -14,7 +14,6 @@ use mime::Mime;
 use std::error;
 use std::fmt::Display;
 use std::fmt::Formatter;
-use std::io;
 use std::path::PathBuf;
 use std::time::Duration;
 
@@ -135,7 +134,7 @@ pub async fn update_metadata(
 pub enum Error {
     Hub(hub_helper::Error),
     FileInfo(file_info::Error),
-    OpenFile(PathBuf, io::Error),
+    OpenFile(PathBuf, file_helper::OpenFileError),
     GetFile(google_drive3::Error),
     Update(google_drive3::Error),
 }
