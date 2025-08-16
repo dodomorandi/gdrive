@@ -83,10 +83,7 @@ enum FileKind<'a> {
 impl File<'_> {
     #[must_use]
     pub fn path(&self) -> &Path {
-        match &self.kind {
-            FileKind::Temp(temp) => temp,
-            FileKind::File(path) => path,
-        }
+        self.kind.path()
     }
 
     #[must_use]
@@ -95,6 +92,11 @@ impl File<'_> {
             FileKind::Temp(temp) => temp.release(),
             FileKind::File(path) => path.to_path_buf(),
         }
+    }
+
+    #[must_use]
+    pub fn file_mut_and_path(&mut self) -> (&mut fs::File, &Path) {
+        (&mut self.inner, self.kind.path())
     }
 }
 
@@ -141,6 +143,15 @@ impl Seek for File<'_> {
 
     fn seek_relative(&mut self, offset: i64) -> io::Result<()> {
         self.inner.seek_relative(offset)
+    }
+}
+
+impl FileKind<'_> {
+    fn path(&self) -> &Path {
+        match self {
+            FileKind::Temp(temp) => temp,
+            FileKind::File(path) => path,
+        }
     }
 }
 
