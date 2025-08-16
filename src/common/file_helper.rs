@@ -7,8 +7,7 @@ use std::path::PathBuf;
 
 pub fn stdin_to_file() -> Result<Temp, StdinToFileError> {
     let tmp_file = Temp::new_file().map_err(StdinToFileError::NewTempFile)?;
-    let path = tmp_file.as_ref().to_path_buf();
-    let mut file = File::create(&path).map_err(StdinToFileError::CreateTempFile)?;
+    let mut file = File::create(&tmp_file).map_err(StdinToFileError::CreateTempFile)?;
     io::copy(&mut io::stdin(), &mut file).map_err(StdinToFileError::CopyStdin)?;
     Ok(tmp_file)
 }
