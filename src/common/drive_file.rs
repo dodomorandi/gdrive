@@ -396,5 +396,5 @@ pub fn is_binary(file: &google_drive3::api::File) -> bool {
 
 #[must_use]
 pub fn is_shortcut(file: &google_drive3::api::File) -> bool {
-    file.mime_type == Some(String::from(MIME_TYPE_DRIVE_SHORTCUT))
+    file.mime_type.as_deref() == Some(MIME_TYPE_DRIVE_SHORTCUT)
 }
