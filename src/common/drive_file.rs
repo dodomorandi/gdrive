@@ -76,6 +76,29 @@ pub const MIME_TYPE_ODP: &str = "application/vnd.oasis.opendocument.presentation
 pub const MIME_TYPE_EPUB: &str = "application/epub+zip";
 pub const MIME_TYPE_TXT: &str = "text/plain";
 
+create_mime_from_str!(
+    MIME_TYPE_DOC => MIME_TYPE_DOC_MIME: "microsoft doc",
+    MIME_TYPE_DOCX => MIME_TYPE_DOCX_MIME: "microsoft docx",
+    MIME_TYPE_ODT => MIME_TYPE_ODT_MIME: "opendocument text",
+    MIME_TYPE_JPG => MIME_TYPE_JPG_MIME: "jpeg image",
+    MIME_TYPE_JPEG => MIME_TYPE_JPEG_MIME: "jpeg image",
+    MIME_TYPE_GIF => MIME_TYPE_GIF_MIME: "gif image",
+    MIME_TYPE_PNG => MIME_TYPE_PNG_MIME: "png image",
+    MIME_TYPE_RTF => MIME_TYPE_RTF_MIME: "rich-text format",
+    MIME_TYPE_PDF => MIME_TYPE_PDF_MIME: "pdf document",
+    MIME_TYPE_HTML => MIME_TYPE_HTML_MIME: "html document",
+    MIME_TYPE_XLS => MIME_TYPE_XLS_MIME: "microsoft xls",
+    MIME_TYPE_XLSX => MIME_TYPE_XLSX_MIME: "microsoft xlsx",
+    MIME_TYPE_CSV => MIME_TYPE_CSV_MIME: "comma separated file",
+    MIME_TYPE_TSV => MIME_TYPE_TSV_MIME: "tab separated file",
+    MIME_TYPE_ODS => MIME_TYPE_ODS_MIME: "opendocument spreadsheet",
+    MIME_TYPE_PPT => MIME_TYPE_PPT_MIME: "microsoft ppt",
+    MIME_TYPE_PPTX => MIME_TYPE_PPTX_MIME: "microsoft pptx",
+    MIME_TYPE_ODP => MIME_TYPE_ODP_MIME: "opendocument presentation",
+    MIME_TYPE_EPUB => MIME_TYPE_EPUB_MIME: "epub document",
+    MIME_TYPE_TXT => MIME_TYPE_TXT_MIME: "plain text",
+);
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DocType {
     Document,
