@@ -41,7 +41,7 @@ pub enum Folder {
     ReadDirEntry(io::Error),
     Nested { path: PathBuf, source: Box<Folder> },
     IsSymlink(PathBuf),
-    File { path: PathBuf, source: super::Error },
+    File { path: PathBuf, source: File },
     UnknownFileType(PathBuf),
 }
 
@@ -80,6 +80,35 @@ impl Error for Folder {
             Folder::ReadDir(source) | Folder::ReadDirEntry(source) => Some(source),
             Folder::Nested { source, .. } => Some(source),
             Folder::File { source, .. } => Some(source),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub enum File {
+    InvalidPath,
+    OpenFile(io::Error),
+    GenerateId(id_gen::Error),
+}
+
+impl Display for File {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let s = match self {
+            File::InvalidPath => "file path is invalid",
+            File::OpenFile(_) => "unable to open file",
+            File::GenerateId(_) => "unable to generate google drive id",
+        };
+
+        f.write_str(s)
+    }
+}
+
+impl Error for File {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            File::InvalidPath => None,
+            File::OpenFile(source) => Some(source),
+            File::GenerateId(source) => Some(source),
         }
     }
 }

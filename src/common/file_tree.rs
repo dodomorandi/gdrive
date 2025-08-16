@@ -231,19 +231,20 @@ impl File {
         path: &Path,
         parent: &Folder,
         ids: &mut IdGen<'_>,
-    ) -> Result<File, Error> {
+    ) -> Result<File, errors::File> {
+        use errors::File as E;
+
         let name = path
             .file_name()
             .map(|s| s.to_string_lossy().to_string())
-            .ok_or(Error::InvalidPath(path.to_path_buf()))?;
+            .ok_or(E::InvalidPath)?;
 
-        let os_file =
-            fs::File::open(path).map_err(|err| Error::OpenFile(path.to_path_buf(), err))?;
+        let os_file = fs::File::open(path).map_err(E::OpenFile)?;
         let size = os_file.metadata().map(|m| m.len()).unwrap_or(0);
         let mime_type = mime_guess::from_path(path)
             .first()
             .unwrap_or(mime::APPLICATION_OCTET_STREAM);
-        let drive_id = ids.next().await.map_err(Error::GetId)?;
+        let drive_id = ids.next().await.map_err(E::GenerateId)?;
 
         let file = File {
             name,
