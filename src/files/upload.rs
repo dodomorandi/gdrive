@@ -274,7 +274,7 @@ pub enum Error {
     Upload(Box<google_drive3::Error>),
     IsDirectory(PathBuf),
     DriveFolderMissingId,
-    CreateFileTree(file_tree::Error),
+    CreateFileTree(file_tree::errors::FileTree),
     Mkdir(Box<google_drive3::Error>),
 }
 

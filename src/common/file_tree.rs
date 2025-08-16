@@ -1,3 +1,5 @@
+pub mod errors;
+
 use crate::common::file_info::FileInfo;
 use crate::common::id_gen;
 use crate::common::id_gen::IdGen;
@@ -19,12 +21,14 @@ pub struct FileTree {
 }
 
 impl FileTree {
-    pub async fn from_path(path: &Path, ids: &mut IdGen<'_>) -> Result<FileTree, Error> {
+    pub async fn from_path(path: &Path, ids: &mut IdGen<'_>) -> Result<FileTree, errors::FileTree> {
         let canonical_path = path
             .canonicalize()
-            .map_err(|err| Error::CanonicalizePath(path.to_owned(), err))?;
+            .map_err(errors::FileTree::Canonicalize)?;
 
-        let root = Folder::from_path(&canonical_path, None, ids).await?;
+        let root = Folder::from_path(&canonical_path, None, ids)
+            .await
+            .map_err(errors::FileTree::Folder)?;
         Ok(FileTree { root })
     }
 
