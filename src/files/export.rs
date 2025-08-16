@@ -1,6 +1,5 @@
 use mime::Mime;
 
-use crate::common::drive_file;
 use crate::common::drive_file::DocType;
 use crate::common::drive_file::FileExtension;
 use crate::common::hub_helper;
@@ -89,7 +88,6 @@ pub enum Error {
     ExportFile(Box<google_drive3::Error>),
     MissingDriveMime,
     UnsupportedDriveMime(String),
-    GetFileExtensionMime(drive_file::FileExtension),
     UnsupportedExportExtension(DocType),
     SaveFile(files::download::Error),
 }
@@ -116,9 +114,6 @@ impl Display for Error {
             Error::MissingDriveMime => write!(f, "Drive file does not have a mime type"),
             Error::UnsupportedDriveMime(mime) => {
                 write!(f, "Mime type on drive file '{mime}' is not supported")
-            }
-            Error::GetFileExtensionMime(doc_type) => {
-                write!(f, "Failed to get mime type from file extension: {doc_type}")
             }
             Error::UnsupportedExportExtension(doc_type) => {
                 let supported_types = doc_type
