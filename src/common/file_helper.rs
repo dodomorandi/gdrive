@@ -1,13 +1,13 @@
 use mktemp::Temp;
 use std::error::Error;
 use std::fmt::{self, Display};
-use std::fs::File;
-use std::io;
-use std::path::PathBuf;
+use std::io::{Read, Seek};
+use std::path::{Path, PathBuf};
+use std::{fs, io};
 
 pub fn stdin_to_file() -> Result<Temp, StdinToFileError> {
     let tmp_file = Temp::new_file().map_err(StdinToFileError::NewTempFile)?;
-    let mut file = File::create(&tmp_file).map_err(StdinToFileError::CreateTempFile)?;
+    let mut file = fs::File::create(&tmp_file).map_err(StdinToFileError::CreateTempFile)?;
     io::copy(&mut io::stdin(), &mut file).map_err(StdinToFileError::CopyStdin)?;
     Ok(tmp_file)
 }
@@ -43,20 +43,96 @@ impl Error for StdinToFileError {
     }
 }
 
-pub fn open_file(path: &Option<PathBuf>) -> Result<(File, PathBuf), OpenFileError> {
-    if let Some(path) = path {
-        let file = File::open(path).map_err(|source| OpenFileError::Open {
+pub fn open_file(path: &Option<PathBuf>) -> Result<File<'_>, OpenFileError> {
+    let (file, kind) = if let Some(path) = path {
+        let file = fs::File::open(path).map_err(|source| OpenFileError::Open {
             path: path.clone(),
             source,
         })?;
-        Ok((file, path.clone()))
+        (file, FileKind::File(path))
     } else {
         let tmp_file = stdin_to_file().map_err(OpenFileError::StdinToFile)?;
-        let path = tmp_file.as_ref().to_path_buf();
-        match File::open(&path) {
-            Ok(file) => Ok((file, path)),
-            Err(source) => Err(OpenFileError::Open { path, source }),
+        let file = match fs::File::open(&tmp_file) {
+            Ok(file) => file,
+            Err(source) => {
+                return Err(OpenFileError::Open {
+                    path: tmp_file.release(),
+                    source,
+                })
+            }
+        };
+
+        (file, FileKind::Temp(tmp_file))
+    };
+
+    Ok(File { inner: file, kind })
+}
+
+#[derive(Debug)]
+pub struct File<'a> {
+    inner: fs::File,
+    kind: FileKind<'a>,
+}
+
+#[derive(Debug)]
+enum FileKind<'a> {
+    Temp(Temp),
+    File(&'a Path),
+}
+
+impl File<'_> {
+    #[must_use]
+    pub fn path(&self) -> &Path {
+        match &self.kind {
+            FileKind::Temp(temp) => temp,
+            FileKind::File(path) => path,
         }
+    }
+}
+
+impl AsRef<fs::File> for File<'_> {
+    fn as_ref(&self) -> &fs::File {
+        &self.inner
+    }
+}
+
+impl Read for File<'_> {
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+        self.inner.read(buf)
+    }
+
+    fn read_vectored(&mut self, bufs: &mut [io::IoSliceMut<'_>]) -> io::Result<usize> {
+        self.inner.read_vectored(bufs)
+    }
+
+    fn read_to_end(&mut self, buf: &mut Vec<u8>) -> io::Result<usize> {
+        self.inner.read_to_end(buf)
+    }
+
+    fn read_to_string(&mut self, buf: &mut String) -> io::Result<usize> {
+        self.inner.read_to_string(buf)
+    }
+
+    fn read_exact(&mut self, buf: &mut [u8]) -> io::Result<()> {
+        self.inner.read_exact(buf)
+    }
+}
+
+impl Seek for File<'_> {
+    fn seek(&mut self, pos: io::SeekFrom) -> io::Result<u64> {
+        self.inner.seek(pos)
+    }
+
+    fn rewind(&mut self) -> io::Result<()> {
+        self.inner.rewind()
+    }
+
+    fn stream_position(&mut self) -> io::Result<u64> {
+        self.inner.stream_position()
+    }
+
+    fn seek_relative(&mut self, offset: i64) -> io::Result<()> {
+        self.inner.seek_relative(offset)
     }
 }
 

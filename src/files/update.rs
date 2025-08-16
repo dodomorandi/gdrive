@@ -40,30 +40,36 @@ pub async fn update(config: Config) -> Result<(), Error> {
         print_chunk_info: config.print_chunk_info,
     };
 
-    let (file, file_path) = file_helper::open_file(&config.file_path).map_err(|err| {
-        Error::OpenFile(
-            config.file_path.unwrap_or_else(|| PathBuf::from("<stdin>")),
-            err,
-        )
-    })?;
+    let file = match file_helper::open_file(&config.file_path) {
+        Ok(file) => file,
+        Err(err) => {
+            return Err(Error::OpenFile(
+                config.file_path.unwrap_or_else(|| PathBuf::from("<stdin>")),
+                err,
+            ))
+        }
+    };
 
     let drive_file = info::get_file(&hub, &config.file_id)
         .await
         .map_err(Error::GetFile)?;
 
-    let file_info = FileInfo::from_file(
-        &file,
-        &file_info::Config {
-            file_path: file_path.clone(),
-            mime_type: config.mime_type,
-            parents: drive_file.parents.clone(),
-        },
-    )
-    .map_err(Error::FileInfo)?;
+    let file_info_config = file_info::Config {
+        file_path: file.path().to_path_buf(),
+        mime_type: config.mime_type,
+        parents: drive_file.parents.clone(),
+    };
+
+    let file_info =
+        FileInfo::from_file(file.as_ref(), &file_info_config).map_err(Error::FileInfo)?;
 
     let reader = std::io::BufReader::new(file);
 
-    println!("Updating {} with {}", config.file_id, file_path.display());
+    println!(
+        "Updating {} with {}",
+        config.file_id,
+        file_info_config.file_path.display()
+    );
 
     let file = update_file(&hub, reader, &config.file_id, file_info, delegate_config)
         .await
