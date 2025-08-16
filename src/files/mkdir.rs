@@ -60,10 +60,9 @@ pub async fn create_directory(
         .delegate(&mut delegate)
         .supports_all_drives(true);
 
-    let empty_file = EmptyFile();
     let mime_type: mime::Mime = MIME_TYPE_DRIVE_FOLDER.parse().unwrap();
 
-    let (_, file) = req.upload(empty_file, mime_type).await?;
+    let (_, file) = req.upload(EmptyFile, mime_type).await?;
 
     Ok(file)
 }
