@@ -300,28 +300,30 @@ impl FileExtension {
 
 impl fmt::Display for FileExtension {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            FileExtension::Doc => write!(f, "{EXTENSION_DOC}"),
-            FileExtension::Docx => write!(f, "{EXTENSION_DOCX}"),
-            FileExtension::Odt => write!(f, "{EXTENSION_ODT}"),
-            FileExtension::Jpg => write!(f, "{EXTENSION_JPG}"),
-            FileExtension::Jpeg => write!(f, "{EXTENSION_JPEG}"),
-            FileExtension::Gif => write!(f, "{EXTENSION_GIF}"),
-            FileExtension::Png => write!(f, "{EXTENSION_PNG}"),
-            FileExtension::Rtf => write!(f, "{EXTENSION_RTF}"),
-            FileExtension::Pdf => write!(f, "{EXTENSION_PDF}"),
-            FileExtension::Html => write!(f, "{EXTENSION_HTML}"),
-            FileExtension::Xls => write!(f, "{EXTENSION_XLS}"),
-            FileExtension::Xlsx => write!(f, "{EXTENSION_XLSX}"),
-            FileExtension::Csv => write!(f, "{EXTENSION_CSV}"),
-            FileExtension::Tsv => write!(f, "{EXTENSION_TSV}"),
-            FileExtension::Ods => write!(f, "{EXTENSION_ODS}"),
-            FileExtension::Ppt => write!(f, "{EXTENSION_PPT}"),
-            FileExtension::Pptx => write!(f, "{EXTENSION_PPTX}"),
-            FileExtension::Odp => write!(f, "{EXTENSION_ODP}"),
-            FileExtension::Epub => write!(f, "{EXTENSION_EPUB}"),
-            FileExtension::Txt => write!(f, "{EXTENSION_TXT}"),
-        }
+        let s = match self {
+            FileExtension::Doc => EXTENSION_DOC,
+            FileExtension::Docx => EXTENSION_DOCX,
+            FileExtension::Odt => EXTENSION_ODT,
+            FileExtension::Jpg => EXTENSION_JPG,
+            FileExtension::Jpeg => EXTENSION_JPEG,
+            FileExtension::Gif => EXTENSION_GIF,
+            FileExtension::Png => EXTENSION_PNG,
+            FileExtension::Rtf => EXTENSION_RTF,
+            FileExtension::Pdf => EXTENSION_PDF,
+            FileExtension::Html => EXTENSION_HTML,
+            FileExtension::Xls => EXTENSION_XLS,
+            FileExtension::Xlsx => EXTENSION_XLSX,
+            FileExtension::Csv => EXTENSION_CSV,
+            FileExtension::Tsv => EXTENSION_TSV,
+            FileExtension::Ods => EXTENSION_ODS,
+            FileExtension::Ppt => EXTENSION_PPT,
+            FileExtension::Pptx => EXTENSION_PPTX,
+            FileExtension::Odp => EXTENSION_ODP,
+            FileExtension::Epub => EXTENSION_EPUB,
+            FileExtension::Txt => EXTENSION_TXT,
+        };
+
+        f.write_str(s)
     }
 }
 
