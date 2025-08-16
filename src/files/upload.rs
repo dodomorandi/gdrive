@@ -88,9 +88,9 @@ pub async fn upload_regular(
 
     let file_info = match FileInfo::from_file(
         &file,
-        &file_info::Config {
-            file_path: file_path.clone(),
-            mime_type: config.mime_type.clone(),
+        file_info::Config {
+            file_path,
+            mime_type: config.mime_type.as_ref(),
             parents: config.parents.clone(),
         },
     ) {
@@ -226,7 +226,7 @@ pub async fn upload_file<RS>(
     hub: &Hub,
     src_file: RS,
     file_id: Option<String>,
-    file_info: FileInfo,
+    file_info: FileInfo<'_>,
     delegate_config: UploadDelegateConfig,
 ) -> Result<google_drive3::api::File, google_drive3::Error>
 where
@@ -252,9 +252,11 @@ where
         .supports_all_drives(true);
 
     let (_, file) = if file_info.size > chunk_size_bytes {
-        req.upload_resumable(src_file, file_info.mime_type).await?
+        req.upload_resumable(src_file, file_info.mime_type.into_owned())
+            .await?
     } else {
-        req.upload(src_file, file_info.mime_type).await?
+        req.upload(src_file, file_info.mime_type.into_owned())
+            .await?
     };
 
     Ok(file)

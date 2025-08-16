@@ -1,24 +1,25 @@
+use std::borrow::Cow;
 use std::error;
 use std::fmt::Display;
 use std::fmt::Formatter;
 use std::fs;
-use std::path::PathBuf;
+use std::path::Path;
 
-pub struct FileInfo {
+pub struct FileInfo<'a> {
     pub name: String,
-    pub mime_type: mime::Mime,
+    pub mime_type: Cow<'a, mime::Mime>,
     pub parents: Option<Vec<String>>,
     pub size: u64,
 }
 
-pub struct Config {
-    pub file_path: PathBuf,
-    pub mime_type: Option<mime::Mime>,
+pub struct Config<'a> {
+    pub file_path: &'a Path,
+    pub mime_type: Option<&'a mime::Mime>,
     pub parents: Option<Vec<String>>,
 }
 
-impl FileInfo {
-    pub fn from_file(file: &fs::File, config: &Config) -> Result<FileInfo, FromFileError> {
+impl<'a> FileInfo<'a> {
+    pub fn from_file(file: &fs::File, config: Config<'a>) -> Result<Self, FromFileError> {
         let file_name = config
             .file_path
             .file_name()
@@ -27,16 +28,19 @@ impl FileInfo {
 
         let file_size = file.metadata().map(|m| m.len()).unwrap_or(0);
 
-        let mime_type = config.mime_type.clone().unwrap_or_else(|| {
-            mime_guess::from_path(&config.file_path)
-                .first()
-                .unwrap_or(mime::APPLICATION_OCTET_STREAM)
-        });
+        let mime_type = config.mime_type.map_or_else(
+            || {
+                mime_guess::from_path(config.file_path)
+                    .first()
+                    .map_or(Cow::Borrowed(&mime::APPLICATION_OCTET_STREAM), Cow::Owned)
+            },
+            Cow::Borrowed,
+        );
 
         Ok(FileInfo {
             name: file_name,
             mime_type,
-            parents: config.parents.clone(),
+            parents: config.parents,
             size: file_size,
         })
     }

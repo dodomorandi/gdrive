@@ -40,8 +40,8 @@ pub async fn update(config: Config) -> Result<(), Error> {
         print_chunk_info: config.print_chunk_info,
     };
 
-    let file = match file_helper::open_file(&config.file_path) {
-        Ok(file) => file,
+    let mut file_helper = match file_helper::open_file(&config.file_path) {
+        Ok(file_helper) => file_helper,
         Err(err) => {
             return Err(Error::OpenFile(
                 config.file_path.unwrap_or_else(|| PathBuf::from("<stdin>")),
@@ -54,17 +54,19 @@ pub async fn update(config: Config) -> Result<(), Error> {
         .await
         .map_err(Error::GetFile)?;
 
+    let (file, file_path) = file_helper.file_mut_and_path();
+
     let file_info_config = file_info::Config {
-        file_path: file.path().to_path_buf(),
-        mime_type: config.mime_type,
+        file_path,
+        mime_type: config.mime_type.as_ref(),
         parents: drive_file.parents.clone(),
     };
 
-    let file_info = match FileInfo::from_file(file.as_ref(), &file_info_config) {
+    let file_info = match FileInfo::from_file(file, file_info_config) {
         Ok(file_info) => file_info,
         Err(source) => {
             return Err(Error::FileInfo {
-                path: file_info_config.file_path,
+                path: file_helper.into_path_buf(),
                 source,
             })
         }
@@ -72,11 +74,7 @@ pub async fn update(config: Config) -> Result<(), Error> {
 
     let reader = std::io::BufReader::new(file);
 
-    println!(
-        "Updating {} with {}",
-        config.file_id,
-        file_info_config.file_path.display()
-    );
+    println!("Updating {} with {}", config.file_id, file_path.display());
 
     let file = update_file(&hub, reader, &config.file_id, file_info, delegate_config)
         .await
@@ -94,7 +92,7 @@ pub async fn update_file<RS>(
     hub: &Hub,
     src_file: RS,
     file_id: &str,
-    file_info: FileInfo,
+    file_info: FileInfo<'_>,
     delegate_config: UploadDelegateConfig,
 ) -> Result<google_drive3::api::File, google_drive3::Error>
 where
@@ -116,9 +114,11 @@ where
         .supports_all_drives(true);
 
     let (_, file) = if file_info.size > 0 {
-        req.upload_resumable(src_file, file_info.mime_type).await?
+        req.upload_resumable(src_file, file_info.mime_type.into_owned())
+            .await?
     } else {
-        req.upload(src_file, file_info.mime_type).await?
+        req.upload(src_file, file_info.mime_type.into_owned())
+            .await?
     };
 
     Ok(file)

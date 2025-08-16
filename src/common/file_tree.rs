@@ -2,6 +2,7 @@ use crate::common::file_info::FileInfo;
 use crate::common::id_gen;
 use crate::common::id_gen::IdGen;
 use async_recursion::async_recursion;
+use std::borrow::Cow;
 use std::error;
 use std::fmt::Display;
 use std::fmt::Formatter;
@@ -245,11 +246,11 @@ impl File {
     }
 
     #[must_use]
-    pub fn info(&self, parents: Option<Vec<String>>) -> FileInfo {
+    pub fn info(&self, parents: Option<Vec<String>>) -> FileInfo<'_> {
         FileInfo {
             name: self.name.clone(),
             size: self.size,
-            mime_type: self.mime_type.clone(),
+            mime_type: Cow::Borrowed(&self.mime_type),
             parents,
         }
     }

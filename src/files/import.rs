@@ -33,9 +33,9 @@ pub async fn import(config: Config) -> Result<(), Error> {
 
     let file_info = match FileInfo::from_file(
         &file,
-        &file_info::Config {
-            file_path: config.file_path.clone(),
-            mime_type: Some(mime_type.clone()),
+        file_info::Config {
+            file_path: &config.file_path,
+            mime_type: Some(mime_type),
             parents: config.parents.clone(),
         },
     ) {
