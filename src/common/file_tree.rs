@@ -105,13 +105,15 @@ impl Folder {
         path: &Path,
         parent: Option<&'async_recursion Folder>,
         ids: &mut IdGen<'a>,
-    ) -> Result<Folder, Error> {
+    ) -> Result<Folder, errors::Folder> {
+        use errors::Folder as E;
+
         let name = path
             .file_name()
             .map(|s| s.to_string_lossy().to_string())
-            .ok_or(Error::InvalidPath(path.to_path_buf()))?;
+            .ok_or(E::InvalidPath)?;
 
-        let drive_id = ids.next().await.map_err(Error::GetId)?;
+        let drive_id = ids.next().await.map_err(E::GenerateId)?;
 
         let mut folder = Folder {
             name,
@@ -121,25 +123,38 @@ impl Folder {
             drive_id,
         };
 
-        let entries = fs::read_dir(path).map_err(Error::ReadDir)?;
+        let entries = fs::read_dir(path).map_err(E::ReadDir)?;
         let mut children = Vec::new();
 
         for e in entries {
-            let entry = e.map_err(Error::ReadDirEntry)?;
+            let entry = e.map_err(E::ReadDirEntry)?;
             let path = entry.path();
 
             if path.is_dir() {
-                let folder = Folder::from_path(&path, Some(&folder), ids).await?;
+                let folder = match Folder::from_path(&path, Some(&folder), ids).await {
+                    Ok(folder) => folder,
+                    Err(source) => {
+                        return Err(E::Nested {
+                            path,
+                            source: Box::new(source),
+                        });
+                    }
+                };
                 let node = Node::FolderNode(folder);
                 children.push(node);
             } else if path.is_symlink() {
-                return Err(Error::IsSymlink(path.clone()));
+                return Err(E::IsSymlink(path));
             } else if path.is_file() {
-                let file = File::from_path(&path, &folder, ids).await?;
+                let file = match File::from_path(&path, &folder, ids).await {
+                    Ok(file) => file,
+                    Err(source) => {
+                        return Err(E::File { path, source });
+                    }
+                };
                 let node = Node::FileNode(file);
                 children.push(node);
             } else {
-                return Err(Error::UnknownFileType(path.clone()));
+                return Err(E::UnknownFileType(path));
             }
         }
 
