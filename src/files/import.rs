@@ -31,15 +31,22 @@ pub async fn import(config: Config) -> Result<(), Error> {
     let file = fs::File::open(&config.file_path)
         .map_err(|err| Error::OpenFile(config.file_path.clone(), err))?;
 
-    let file_info = FileInfo::from_file(
+    let file_info = match FileInfo::from_file(
         &file,
         &file_info::Config {
             file_path: config.file_path.clone(),
             mime_type: Some(mime_type.clone()),
             parents: config.parents.clone(),
         },
-    )
-    .map_err(Error::FileInfo)?;
+    ) {
+        Ok(file_info) => file_info,
+        Err(source) => {
+            return Err(Error::FileInfo {
+                path: config.file_path,
+                source,
+            })
+        }
+    };
 
     let reader = std::io::BufReader::new(file);
 
@@ -66,12 +73,23 @@ pub async fn import(config: Config) -> Result<(), Error> {
 pub enum Error {
     Hub(hub_helper::Error),
     OpenFile(PathBuf, io::Error),
-    FileInfo(file_info::Error),
+    FileInfo {
+        path: PathBuf,
+        source: file_info::FromFileError,
+    },
     UploadFile(google_drive3::Error),
     UnsupportedFileType,
 }
 
-impl error::Error for Error {}
+impl error::Error for Error {
+    fn source(&self) -> Option<&(dyn error::Error + 'static)> {
+        match self {
+            Error::FileInfo { source, .. } => Some(source),
+            // FIXME: correctly impl std::error::Error
+            _ => None,
+        }
+    }
+}
 
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
@@ -80,7 +98,9 @@ impl Display for Error {
             Error::OpenFile(path, err) => {
                 write!(f, "Failed to open file '{}': {}", path.display(), err)
             }
-            Error::FileInfo(err) => write!(f, "Failed to get file info: {err}"),
+            Error::FileInfo { path, source: _ } => {
+                write!(f, "unable to get file info for '{}'", path.display())
+            }
             Error::UploadFile(err) => {
                 write!(f, "Failed to upload file: {err}")
             }

@@ -18,12 +18,12 @@ pub struct Config {
 }
 
 impl FileInfo {
-    pub fn from_file(file: &fs::File, config: &Config) -> Result<FileInfo, Error> {
+    pub fn from_file(file: &fs::File, config: &Config) -> Result<FileInfo, FromFileError> {
         let file_name = config
             .file_path
             .file_name()
             .map(|s| s.to_string_lossy().to_string())
-            .ok_or(Error::InvalidFilePath(config.file_path.clone()))?;
+            .ok_or(FromFileError)?;
 
         let file_size = file.metadata().map(|m| m.len()).unwrap_or(0);
 
@@ -43,16 +43,12 @@ impl FileInfo {
 }
 
 #[derive(Debug)]
-pub enum Error {
-    InvalidFilePath(PathBuf),
-}
+pub struct FromFileError;
 
-impl error::Error for Error {}
+impl error::Error for FromFileError {}
 
-impl Display for Error {
+impl Display for FromFileError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Error::InvalidFilePath(path) => write!(f, "Invalid file path: {}", path.display()),
-        }
+        f.write_str("invalid file path")
     }
 }

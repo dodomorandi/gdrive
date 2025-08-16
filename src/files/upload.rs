@@ -86,15 +86,22 @@ pub async fn upload_regular(
     let file_path = config.file_path.as_ref().unwrap();
     let file = fs::File::open(file_path).map_err(|err| Error::OpenFile(file_path.clone(), err))?;
 
-    let file_info = FileInfo::from_file(
+    let file_info = match FileInfo::from_file(
         &file,
         &file_info::Config {
             file_path: file_path.clone(),
             mime_type: config.mime_type.clone(),
             parents: config.parents.clone(),
         },
-    )
-    .map_err(Error::FileInfo)?;
+    ) {
+        Ok(file_info) => file_info,
+        Err(source) => {
+            return Err(Error::FileInfo {
+                path: file_path.clone(),
+                source,
+            })
+        }
+    };
 
     let reader = std::io::BufReader::new(file);
 
@@ -256,7 +263,10 @@ where
 #[derive(Debug)]
 pub enum Error {
     Hub(hub_helper::Error),
-    FileInfo(file_info::Error),
+    FileInfo {
+        path: PathBuf,
+        source: file_info::FromFileError,
+    },
     OpenFile(PathBuf, io::Error),
     StdinToFile(file_helper::StdinToFileError),
     Upload(Box<google_drive3::Error>),
@@ -269,6 +279,7 @@ pub enum Error {
 impl error::Error for Error {
     fn source(&self) -> Option<&(dyn error::Error + 'static)> {
         match self {
+            Error::FileInfo { source, .. } => Some(source),
             Error::StdinToFile(source) => Some(source),
             // FIXME: correctly impl std::error::Error
             _ => None,
@@ -280,7 +291,9 @@ impl Display for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             Error::Hub(err) => write!(f, "{err}"),
-            Error::FileInfo(err) => write!(f, "{err}"),
+            Error::FileInfo { path, source: _ } => {
+                write!(f, "unable to get file info for '{}'", path.display())
+            }
             Error::OpenFile(path, err) => {
                 write!(f, "Failed to open file '{}': {}", path.display(), err)
             }

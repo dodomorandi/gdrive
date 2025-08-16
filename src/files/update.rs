@@ -60,8 +60,15 @@ pub async fn update(config: Config) -> Result<(), Error> {
         parents: drive_file.parents.clone(),
     };
 
-    let file_info =
-        FileInfo::from_file(file.as_ref(), &file_info_config).map_err(Error::FileInfo)?;
+    let file_info = match FileInfo::from_file(file.as_ref(), &file_info_config) {
+        Ok(file_info) => file_info,
+        Err(source) => {
+            return Err(Error::FileInfo {
+                path: file_info_config.file_path,
+                source,
+            })
+        }
+    };
 
     let reader = std::io::BufReader::new(file);
 
@@ -139,19 +146,32 @@ pub async fn update_metadata(
 #[derive(Debug)]
 pub enum Error {
     Hub(hub_helper::Error),
-    FileInfo(file_info::Error),
+    FileInfo {
+        path: PathBuf,
+        source: file_info::FromFileError,
+    },
     OpenFile(PathBuf, file_helper::OpenFileError),
     GetFile(google_drive3::Error),
     Update(google_drive3::Error),
 }
 
-impl error::Error for Error {}
+impl error::Error for Error {
+    fn source(&self) -> Option<&(dyn error::Error + 'static)> {
+        match self {
+            Error::FileInfo { source, .. } => Some(source),
+            // FIXME: correctly impl std::error::Error
+            _ => None,
+        }
+    }
+}
 
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             Error::Hub(err) => write!(f, "{err}"),
-            Error::FileInfo(err) => write!(f, "{err}"),
+            Error::FileInfo { path, source: _ } => {
+                write!(f, "unable to get file info for '{}'", path.display())
+            }
             Error::OpenFile(path, err) => {
                 write!(f, "Failed to open file '{}': {}", path.display(), err)
             }
