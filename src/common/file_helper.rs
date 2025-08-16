@@ -88,6 +88,14 @@ impl File<'_> {
             FileKind::File(path) => path,
         }
     }
+
+    #[must_use]
+    pub fn into_path_buf(self) -> PathBuf {
+        match self.kind {
+            FileKind::Temp(temp) => temp.release(),
+            FileKind::File(path) => path.to_path_buf(),
+        }
+    }
 }
 
 impl AsRef<fs::File> for File<'_> {
