@@ -5,12 +5,43 @@ use std::fs::File;
 use std::io;
 use std::path::PathBuf;
 
-pub fn stdin_to_file() -> Result<Temp, io::Error> {
-    let tmp_file = Temp::new_file()?;
+pub fn stdin_to_file() -> Result<Temp, StdinToFileError> {
+    let tmp_file = Temp::new_file().map_err(StdinToFileError::NewTempFile)?;
     let path = tmp_file.as_ref().to_path_buf();
-    let mut file = File::create(&path)?;
-    io::copy(&mut io::stdin(), &mut file)?;
+    let mut file = File::create(&path).map_err(StdinToFileError::CreateTempFile)?;
+    io::copy(&mut io::stdin(), &mut file).map_err(StdinToFileError::CopyStdin)?;
     Ok(tmp_file)
+}
+
+#[derive(Debug)]
+pub enum StdinToFileError {
+    NewTempFile(io::Error),
+    CreateTempFile(io::Error),
+    CopyStdin(io::Error),
+}
+
+impl Display for StdinToFileError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let s = match self {
+            StdinToFileError::NewTempFile(_) => "unable to create a new temporary file",
+            StdinToFileError::CreateTempFile(_) => {
+                "unable to open and truncate the new temporary file"
+            }
+            StdinToFileError::CopyStdin(_) => "unable to copy stdin to temporary file",
+        };
+
+        f.write_str(s)
+    }
+}
+
+impl Error for StdinToFileError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            StdinToFileError::NewTempFile(source)
+            | StdinToFileError::CreateTempFile(source)
+            | StdinToFileError::CopyStdin(source) => Some(source),
+        }
+    }
 }
 
 pub fn open_file(path: &Option<PathBuf>) -> Result<(File, PathBuf), OpenFileError> {
@@ -33,7 +64,7 @@ pub fn open_file(path: &Option<PathBuf>) -> Result<(File, PathBuf), OpenFileErro
 #[derive(Debug)]
 pub enum OpenFileError {
     Open { path: PathBuf, source: io::Error },
-    StdinToFile(io::Error),
+    StdinToFile(StdinToFileError),
 }
 
 impl Display for OpenFileError {
@@ -50,7 +81,8 @@ impl Display for OpenFileError {
 impl Error for OpenFileError {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
-            OpenFileError::Open { source, .. } | OpenFileError::StdinToFile(source) => Some(source),
+            OpenFileError::Open { source, .. } => Some(source),
+            OpenFileError::StdinToFile(source) => Some(source),
         }
     }
 }

@@ -62,8 +62,7 @@ pub async fn upload(config: Config) -> Result<(), Error> {
             upload_regular(&hub, &config, delegate_config).await?;
         }
     } else {
-        let tmp_file = file_helper::stdin_to_file()
-            .map_err(|err| Error::OpenFile(PathBuf::from("<stdin>"), err))?;
+        let tmp_file = file_helper::stdin_to_file().map_err(Error::StdinToFile)?;
 
         upload_regular(
             &hub,
@@ -259,6 +258,7 @@ pub enum Error {
     Hub(hub_helper::Error),
     FileInfo(file_info::Error),
     OpenFile(PathBuf, io::Error),
+    StdinToFile(file_helper::StdinToFileError),
     Upload(Box<google_drive3::Error>),
     IsDirectory(PathBuf),
     DriveFolderMissingId,
@@ -266,7 +266,15 @@ pub enum Error {
     Mkdir(Box<google_drive3::Error>),
 }
 
-impl error::Error for Error {}
+impl error::Error for Error {
+    fn source(&self) -> Option<&(dyn error::Error + 'static)> {
+        match self {
+            Error::StdinToFile(source) => Some(source),
+            // FIXME: correctly impl std::error::Error
+            _ => None,
+        }
+    }
+}
 
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
@@ -276,6 +284,7 @@ impl Display for Error {
             Error::OpenFile(path, err) => {
                 write!(f, "Failed to open file '{}': {}", path.display(), err)
             }
+            Error::StdinToFile(_) => f.write_str("unable to write stdin to file"),
             Error::Upload(err) => write!(f, "Failed to upload file: {err}"),
             Error::IsDirectory(path) => write!(
                 f,
