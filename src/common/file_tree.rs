@@ -33,7 +33,7 @@ impl FileTree {
 
         folders.push(self.root.clone());
         let child_folders = self.root.folders_recursive();
-        folders.extend(child_folders);
+        folders.extend(child_folders.into_iter().cloned());
 
         folders.sort_by(|a, b| {
             let parent_count_a = a.ancestor_count();
@@ -177,12 +177,12 @@ impl Folder {
     }
 
     #[must_use]
-    pub fn folders_recursive(&self) -> Vec<Folder> {
+    pub fn folders_recursive(&self) -> Vec<&Folder> {
         let mut folders = vec![];
 
         self.children.iter().for_each(|child| {
             if let Node::FolderNode(folder) = child {
-                folders.push(folder.clone());
+                folders.push(folder);
                 let child_folders = folder.folders_recursive();
                 folders.extend(child_folders);
             }
