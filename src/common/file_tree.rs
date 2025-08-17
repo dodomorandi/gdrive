@@ -269,7 +269,7 @@ impl File {
     #[must_use]
     pub fn info(&self, parents: Option<Vec<String>>) -> FileInfo<'_> {
         FileInfo {
-            name: self.name.clone(),
+            name: Cow::Borrowed(&self.name),
             size: self.size,
             mime_type: Cow::Borrowed(&self.mime_type),
             parents,

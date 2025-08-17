@@ -99,7 +99,7 @@ where
     RS: google_drive3::client::ReadSeek,
 {
     let dst_file = google_drive3::api::File {
-        name: Some(file_info.name),
+        name: Some(file_info.name.into_owned()),
         ..google_drive3::api::File::default()
     };
 

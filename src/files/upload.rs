@@ -239,7 +239,7 @@ where
 {
     let dst_file = google_drive3::api::File {
         id: file_id,
-        name: Some(file_info.name),
+        name: Some(file_info.name.into_owned()),
         mime_type: Some(file_info.mime_type.to_string()),
         parents: file_info.parents,
         ..google_drive3::api::File::default()

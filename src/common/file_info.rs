@@ -6,7 +6,7 @@ use std::fs;
 use std::path::Path;
 
 pub struct FileInfo<'a> {
-    pub name: String,
+    pub name: Cow<'a, str>,
     pub mime_type: Cow<'a, mime::Mime>,
     pub parents: Option<Vec<String>>,
     pub size: u64,
@@ -23,7 +23,7 @@ impl<'a> FileInfo<'a> {
         let file_name = config
             .file_path
             .file_name()
-            .map(|s| s.to_string_lossy().to_string())
+            .map(|s| s.to_string_lossy())
             .ok_or(FromFileError)?;
 
         let file_size = file.metadata().map(|m| m.len()).unwrap_or(0);
