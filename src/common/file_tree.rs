@@ -103,7 +103,7 @@ impl Folder {
 
         let name = path
             .file_name()
-            .map(|s| s.to_string_lossy().to_string())
+            .map(|s| s.to_string_lossy().into_owned())
             .ok_or(E::InvalidPath)?;
 
         let drive_id = ids.next().await.map_err(E::GenerateId)?;
@@ -229,7 +229,7 @@ impl File {
 
         let name = path
             .file_name()
-            .map(|s| s.to_string_lossy().to_string())
+            .map(|s| s.to_string_lossy().into_owned())
             .ok_or(E::InvalidPath)?;
 
         let os_file = fs::File::open(path).map_err(E::OpenFile)?;
