@@ -39,11 +39,9 @@ impl FileTree {
             let parent_count_a = a.ancestor_count();
             let parent_count_b = b.ancestor_count();
 
-            if parent_count_a == parent_count_b {
-                a.name.cmp(&b.name)
-            } else {
-                parent_count_a.cmp(&parent_count_b)
-            }
+            parent_count_a
+                .cmp(&parent_count_b)
+                .then_with(|| a.name.cmp(&b.name))
         });
 
         folders
