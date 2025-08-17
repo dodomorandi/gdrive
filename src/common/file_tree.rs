@@ -173,7 +173,7 @@ impl Folder {
 
     #[must_use]
     pub fn relative_path(&self) -> PathBuf {
-        let mut root_path = self.root().path;
+        let mut root_path = self.root().path.clone();
         root_path.pop();
         self.path.strip_prefix(root_path).unwrap().to_path_buf()
     }
@@ -202,19 +202,12 @@ impl Folder {
         folders
     }
 
-    fn root(&self) -> Self {
-        let folder = self;
-        let mut root_candidate = Some(folder.clone());
-
-        while let Some(folder) = root_candidate {
-            if folder.parent.is_none() {
-                return folder.clone();
-            }
-
-            root_candidate = folder.parent.map(|folder| *folder.clone());
+    fn root(&self) -> &Self {
+        let mut folder = self;
+        while let Some(parent) = &folder.parent {
+            folder = parent;
         }
-
-        folder.clone()
+        folder
     }
 }
 
@@ -268,7 +261,7 @@ impl File {
 
     #[must_use]
     pub fn relative_path(&self) -> PathBuf {
-        let mut root_path = self.parent.root().path;
+        let mut root_path = self.parent.root().path.clone();
         root_path.pop();
         self.path.strip_prefix(root_path).unwrap().to_path_buf()
     }
