@@ -179,7 +179,11 @@ impl Folder {
     #[must_use]
     pub fn folders_recursive(&self) -> Vec<&Folder> {
         let mut folders = vec![];
+        self.folders_recursive_in(&mut folders);
+        folders
+    }
 
+    fn folders_recursive_in<'a>(&'a self, folders: &mut Vec<&'a Self>) {
         self.children.iter().for_each(|child| {
             if let Node::FolderNode(folder) = child {
                 folders.push(folder);
@@ -187,8 +191,6 @@ impl Folder {
                 folders.extend(child_folders);
             }
         });
-
-        folders
     }
 
     #[must_use]
