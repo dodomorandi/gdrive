@@ -192,8 +192,7 @@ impl Folder {
         self.children.iter().for_each(|child| {
             if let Node::Folder(folder) = child {
                 folders.push(folder);
-                let child_folders = folder.folders_recursive();
-                folders.extend(child_folders);
+                folder.folders_recursive_in(folders);
             }
         });
     }
