@@ -28,12 +28,12 @@ impl FileTree {
     }
 
     #[must_use]
-    pub fn folders(&self) -> Vec<Folder> {
+    pub fn folders(&self) -> Vec<&Folder> {
         let mut folders = vec![];
 
-        folders.push(self.root.clone());
+        folders.push(&self.root);
         let child_folders = self.root.folders_recursive();
-        folders.extend(child_folders.into_iter().cloned());
+        folders.extend(child_folders);
 
         folders.sort_by(|a, b| {
             let parent_count_a = a.ancestor_count();
