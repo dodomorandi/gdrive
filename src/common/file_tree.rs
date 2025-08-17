@@ -1,15 +1,10 @@
 pub mod errors;
 
 use crate::common::file_info::FileInfo;
-use crate::common::id_gen;
 use crate::common::id_gen::IdGen;
 use async_recursion::async_recursion;
 use std::borrow::Cow;
-use std::error;
-use std::fmt::Display;
-use std::fmt::Formatter;
 use std::fs;
-use std::io;
 use std::path::Path;
 use std::path::PathBuf;
 
@@ -272,42 +267,6 @@ impl File {
             size: self.size,
             mime_type: Cow::Borrowed(&self.mime_type),
             parents,
-        }
-    }
-}
-
-#[derive(Debug)]
-pub enum Error {
-    CanonicalizePath(PathBuf, io::Error),
-    ReadDir(io::Error),
-    ReadDirEntry(io::Error),
-    OpenFile(PathBuf, io::Error),
-    GetId(id_gen::Error),
-    InvalidPath(PathBuf),
-    IsSymlink(PathBuf),
-    UnknownFileType(PathBuf),
-}
-
-impl error::Error for Error {}
-
-impl Display for Error {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Error::CanonicalizePath(path, e) => write!(
-                f,
-                "Failed to get canonical path of {}: {}",
-                path.display(),
-                e
-            ),
-            Error::ReadDir(e) => write!(f, "Error reading directory: '{e}'"),
-            Error::ReadDirEntry(e) => write!(f, "Error reading directory entry: {e}"),
-            Error::OpenFile(path, e) => {
-                write!(f, "Failed to open file '{}': {}", path.display(), e)
-            }
-            Error::GetId(e) => write!(f, "Error getting id: {e}"),
-            Error::InvalidPath(path) => write!(f, "Invalid path: {}", path.display()),
-            Error::IsSymlink(path) => write!(f, "Path is symlink: {}", path.display()),
-            Error::UnknownFileType(path) => write!(f, "Unknown file type: {}", path.display()),
         }
     }
 }
