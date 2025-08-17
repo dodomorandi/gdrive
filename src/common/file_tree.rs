@@ -370,4 +370,35 @@ mod tests {
                 Path::new("a/d"),
             ]);
     }
+
+    #[test]
+    fn check_folder_not_leaking() {
+        let folder_a = Arc::new(super::FolderInfo {
+            name: "a".to_string(),
+            path: PathBuf::from("a"),
+            parent: None,
+            drive_id: "a".to_string(),
+        });
+        let folder_b = Arc::new(FolderInfo {
+            name: "b".to_string(),
+            path: PathBuf::from("a/b"),
+            parent: Some(Arc::clone(&folder_a)),
+            drive_id: "b".to_string(),
+        });
+
+        let weak_folder_a = Arc::downgrade(&folder_a);
+        let weak_folder_b = Arc::downgrade(&folder_b);
+
+        let folder = Folder {
+            info: folder_a,
+            children: vec![Node::Folder(Folder {
+                info: folder_b,
+                children: vec![],
+            })],
+        };
+        drop(folder);
+
+        assert_eq!(weak_folder_a.strong_count(), 0);
+        assert_eq!(weak_folder_b.strong_count(), 0);
+    }
 }
