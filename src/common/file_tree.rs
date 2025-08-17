@@ -7,6 +7,7 @@ use std::borrow::Cow;
 use std::fs;
 use std::path::Path;
 use std::path::PathBuf;
+use std::sync::Arc;
 
 use super::FolderLike;
 
@@ -38,7 +39,7 @@ impl FileTree {
 
             parent_count_a
                 .cmp(&parent_count_b)
-                .then_with(|| a.name.cmp(&b.name))
+                .then_with(|| a.info.name.cmp(&b.info.name))
         });
 
         folders
@@ -81,12 +82,17 @@ pub enum Node {
 }
 
 #[derive(Debug, Clone)]
-pub struct Folder {
+pub struct FolderInfo {
     pub name: String,
     pub path: PathBuf,
-    pub parent: Option<Box<Folder>>,
-    pub children: Vec<Node>,
+    pub parent: Option<Arc<FolderInfo>>,
     pub drive_id: String,
+}
+
+#[derive(Debug, Clone)]
+pub struct Folder {
+    pub info: Arc<FolderInfo>,
+    pub children: Vec<Node>,
 }
 
 impl Folder {
@@ -106,11 +112,13 @@ impl Folder {
         let drive_id = ids.next().await.map_err(E::GenerateId)?;
 
         let mut folder = Folder {
-            name,
-            path: path.to_path_buf(),
-            parent: parent.map(|folder| Box::new(folder.clone())),
+            info: Arc::new(FolderInfo {
+                name,
+                path: path.to_path_buf(),
+                parent: parent.map(|folder| Arc::clone(&folder.info)),
+                drive_id,
+            }),
             children: Vec::new(),
-            drive_id,
         };
 
         let entries = fs::read_dir(path).map_err(E::ReadDir)?;
@@ -170,7 +178,7 @@ impl Folder {
 
     #[must_use]
     pub fn relative_path(&self) -> &Path {
-        get_relative_path(&self.path, self)
+        get_relative_path(&self.info.path, &self.info)
     }
 
     #[must_use]
@@ -192,9 +200,11 @@ impl Folder {
 
     #[must_use]
     pub fn ancestor_count(&self) -> usize {
-        FolderLike::ancestor_count(self)
+        FolderLike::ancestor_count(&*self.info)
     }
+}
 
+impl FolderInfo {
     fn root(&self) -> &Self {
         let mut folder = self;
         while let Some(parent) = &folder.parent {
@@ -204,7 +214,7 @@ impl Folder {
     }
 }
 
-impl FolderLike for Folder {
+impl FolderLike for FolderInfo {
     fn parent(&self) -> Option<&Self> {
         self.parent.as_deref()
     }
@@ -216,7 +226,7 @@ pub struct File {
     pub path: PathBuf,
     pub size: u64,
     pub mime_type: mime::Mime,
-    pub parent: Folder,
+    pub parent: Arc<FolderInfo>,
     pub drive_id: String,
 }
 
@@ -245,7 +255,7 @@ impl File {
             path: path.to_path_buf(),
             size,
             mime_type,
-            parent: parent.clone(),
+            parent: Arc::clone(&parent.info),
             drive_id,
         };
 
@@ -268,8 +278,8 @@ impl File {
     }
 }
 
-fn get_relative_path<'a>(path: &'a Path, folder: &Folder) -> &'a Path {
-    folder
+fn get_relative_path<'a>(path: &'a Path, folder_info: &FolderInfo) -> &'a Path {
+    folder_info
         .root()
         .path
         .parent()
@@ -279,74 +289,78 @@ fn get_relative_path<'a>(path: &'a Path, folder: &Folder) -> &'a Path {
 
 #[cfg(test)]
 mod tests {
-    use std::path::{Path, PathBuf};
+    use std::{
+        path::{Path, PathBuf},
+        sync::Arc,
+    };
 
-    use crate::common::drive_file::MIME_TYPE_CSV_MIME;
+    use crate::common::{drive_file::MIME_TYPE_CSV_MIME, file_tree::FolderInfo};
 
     use super::{File, Folder, Node};
 
     #[test]
     fn folder_folders_recursive() {
-        let folder = Folder {
+        let folder_a = Arc::new(super::FolderInfo {
             name: "a".to_string(),
             path: PathBuf::from("a"),
             parent: None,
+            drive_id: "a".to_string(),
+        });
+        let folder_b = Arc::new(FolderInfo {
+            name: "b".to_string(),
+            path: PathBuf::from("a/b"),
+            parent: Some(Arc::clone(&folder_a)),
+            drive_id: "b".to_string(),
+        });
+        let folder_c = Arc::new(FolderInfo {
+            name: "c".to_string(),
+            path: PathBuf::from("a/c"),
+            parent: Some(Arc::clone(&folder_a)),
+            drive_id: "c".to_string(),
+        });
+        let folder_e = Arc::new(FolderInfo {
+            name: "e".to_string(),
+            path: PathBuf::from("a/b/e"),
+            parent: Some(Arc::clone(&folder_b)),
+            drive_id: "e".to_string(),
+        });
+
+        let folder = Folder {
+            info: Arc::clone(&folder_a),
             children: vec![
                 Node::Folder(Folder {
-                    name: "b".to_string(),
-                    path: PathBuf::from("a/b"),
-                    parent: None,
+                    info: folder_b,
                     children: vec![Node::Folder(Folder {
-                        name: "e".to_string(),
-                        path: PathBuf::from("a/b/e"),
-                        parent: None,
+                        info: folder_e,
                         children: vec![],
-                        drive_id: "e".to_string(),
                     })],
-                    drive_id: "b".to_string(),
                 }),
                 Node::Folder(Folder {
-                    name: "c".to_string(),
-                    path: PathBuf::from("a/c"),
-                    parent: None,
+                    info: Arc::clone(&folder_c),
                     children: vec![Node::File(File {
                         name: "f".to_string(),
                         path: PathBuf::from("a/c/f"),
                         size: 12,
                         mime_type: MIME_TYPE_CSV_MIME.clone(),
-                        parent: Folder {
-                            name: "c".to_string(),
-                            path: PathBuf::from("a/c"),
-                            parent: None,
-                            children: vec![],
-                            drive_id: "c".to_string(),
-                        },
+                        parent: Arc::clone(&folder_c),
                         drive_id: "f".to_string(),
                     })],
-                    drive_id: "c".to_string(),
                 }),
                 Node::File(File {
                     name: "d".to_string(),
                     path: PathBuf::from("a/d"),
                     size: 12,
                     mime_type: MIME_TYPE_CSV_MIME.clone(),
-                    parent: Folder {
-                        name: "a".to_string(),
-                        path: PathBuf::from("a"),
-                        parent: None,
-                        children: vec![],
-                        drive_id: "a".to_string(),
-                    },
+                    parent: folder_a,
                     drive_id: "d".to_string(),
                 }),
             ],
-            drive_id: "a".to_string(),
         };
 
         folder
             .folders_recursive()
             .iter()
-            .map(|folder| folder.path.as_path())
+            .map(|folder| folder.info.path.as_path())
             .eq([
                 Path::new("a"),
                 Path::new("a/b"),

@@ -147,6 +147,7 @@ pub async fn upload_directory(
 
     for folder in &tree.folders() {
         let folder_parents = folder
+            .info
             .parent
             .as_ref()
             .map(|p| vec![p.drive_id.clone()])
@@ -156,15 +157,15 @@ pub async fn upload_directory(
             println!(
                 "Creating directory '{}' with id: {}",
                 folder.relative_path().display(),
-                folder.drive_id
+                folder.info.drive_id
             );
         }
 
         let drive_folder = mkdir::create_directory(
             hub,
             &mkdir::Config {
-                id: Some(folder.drive_id.clone()),
-                name: folder.name.clone(),
+                id: Some(folder.info.drive_id.clone()),
+                name: folder.info.name.clone(),
                 parents: folder_parents,
                 print_only_id: false,
             },
@@ -174,7 +175,11 @@ pub async fn upload_directory(
         .map_err(|err| Error::Mkdir(Box::new(err)))?;
 
         if config.print_only_id {
-            println!("{}: {}", folder.relative_path().display(), folder.drive_id);
+            println!(
+                "{}: {}",
+                folder.relative_path().display(),
+                folder.info.drive_id
+            );
         }
 
         let folder_id = drive_folder.id.ok_or(Error::DriveFolderMissingId)?;
