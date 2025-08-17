@@ -173,9 +173,7 @@ impl Folder {
 
     #[must_use]
     pub fn relative_path(&self) -> PathBuf {
-        let mut root_path = self.root().path.clone();
-        root_path.pop();
-        self.path.strip_prefix(root_path).unwrap().to_path_buf()
+        get_relative_path(&self.path, self)
     }
 
     #[must_use]
@@ -261,9 +259,7 @@ impl File {
 
     #[must_use]
     pub fn relative_path(&self) -> PathBuf {
-        let mut root_path = self.parent.root().path.clone();
-        root_path.pop();
-        self.path.strip_prefix(root_path).unwrap().to_path_buf()
+        get_relative_path(&self.path, &self.parent)
     }
 
     #[must_use]
@@ -275,4 +271,10 @@ impl File {
             parents,
         }
     }
+}
+
+fn get_relative_path(path: &Path, folder: &Folder) -> PathBuf {
+    let mut root_path = folder.root().path.clone();
+    root_path.pop();
+    path.strip_prefix(root_path).unwrap().to_path_buf()
 }
