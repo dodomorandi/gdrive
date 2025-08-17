@@ -94,10 +94,10 @@ pub struct Folder {
 
 impl Folder {
     #[async_recursion]
-    pub async fn from_path<'a>(
+    pub async fn from_path(
         path: &Path,
         parent: Option<&'async_recursion Folder>,
-        ids: &mut IdGen<'a>,
+        ids: &mut IdGen<'_>,
     ) -> Result<Folder, errors::Folder> {
         use errors::Folder as E;
 
