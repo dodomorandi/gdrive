@@ -76,8 +76,8 @@ pub struct TreeInfo {
 
 #[derive(Debug, Clone)]
 pub enum Node {
-    FolderNode(Folder),
-    FileNode(File),
+    Folder(Folder),
+    File(File),
 }
 
 #[derive(Debug, Clone)]
@@ -130,7 +130,7 @@ impl Folder {
                         });
                     }
                 };
-                let node = Node::FolderNode(folder);
+                let node = Node::Folder(folder);
                 children.push(node);
             } else if path.is_symlink() {
                 return Err(E::IsSymlink(path));
@@ -141,7 +141,7 @@ impl Folder {
                         return Err(E::File { path, source });
                     }
                 };
-                let node = Node::FileNode(file);
+                let node = Node::File(file);
                 children.push(node);
             } else {
                 return Err(E::UnknownFileType(path));
@@ -158,7 +158,7 @@ impl Folder {
         let mut files = vec![];
 
         for child in &self.children {
-            if let Node::FileNode(file) = child {
+            if let Node::File(file) = child {
                 files.push(file.clone());
             }
         }
@@ -182,7 +182,7 @@ impl Folder {
 
     fn folders_recursive_in<'a>(&'a self, folders: &mut Vec<&'a Self>) {
         self.children.iter().for_each(|child| {
-            if let Node::FolderNode(folder) = child {
+            if let Node::Folder(folder) = child {
                 folders.push(folder);
                 let child_folders = folder.folders_recursive();
                 folders.extend(child_folders);
@@ -292,11 +292,11 @@ mod tests {
             path: PathBuf::from("a"),
             parent: None,
             children: vec![
-                Node::FolderNode(Folder {
+                Node::Folder(Folder {
                     name: "b".to_string(),
                     path: PathBuf::from("a/b"),
                     parent: None,
-                    children: vec![Node::FolderNode(Folder {
+                    children: vec![Node::Folder(Folder {
                         name: "e".to_string(),
                         path: PathBuf::from("a/b/e"),
                         parent: None,
@@ -305,11 +305,11 @@ mod tests {
                     })],
                     drive_id: "b".to_string(),
                 }),
-                Node::FolderNode(Folder {
+                Node::Folder(Folder {
                     name: "c".to_string(),
                     path: PathBuf::from("a/c"),
                     parent: None,
-                    children: vec![Node::FileNode(File {
+                    children: vec![Node::File(File {
                         name: "f".to_string(),
                         path: PathBuf::from("a/c/f"),
                         size: 12,
@@ -325,7 +325,7 @@ mod tests {
                     })],
                     drive_id: "c".to_string(),
                 }),
-                Node::FileNode(File {
+                Node::File(File {
                     name: "d".to_string(),
                     path: PathBuf::from("a/d"),
                     size: 12,
