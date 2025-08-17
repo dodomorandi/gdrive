@@ -281,3 +281,84 @@ fn get_relative_path<'a>(path: &'a Path, folder: &Folder) -> &'a Path {
         .and_then(|root_path| path.strip_prefix(root_path).ok())
         .unwrap_or(path)
 }
+
+#[cfg(test)]
+mod tests {
+    use std::path::{Path, PathBuf};
+
+    use crate::common::drive_file::MIME_TYPE_CSV_MIME;
+
+    use super::{File, Folder, Node};
+
+    #[test]
+    fn folder_folders_recursive() {
+        let folder = Folder {
+            name: "a".to_string(),
+            path: PathBuf::from("a"),
+            parent: None,
+            children: vec![
+                Node::FolderNode(Folder {
+                    name: "b".to_string(),
+                    path: PathBuf::from("a/b"),
+                    parent: None,
+                    children: vec![Node::FolderNode(Folder {
+                        name: "e".to_string(),
+                        path: PathBuf::from("a/b/e"),
+                        parent: None,
+                        children: vec![],
+                        drive_id: "e".to_string(),
+                    })],
+                    drive_id: "b".to_string(),
+                }),
+                Node::FolderNode(Folder {
+                    name: "c".to_string(),
+                    path: PathBuf::from("a/c"),
+                    parent: None,
+                    children: vec![Node::FileNode(File {
+                        name: "f".to_string(),
+                        path: PathBuf::from("a/c/f"),
+                        size: 12,
+                        mime_type: MIME_TYPE_CSV_MIME.clone(),
+                        parent: Folder {
+                            name: "c".to_string(),
+                            path: PathBuf::from("a/c"),
+                            parent: None,
+                            children: vec![],
+                            drive_id: "c".to_string(),
+                        },
+                        drive_id: "f".to_string(),
+                    })],
+                    drive_id: "c".to_string(),
+                }),
+                Node::FileNode(File {
+                    name: "d".to_string(),
+                    path: PathBuf::from("a/d"),
+                    size: 12,
+                    mime_type: MIME_TYPE_CSV_MIME.clone(),
+                    parent: Folder {
+                        name: "a".to_string(),
+                        path: PathBuf::from("a"),
+                        parent: None,
+                        children: vec![],
+                        drive_id: "a".to_string(),
+                    },
+                    drive_id: "d".to_string(),
+                }),
+            ],
+            drive_id: "a".to_string(),
+        };
+
+        folder
+            .folders_recursive()
+            .iter()
+            .map(|folder| folder.path.as_path())
+            .eq([
+                Path::new("a"),
+                Path::new("a/b"),
+                Path::new("a/b/e"),
+                Path::new("a/c"),
+                Path::new("a/c/f"),
+                Path::new("a/d"),
+            ]);
+    }
+}
