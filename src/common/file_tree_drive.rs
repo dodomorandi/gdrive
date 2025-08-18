@@ -80,8 +80,8 @@ pub struct TreeInfo {
 
 #[derive(Debug, Clone)]
 pub enum Node {
-    FolderNode(Folder),
-    FileNode(File),
+    Folder(Folder),
+    File(File),
 }
 
 #[derive(Debug, Clone)]
@@ -129,14 +129,14 @@ impl Folder {
         for file in files {
             if drive_file::is_directory(&file) {
                 let folder = Folder::from_file(hub, &file, Some(&folder)).await?;
-                let node = Node::FolderNode(folder);
+                let node = Node::Folder(folder);
                 children.push(node);
             } else if drive_file::is_binary(&file) {
                 let f = File::from_file(&file, &folder).map_err(|source| errors::Folder::File {
                     identifier: FileIdentifier::from(file),
                     source,
                 })?;
-                let node = Node::FileNode(f);
+                let node = Node::File(f);
                 children.push(node);
             } else {
                 // Skip documents
@@ -153,7 +153,7 @@ impl Folder {
         let mut files = vec![];
 
         for child in &self.children {
-            if let Node::FileNode(file) = child {
+            if let Node::File(file) = child {
                 files.push(file.clone());
             }
         }
@@ -183,7 +183,7 @@ impl Folder {
 
     fn folders_recursive_in<'a>(&'a self, folders: &mut Vec<&'a Folder>) {
         self.children.iter().for_each(|child| {
-            if let Node::FolderNode(folder) = child {
+            if let Node::Folder(folder) = child {
                 folders.push(folder);
                 folder.folders_recursive_in(folders);
             }
