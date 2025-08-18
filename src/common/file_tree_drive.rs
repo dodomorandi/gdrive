@@ -221,14 +221,17 @@ pub struct File {
 }
 
 impl File {
-    pub fn from_file(file: &google_drive3::api::File, parent: &Folder) -> Result<File, Error> {
-        let name = file.name.clone().ok_or(Error::MissingFileName)?;
+    pub fn from_file(
+        file: &google_drive3::api::File,
+        parent: &Folder,
+    ) -> Result<File, errors::File> {
+        let name = file.name.clone().ok_or(errors::File::MissingFileName)?;
         let size = file
             .size
-            .ok_or(Error::MissingFileSize)?
+            .ok_or(errors::File::MissingFileSize)?
             .try_into()
-            .map_err(|_| Error::InvalidFileSize)?;
-        let file_id = file.id.clone().ok_or(Error::MissingFileId)?;
+            .map_err(errors::File::InvalidFileSize)?;
+        let file_id = file.id.clone().ok_or(errors::File::MissingFileId)?;
         let md5 = file.md5_checksum.as_deref().and_then(parse_md5_digest);
 
         let file = File {

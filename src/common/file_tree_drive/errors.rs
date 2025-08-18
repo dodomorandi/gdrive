@@ -1,6 +1,7 @@
 use std::{
     error::Error,
     fmt::{self, Display},
+    num::TryFromIntError,
 };
 
 use crate::files;
@@ -88,7 +89,7 @@ pub enum Folder {
     },
     File {
         identifier: FileIdentifier,
-        source: super::Error,
+        source: File,
     },
 }
 
@@ -126,6 +127,36 @@ impl Error for Folder {
             Folder::ListFiles(error) => Some(error),
             Folder::Nested { source, .. } => Some(source),
             Folder::File { source, .. } => Some(source),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub enum File {
+    MissingFileName,
+    MissingFileSize,
+    InvalidFileSize(TryFromIntError),
+    MissingFileId,
+}
+
+impl Display for File {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let s = match self {
+            File::MissingFileName => "file name is missing",
+            File::MissingFileSize => "file size is missing",
+            File::InvalidFileSize(_) => "file size is invalid",
+            File::MissingFileId => "file id is missing",
+        };
+
+        f.write_str(s)
+    }
+}
+
+impl Error for File {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            File::MissingFileName | File::MissingFileSize | File::MissingFileId => None,
+            File::InvalidFileSize(source) => Some(source),
         }
     }
 }
