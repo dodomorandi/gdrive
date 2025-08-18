@@ -269,3 +269,38 @@ impl File {
         self.parent.relative_path().join(&self.name)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::sync::Arc;
+
+    use super::FolderInfo;
+
+    #[test]
+    fn folder_info_ancestors() {
+        let folder_a = Arc::new(FolderInfo {
+            name: "a".to_string(),
+            parent: None,
+            drive_id: "a".to_string(),
+        });
+        let folder_b = Arc::new(FolderInfo {
+            name: "b".to_string(),
+            parent: Some(Arc::clone(&folder_a)),
+            drive_id: "b".to_string(),
+        });
+        let folder_c = Arc::new(FolderInfo {
+            name: "c".to_string(),
+            parent: Some(Arc::clone(&folder_b)),
+            drive_id: "c".to_string(),
+        });
+        let folder_d = Arc::new(FolderInfo {
+            name: "d".to_string(),
+            parent: Some(Arc::clone(&folder_c)),
+            drive_id: "d".to_string(),
+        });
+
+        let ancestors = folder_d.ancestors();
+        let ancestors = ancestors.iter().map(|folder| folder.name.as_str());
+        assert!(ancestors.eq(["a", "b", "c"]));
+    }
+}
