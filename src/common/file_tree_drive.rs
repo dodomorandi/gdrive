@@ -30,10 +30,10 @@ impl FileTreeDrive {
     }
 
     #[must_use]
-    pub fn folders(&self) -> Vec<Folder> {
+    pub fn folders(&self) -> Vec<&Folder> {
         let mut folders = vec![];
 
-        folders.push(self.root.clone());
+        folders.push(&self.root);
         self.root.folders_recursive_in(&mut folders);
 
         folders.sort_by(|a, b| {
@@ -175,16 +175,16 @@ impl Folder {
     }
 
     #[must_use]
-    pub fn folders_recursive(&self) -> Vec<Folder> {
+    pub fn folders_recursive(&self) -> Vec<&Folder> {
         let mut folders = vec![];
         self.folders_recursive_in(&mut folders);
         folders
     }
 
-    fn folders_recursive_in(&self, folders: &mut Vec<Folder>) {
+    fn folders_recursive_in<'a>(&'a self, folders: &mut Vec<&'a Folder>) {
         self.children.iter().for_each(|child| {
             if let Node::FolderNode(folder) = child {
-                folders.push(folder.clone());
+                folders.push(folder);
                 folder.folders_recursive_in(folders);
             }
         });
