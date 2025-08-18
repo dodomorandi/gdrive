@@ -87,9 +87,17 @@ pub async fn download(config: Config) -> Result<(), Error> {
     err_if_shortcut(&file, &config)?;
 
     if drive_file::is_shortcut(&file) {
-        let target_file_id = file.shortcut_details.and_then(|details| details.target_id);
+        let google_drive3::api::File {
+            shortcut_details,
+            name,
+            id,
+            ..
+        } = file;
+        let target_file_id = shortcut_details.and_then(|details| details.target_id);
 
-        let file_id = target_file_id.ok_or(Error::MissingShortcutTarget)?;
+        let file_id = target_file_id.ok_or_else(|| {
+            Error::MissingShortcutTarget(file_tree_drive::errors::FileIdentifier::new(name, id))
+        })?;
 
         download(Config { file_id, ..config }).await?;
     } else if drive_file::is_directory(&file) {
@@ -113,7 +121,9 @@ pub async fn download_regular(
     if config.destination == Destination::Stdout {
         save_body_to_stdout(body).await?;
     } else {
-        let file_name = file.name.clone().ok_or(Error::MissingFileName)?;
+        let file_name = file.name.clone().ok_or_else(|| {
+            Error::MissingFileName(file_tree_drive::errors::FileIdentifier::from(file))
+        })?;
         let root_path = config.canonical_destination_root()?;
         let abs_file_path = root_path.join(&file_name);
 
@@ -200,9 +210,9 @@ pub enum Error {
     Hub(hub_helper::Error),
     GetFile(Box<google_drive3::Error>),
     DownloadFile(Box<google_drive3::Error>),
-    MissingFileName,
-    FileExists(PathBuf),
-    IsDirectory(String),
+    MissingFileName(file_tree_drive::errors::FileIdentifier),
+    FileExists(file_tree_drive::errors::FileIdentifier),
+    IsDirectory(file_tree_drive::errors::FileIdentifier),
     Md5Mismatch {
         expected: Option<Digest>,
         actual: Digest,
@@ -217,8 +227,8 @@ pub enum Error {
     DestinationPathDoesNotExist(PathBuf),
     DestinationPathNotADirectory(PathBuf),
     CanonicalizeDestinationPath(PathBuf, io::Error),
-    MissingShortcutTarget,
-    IsShortcut(String),
+    MissingShortcutTarget(file_tree_drive::errors::FileIdentifier),
+    IsShortcut(file_tree_drive::errors::FileIdentifier),
     StdoutNotValidDestination,
 }
 
@@ -230,15 +240,18 @@ impl Display for Error {
             Error::Hub(err) => write!(f, "{err}"),
             Error::GetFile(err) => write!(f, "Failed getting file: {err}"),
             Error::DownloadFile(err) => write!(f, "Failed to download file: {err}"),
-            Error::MissingFileName => write!(f, "File does not have a name"),
-            Error::FileExists(path) => write!(
+            Error::MissingFileName(identifier) => {
+                write!(f, "File{} does not have a name", identifier.display())
+            }
+            Error::FileExists(identifier) => write!(
                 f,
                 "File '{}' already exists, use --overwrite to overwrite it",
-                path.display()
+                identifier.display()
             ),
-            Error::IsDirectory(name) => write!(
+            Error::IsDirectory(identifier) => write!(
                 f,
-                "'{name}' is a directory, use --recursive to download directories"
+                "file{} is a directory, use --recursive to download directories",
+                identifier.display(),
             ),
             Error::Md5Mismatch { expected, actual } => {
                 write!(
@@ -274,10 +287,13 @@ impl Display for Error {
                 path.display(),
                 err
             ),
-            Error::MissingShortcutTarget => write!(f, "Shortcut does not have a target"),
-            Error::IsShortcut(name) => write!(
+            Error::MissingShortcutTarget(identifier) => {
+                write!(f, "Shortcut{} does not have a target", identifier.display())
+            }
+            Error::IsShortcut(identifier) => write!(
                 f,
-                "'{name}' is a shortcut, use --follow-shortcuts to download the file it points to"
+                "file{} is a shortcut, use --follow-shortcuts to download the file it points to",
+                identifier.display(),
             ),
             Error::StdoutNotValidDestination => write!(
                 f,
@@ -331,7 +347,9 @@ pub async fn save_body_to_stdout(mut body: hyper::Body) -> Result<(), Error> {
 }
 
 fn err_if_file_exists(file: &google_drive3::api::File, config: &Config) -> Result<(), Error> {
-    let file_name = file.name.clone().ok_or(Error::MissingFileName)?;
+    let file_name = file.name.clone().ok_or_else(|| {
+        Error::MissingFileName(file_tree_drive::errors::FileIdentifier::from(file))
+    })?;
 
     let file_path = match &config.destination {
         Destination::CurrentDir => Some(PathBuf::from(".").join(file_name)),
@@ -342,7 +360,9 @@ fn err_if_file_exists(file: &google_drive3::api::File, config: &Config) -> Resul
     match file_path {
         Some(path) => {
             if path.exists() && config.existing_file_action == ExistingFileAction::Abort {
-                Err(Error::FileExists(path.clone()))
+                Err(Error::FileExists(
+                    file_tree_drive::errors::FileIdentifier::from(file),
+                ))
             } else {
                 Ok(())
             }
@@ -354,12 +374,9 @@ fn err_if_file_exists(file: &google_drive3::api::File, config: &Config) -> Resul
 
 fn err_if_directory(file: &google_drive3::api::File, config: &Config) -> Result<(), Error> {
     if drive_file::is_directory(file) && !config.download_directories {
-        let name = file
-            .name
-            .as_ref()
-            .map(ToString::to_string)
-            .unwrap_or_default();
-        Err(Error::IsDirectory(name))
+        Err(Error::IsDirectory(
+            file_tree_drive::errors::FileIdentifier::from(file),
+        ))
     } else {
         Ok(())
     }
@@ -367,12 +384,9 @@ fn err_if_directory(file: &google_drive3::api::File, config: &Config) -> Result<
 
 fn err_if_shortcut(file: &google_drive3::api::File, config: &Config) -> Result<(), Error> {
     if drive_file::is_shortcut(file) && !config.follow_shortcuts {
-        let name = file
-            .name
-            .as_ref()
-            .map(ToString::to_string)
-            .unwrap_or_default();
-        Err(Error::IsShortcut(name))
+        Err(Error::IsShortcut(
+            file_tree_drive::errors::FileIdentifier::from(file),
+        ))
     } else {
         Ok(())
     }
