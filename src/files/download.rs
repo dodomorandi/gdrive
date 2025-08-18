@@ -213,7 +213,7 @@ pub enum Error {
     RenameFile(io::Error),
     ReadChunk(hyper::Error),
     WriteChunk(io::Error),
-    CreateFileTree(file_tree_drive::Error),
+    CreateFileTree(file_tree_drive::errors::FileTreeDrive),
     DestinationPathDoesNotExist(PathBuf),
     DestinationPathNotADirectory(PathBuf),
     CanonicalizeDestinationPath(PathBuf, io::Error),

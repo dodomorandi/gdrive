@@ -1,3 +1,5 @@
+pub mod errors;
+
 use crate::common::drive_file;
 use crate::files::list;
 use crate::files::list::ListQuery;
@@ -22,8 +24,10 @@ impl FileTreeDrive {
     pub async fn from_file(
         hub: &Hub,
         file: &google_drive3::api::File,
-    ) -> Result<FileTreeDrive, Error> {
-        let root = Folder::from_file(hub, file, None).await?;
+    ) -> Result<FileTreeDrive, errors::FileTreeDrive> {
+        let root = Folder::from_file(hub, file, None)
+            .await
+            .map_err(errors::FileTreeDrive)?;
         Ok(FileTreeDrive { root })
     }
 
