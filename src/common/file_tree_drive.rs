@@ -7,6 +7,7 @@ use crate::files::list::ListQuery;
 use crate::files::list::ListSortOrder;
 use crate::hub::Hub;
 use async_recursion::async_recursion;
+use std::iter;
 use std::ops::Not;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -206,18 +207,11 @@ impl FolderInfo {
     }
 
     fn ancestors(&self) -> Vec<Arc<FolderInfo>> {
-        let mut folders = Vec::new();
-        let mut maybe_folder = &self.parent;
-
-        while let Some(folder) = maybe_folder {
-            folders.push(Arc::clone(folder));
-
-            if folder.parent.is_none() {
-                break;
-            }
-
-            maybe_folder = &folder.parent;
-        }
+        let mut folders = iter::successors(self.parent.as_ref(), |folder_info| {
+            folder_info.parent.as_ref()
+        })
+        .cloned()
+        .collect::<Vec<_>>();
 
         folders.reverse();
         folders
