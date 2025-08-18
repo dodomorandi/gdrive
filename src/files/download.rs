@@ -157,7 +157,7 @@ pub async fn download_directory(
     let root_path = config.canonical_destination_root()?;
 
     for folder in &tree.folders() {
-        let folder_path = folder.relative_path();
+        let folder_path = folder.info.relative_path();
         let abs_folder_path = root_path.join(&folder_path);
 
         println!("Creating directory {}", folder_path.display());

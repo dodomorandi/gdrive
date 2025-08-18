@@ -9,6 +9,7 @@ use crate::hub::Hub;
 use async_recursion::async_recursion;
 use std::ops::Not;
 use std::path::PathBuf;
+use std::sync::Arc;
 
 use super::parse_md5_digest;
 use super::FolderLike;
@@ -42,7 +43,7 @@ impl FileTreeDrive {
 
             parent_count_a
                 .cmp(&parent_count_b)
-                .then_with(|| a.name.cmp(&b.name))
+                .then_with(|| a.info.name.cmp(&b.info.name))
         });
 
         folders
@@ -86,9 +87,14 @@ pub enum Node {
 
 #[derive(Debug, Clone)]
 pub struct Folder {
-    pub name: String,
-    pub parent: Option<Box<Folder>>,
+    pub info: Arc<FolderInfo>,
     pub children: Vec<Node>,
+}
+
+#[derive(Debug, Clone)]
+pub struct FolderInfo {
+    pub name: String,
+    pub parent: Option<Arc<Self>>,
     pub drive_id: String,
 }
 
@@ -97,7 +103,7 @@ impl Folder {
     pub async fn from_file(
         hub: &Hub,
         file: &google_drive3::api::File,
-        parent: Option<&'async_recursion Folder>,
+        parent: Option<&'async_recursion Arc<FolderInfo>>,
     ) -> Result<Folder, errors::Folder> {
         if drive_file::is_directory(file).not() {
             return Err(errors::Folder::NotDirectory);
@@ -107,10 +113,12 @@ impl Folder {
         let file_id = file.id.clone().ok_or(errors::Folder::MissingFileId)?;
 
         let mut folder = Folder {
-            name,
-            parent: parent.map(|folder| Box::new(folder.clone())),
+            info: Arc::new(FolderInfo {
+                name,
+                parent: parent.map(Arc::clone),
+                drive_id: file_id.clone(),
+            }),
             children: Vec::new(),
-            drive_id: file_id.clone(),
         };
 
         let files = list::list_files(
@@ -128,7 +136,7 @@ impl Folder {
 
         for file in files {
             if drive_file::is_directory(&file) {
-                let folder = Folder::from_file(hub, &file, Some(&folder)).await?;
+                let folder = Folder::from_file(hub, &file, Some(&folder.info)).await?;
                 let node = Node::Folder(folder);
                 children.push(node);
             } else if drive_file::is_binary(&file) {
@@ -164,17 +172,6 @@ impl Folder {
     }
 
     #[must_use]
-    pub fn relative_path(&self) -> PathBuf {
-        let mut path = PathBuf::new();
-
-        for folder in self.ancestors() {
-            path.push(&folder.name);
-        }
-
-        path.join(&self.name)
-    }
-
-    #[must_use]
     pub fn folders_recursive(&self) -> Vec<&Folder> {
         let mut folders = vec![];
         self.folders_recursive_in(&mut folders);
@@ -192,21 +189,34 @@ impl Folder {
 
     #[must_use]
     pub fn ancestor_count(&self) -> usize {
-        FolderLike::ancestor_count(self)
+        FolderLike::ancestor_count(&*self.info)
+    }
+}
+
+impl FolderInfo {
+    #[must_use]
+    pub fn relative_path(&self) -> PathBuf {
+        let mut path = PathBuf::new();
+
+        for folder in self.ancestors() {
+            path.push(&folder.name);
+        }
+
+        path.join(&self.name)
     }
 
-    fn ancestors(&self) -> Vec<Folder> {
+    fn ancestors(&self) -> Vec<Arc<FolderInfo>> {
         let mut folders = Vec::new();
-        let mut maybe_folder = self.parent.clone();
+        let mut maybe_folder = &self.parent;
 
         while let Some(folder) = maybe_folder {
-            folders.push(*folder.clone());
+            folders.push(Arc::clone(folder));
 
             if folder.parent.is_none() {
                 break;
             }
 
-            maybe_folder = folder.parent;
+            maybe_folder = &folder.parent;
         }
 
         folders.reverse();
@@ -214,7 +224,7 @@ impl Folder {
     }
 }
 
-impl FolderLike for Folder {
+impl FolderLike for FolderInfo {
     fn parent(&self) -> Option<&Self> {
         self.parent.as_deref()
     }
@@ -224,7 +234,7 @@ impl FolderLike for Folder {
 pub struct File {
     pub name: String,
     pub size: u64,
-    pub parent: Folder,
+    pub parent: Arc<FolderInfo>,
     pub drive_id: String,
     pub md5: Option<md5::Digest>,
 }
@@ -246,7 +256,7 @@ impl File {
         let file = File {
             name,
             size,
-            parent: parent.clone(),
+            parent: Arc::clone(&parent.info),
             drive_id: file_id,
             md5,
         };
