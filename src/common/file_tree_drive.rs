@@ -1,6 +1,7 @@
 pub mod errors;
 
 use crate::common::drive_file;
+use crate::common::file_tree_drive::errors::FileIdentifier;
 use crate::files::list;
 use crate::files::list::ListQuery;
 use crate::files::list::ListSortOrder;
@@ -103,18 +104,13 @@ impl Folder {
         hub: &Hub,
         file: &google_drive3::api::File,
         parent: Option<&'async_recursion Folder>,
-    ) -> Result<Folder, Error> {
+    ) -> Result<Folder, errors::Folder> {
         if drive_file::is_directory(file).not() {
-            let name = file
-                .name
-                .as_ref()
-                .map(ToString::to_string)
-                .unwrap_or_default();
-            return Err(Error::NotADirectory(name));
+            return Err(errors::Folder::NotDirectory);
         }
 
-        let name = file.name.clone().ok_or(Error::MissingFileName)?;
-        let file_id = file.id.clone().ok_or(Error::MissingFileId)?;
+        let name = file.name.clone().ok_or(errors::Folder::MissingFileName)?;
+        let file_id = file.id.clone().ok_or(errors::Folder::MissingFileId)?;
 
         let mut folder = Folder {
             name,
@@ -132,7 +128,7 @@ impl Folder {
             },
         )
         .await
-        .map_err(Error::ListFiles)?;
+        .map_err(errors::Folder::ListFiles)?;
 
         let mut children = Vec::new();
 
@@ -142,7 +138,10 @@ impl Folder {
                 let node = Node::FolderNode(folder);
                 children.push(node);
             } else if drive_file::is_binary(&file) {
-                let f = File::from_file(&file, &folder)?;
+                let f = File::from_file(&file, &folder).map_err(|source| errors::Folder::File {
+                    identifier: FileIdentifier::from(file),
+                    source,
+                })?;
                 let node = Node::FileNode(f);
                 children.push(node);
             } else {

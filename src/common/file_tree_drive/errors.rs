@@ -3,8 +3,10 @@ use std::{
     fmt::{self, Display},
 };
 
+use crate::files;
+
 #[derive(Debug)]
-pub struct FileTreeDrive(pub super::Error);
+pub struct FileTreeDrive(pub Folder);
 
 impl Display for FileTreeDrive {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -70,6 +72,60 @@ impl Display for FileIdentifierDisplay<'_> {
             FileIdentifier::Name(name) => write!(f, " with name '{name}'"),
             FileIdentifier::Id(id) => write!(f, " with id '{id}'"),
             FileIdentifier::None => Ok(()),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub enum Folder {
+    MissingFileName,
+    NotDirectory,
+    MissingFileId,
+    ListFiles(files::list::Error),
+    Nested {
+        identifier: FileIdentifier,
+        source: Box<Folder>,
+    },
+    File {
+        identifier: FileIdentifier,
+        source: super::Error,
+    },
+}
+
+impl Display for Folder {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Folder::MissingFileName => f.write_str("file name is missing"),
+            Folder::NotDirectory => f.write_str("file is not a directory"),
+            Folder::MissingFileId => f.write_str("file id is missing"),
+            Folder::ListFiles(_) => f.write_str("unable to list directory files"),
+            Folder::Nested {
+                identifier,
+                source: _,
+            } => {
+                write!(
+                    f,
+                    "unable to process nested directory{}",
+                    identifier.display()
+                )
+            }
+            Folder::File {
+                identifier,
+                source: _,
+            } => {
+                write!(f, "unable to process file{}", identifier.display())
+            }
+        }
+    }
+}
+
+impl Error for Folder {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            Folder::MissingFileName | Folder::NotDirectory | Folder::MissingFileId => None,
+            Folder::ListFiles(error) => Some(error),
+            Folder::Nested { source, .. } => Some(source),
+            Folder::File { source, .. } => Some(source),
         }
     }
 }
