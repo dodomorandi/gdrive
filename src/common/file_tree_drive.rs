@@ -23,7 +23,7 @@ pub struct FileTreeDrive {
 impl FileTreeDrive {
     pub async fn from_file(
         hub: &Hub,
-        file: &google_drive3::api::File,
+        file: google_drive3::api::File,
     ) -> Result<FileTreeDrive, errors::FileTreeDrive> {
         let root = Folder::from_file(hub, file, None)
             .await
@@ -103,15 +103,15 @@ impl Folder {
     #[async_recursion]
     pub async fn from_file(
         hub: &Hub,
-        file: &google_drive3::api::File,
+        file: google_drive3::api::File,
         parent: Option<&'async_recursion Arc<FolderInfo>>,
     ) -> Result<Folder, errors::Folder> {
-        if drive_file::is_directory(file).not() {
+        if drive_file::is_directory(&file).not() {
             return Err(errors::Folder::NotDirectory);
         }
 
-        let name = file.name.clone().ok_or(errors::Folder::MissingFileName)?;
-        let file_id = file.id.clone().ok_or(errors::Folder::MissingFileId)?;
+        let name = file.name.ok_or(errors::Folder::MissingFileName)?;
+        let file_id = file.id.ok_or(errors::Folder::MissingFileId)?;
 
         let mut folder = Folder {
             info: Arc::new(FolderInfo {
@@ -137,14 +137,12 @@ impl Folder {
 
         for file in files {
             if drive_file::is_directory(&file) {
-                let folder = Folder::from_file(hub, &file, Some(&folder.info)).await?;
+                let folder = Folder::from_file(hub, file, Some(&folder.info)).await?;
                 let node = Node::Folder(folder);
                 children.push(node);
             } else if drive_file::is_binary(&file) {
-                let f = File::from_file(&file, &folder).map_err(|source| errors::Folder::File {
-                    identifier: FileIdentifier::from(file),
-                    source,
-                })?;
+                let f = File::from_file(file, &folder)
+                    .map_err(|(source, identifier)| errors::Folder::File { identifier, source })?;
                 let node = Node::File(f);
                 children.push(node);
             } else {
@@ -235,16 +233,27 @@ pub struct File {
 
 impl File {
     pub fn from_file(
-        file: &google_drive3::api::File,
+        file: google_drive3::api::File,
         parent: &Folder,
-    ) -> Result<File, errors::File> {
-        let name = file.name.clone().ok_or(errors::File::MissingFileName)?;
-        let size = file
-            .size
-            .ok_or(errors::File::MissingFileSize)?
-            .try_into()
-            .map_err(errors::File::InvalidFileSize)?;
-        let file_id = file.id.clone().ok_or(errors::File::MissingFileId)?;
+    ) -> Result<File, (errors::File, FileIdentifier)> {
+        let name = file
+            .name
+            .ok_or((errors::File::MissingFileName, FileIdentifier::None))?;
+        let Some(size) = file.size else {
+            return Err((errors::File::MissingFileSize, FileIdentifier::Name(name)));
+        };
+        let size = match size.try_into() {
+            Ok(size) => size,
+            Err(source) => {
+                return Err((
+                    errors::File::InvalidFileSize(source),
+                    FileIdentifier::Name(name),
+                ))
+            }
+        };
+        let Some(file_id) = file.id else {
+            return Err((errors::File::MissingFileId, FileIdentifier::Name(name)));
+        };
         let md5 = file.md5_checksum.as_deref().and_then(parse_md5_digest);
 
         let file = File {

@@ -101,7 +101,7 @@ pub async fn download(config: Config) -> Result<(), Error> {
 
         download(Config { file_id, ..config }).await?;
     } else if drive_file::is_directory(&file) {
-        download_directory(&hub, &file, &config).await?;
+        download_directory(&hub, file, &config).await?;
     } else {
         download_regular(&hub, &file, &config).await?;
     }
@@ -138,7 +138,7 @@ pub async fn download_regular(
 
 pub async fn download_directory(
     hub: &Hub,
-    file: &google_drive3::api::File,
+    file: google_drive3::api::File,
     config: &Config,
 ) -> Result<(), Error> {
     let tree = FileTreeDrive::from_file(hub, file)
