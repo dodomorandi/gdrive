@@ -180,16 +180,17 @@ impl Folder {
     #[must_use]
     pub fn folders_recursive(&self) -> Vec<Folder> {
         let mut folders = vec![];
+        self.folders_recursive_in(&mut folders);
+        folders
+    }
 
+    fn folders_recursive_in(&self, folders: &mut Vec<Folder>) {
         self.children.iter().for_each(|child| {
             if let Node::FolderNode(folder) = child {
                 folders.push(folder.clone());
-                let child_folders = folder.folders_recursive();
-                folders.extend(child_folders);
+                folder.folders_recursive_in(folders);
             }
         });
-
-        folders
     }
 
     #[must_use]
