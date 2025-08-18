@@ -34,8 +34,7 @@ impl FileTreeDrive {
         let mut folders = vec![];
 
         folders.push(self.root.clone());
-        let child_folders = self.root.folders_recursive();
-        folders.extend(child_folders);
+        self.root.folders_recursive_in(&mut folders);
 
         folders.sort_by(|a, b| {
             let parent_count_a = a.ancestor_count();
