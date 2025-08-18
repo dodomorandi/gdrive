@@ -179,26 +179,22 @@ impl Folder {
 
     #[must_use]
     pub fn folders_recursive(&self) -> Vec<Folder> {
-        Folder::collect_folders_recursive(self)
-    }
-
-    #[must_use]
-    pub fn ancestor_count(&self) -> usize {
-        FolderLike::ancestor_count(self)
-    }
-
-    fn collect_folders_recursive(folder: &Folder) -> Vec<Folder> {
         let mut folders = vec![];
 
-        folder.children.iter().for_each(|child| {
+        self.children.iter().for_each(|child| {
             if let Node::FolderNode(folder) = child {
                 folders.push(folder.clone());
-                let child_folders = Folder::collect_folders_recursive(folder);
+                let child_folders = folder.folders_recursive();
                 folders.extend(child_folders);
             }
         });
 
         folders
+    }
+
+    #[must_use]
+    pub fn ancestor_count(&self) -> usize {
+        FolderLike::ancestor_count(self)
     }
 }
 
