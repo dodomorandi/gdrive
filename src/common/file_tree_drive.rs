@@ -7,6 +7,7 @@ use async_recursion::async_recursion;
 use std::error;
 use std::fmt::Display;
 use std::fmt::Formatter;
+use std::ops::Not;
 use std::path::PathBuf;
 
 use super::parse_md5_digest;
@@ -99,7 +100,14 @@ impl Folder {
         file: &google_drive3::api::File,
         parent: Option<&'async_recursion Folder>,
     ) -> Result<Folder, Error> {
-        err_if_not_directory(file)?;
+        if drive_file::is_directory(file).not() {
+            let name = file
+                .name
+                .as_ref()
+                .map(ToString::to_string)
+                .unwrap_or_default();
+            return Err(Error::NotADirectory(name));
+        }
 
         let name = file.name.clone().ok_or(Error::MissingFileName)?;
         let file_id = file.id.clone().ok_or(Error::MissingFileId)?;
@@ -278,17 +286,4 @@ fn get_ancestors(f: &Folder) -> Vec<Folder> {
 
     folders.reverse();
     folders
-}
-
-fn err_if_not_directory(file: &google_drive3::api::File) -> Result<(), Error> {
-    if drive_file::is_directory(file) {
-        Ok(())
-    } else {
-        let name = file
-            .name
-            .as_ref()
-            .map(ToString::to_string)
-            .unwrap_or_default();
-        Err(Error::NotADirectory(name))
-    }
 }
