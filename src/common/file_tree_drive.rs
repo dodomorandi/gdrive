@@ -7,9 +7,6 @@ use crate::files::list::ListQuery;
 use crate::files::list::ListSortOrder;
 use crate::hub::Hub;
 use async_recursion::async_recursion;
-use std::error;
-use std::fmt::Display;
-use std::fmt::Formatter;
 use std::ops::Not;
 use std::path::PathBuf;
 
@@ -248,31 +245,6 @@ impl File {
     #[must_use]
     pub fn relative_path(&self) -> PathBuf {
         self.parent.relative_path().join(&self.name)
-    }
-}
-
-#[derive(Debug)]
-pub enum Error {
-    NotADirectory(String),
-    MissingFileName,
-    MissingFileId,
-    MissingFileSize,
-    InvalidFileSize,
-    ListFiles(list::Error),
-}
-
-impl error::Error for Error {}
-
-impl Display for Error {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Error::NotADirectory(name) => write!(f, "'{name}' is not a directory"),
-            Error::MissingFileName => write!(f, "Drive file is missing file name"),
-            Error::MissingFileId => write!(f, "Drive file is missing file id"),
-            Error::MissingFileSize => write!(f, "Drive file is missing file size"),
-            Error::InvalidFileSize => f.write_str("Drive file size is negative thus invalid"),
-            Error::ListFiles(err) => write!(f, "Failed to list files: {err}"),
-        }
     }
 }
 
