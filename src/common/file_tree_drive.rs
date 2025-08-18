@@ -167,7 +167,7 @@ impl Folder {
     pub fn relative_path(&self) -> PathBuf {
         let mut path = PathBuf::new();
 
-        for folder in get_ancestors(self) {
+        for folder in self.ancestors() {
             path.push(&folder.name);
         }
 
@@ -193,6 +193,24 @@ impl Folder {
     #[must_use]
     pub fn ancestor_count(&self) -> usize {
         FolderLike::ancestor_count(self)
+    }
+
+    fn ancestors(&self) -> Vec<Folder> {
+        let mut folders = Vec::new();
+        let mut maybe_folder = self.parent.clone();
+
+        while let Some(folder) = maybe_folder {
+            folders.push(*folder.clone());
+
+            if folder.parent.is_none() {
+                break;
+            }
+
+            maybe_folder = folder.parent;
+        }
+
+        folders.reverse();
+        folders
     }
 }
 
@@ -240,22 +258,4 @@ impl File {
     pub fn relative_path(&self) -> PathBuf {
         self.parent.relative_path().join(&self.name)
     }
-}
-
-fn get_ancestors(f: &Folder) -> Vec<Folder> {
-    let mut folders = Vec::new();
-    let mut maybe_folder = f.parent.clone();
-
-    while let Some(folder) = maybe_folder {
-        folders.push(*folder.clone());
-
-        if folder.parent.is_none() {
-            break;
-        }
-
-        maybe_folder = folder.parent;
-    }
-
-    folders.reverse();
-    folders
 }
