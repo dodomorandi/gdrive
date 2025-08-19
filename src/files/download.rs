@@ -85,7 +85,7 @@ pub async fn download(config: Config) -> Result<(), Error> {
         .map_err(|err| Error::GetFile(Box::new(err)))?;
 
     err_if_file_exists(&file, &config)?;
-    err_if_directory(&file, &config)?;
+
     err_if_shortcut(&file, &config)?;
 
     if drive_file::is_shortcut(&file) {
@@ -102,6 +102,10 @@ pub async fn download(config: Config) -> Result<(), Error> {
 
         download(Config { file_id, ..config }).await?;
     } else if drive_file::is_directory(&file) {
+        if !config.download_directories {
+            return Err(Error::IsDirectory(FileIdentifier::from(file)));
+        }
+
         download_directory(&hub, file, &config).await?;
     } else {
         download_regular(&hub, &file, &config).await?;
@@ -370,14 +374,6 @@ fn err_if_file_exists(file: &google_drive3::api::File, config: &Config) -> Resul
         }
 
         None => Ok(()),
-    }
-}
-
-fn err_if_directory(file: &google_drive3::api::File, config: &Config) -> Result<(), Error> {
-    if drive_file::is_directory(file) && !config.download_directories {
-        Err(Error::IsDirectory(FileIdentifier::from(file)))
-    } else {
-        Ok(())
     }
 }
 
