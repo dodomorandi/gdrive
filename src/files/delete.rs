@@ -23,7 +23,14 @@ pub async fn delete(config: Config) -> Result<(), Error> {
         .await
         .map_err(|err| Error::GetFile(Box::new(err)))?;
 
-    err_if_directory(&file, &config)?;
+    if drive_file::is_directory(&file) && !config.delete_directories {
+        let name = file
+            .name
+            .as_ref()
+            .map(ToString::to_string)
+            .unwrap_or_default();
+        return Err(Error::IsDirectory(name));
+    }
 
     hub.files()
         .delete(&config.file_id)
@@ -59,18 +66,5 @@ impl Display for Error {
                 "'{name}' is a directory, use --recursive to delete directories"
             ),
         }
-    }
-}
-
-fn err_if_directory(file: &google_drive3::api::File, config: &Config) -> Result<(), Error> {
-    if drive_file::is_directory(file) && !config.delete_directories {
-        let name = file
-            .name
-            .as_ref()
-            .map(ToString::to_string)
-            .unwrap_or_default();
-        Err(Error::IsDirectory(name))
-    } else {
-        Ok(())
     }
 }
