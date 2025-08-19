@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::fmt::{self, Display};
 use std::io;
 use std::io::Write;
 use tabwriter::TabWriter;
@@ -12,6 +12,15 @@ pub struct Table<H: Display, V: Display, const COLUMNS: usize> {
 pub struct DisplayConfig {
     pub skip_header: bool,
     pub separator: String,
+}
+
+impl DisplayConfig {
+    fn display_row<'a, T>(&'a self, value: &'a [T]) -> DisplayRow<'a, T>
+    where
+        T: Display,
+    {
+        DisplayRow(self, value)
+    }
 }
 
 impl Default for DisplayConfig {
@@ -31,19 +40,31 @@ pub fn write<W: Write, H: Display, V: Display, const COLUMNS: usize>(
     let mut tw = TabWriter::new(writer).padding(3);
 
     if !config.skip_header {
-        writeln!(&mut tw, "{}", to_row(config, table.header))?;
+        writeln!(&mut tw, "{}", config.display_row(&table.header))?;
     }
 
     for value in table.values {
-        writeln!(&mut tw, "{}", to_row(config, value))?;
+        writeln!(&mut tw, "{}", config.display_row(&value))?;
     }
 
     tw.flush()
 }
 
-fn to_row<T: Display, const COLUMNS: usize>(
-    config: &DisplayConfig,
-    columns: [T; COLUMNS],
-) -> String {
-    columns.map(|c| c.to_string()).join(&config.separator)
+#[derive(Debug, Clone, Copy)]
+pub struct DisplayRow<'a, T>(&'a DisplayConfig, &'a [T]);
+
+impl<T> Display for DisplayRow<'_, T>
+where
+    T: Display,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut columns = self.1.iter();
+        if let Some(column) = columns.next() {
+            write!(f, "{column}")?;
+            for column in columns {
+                write!(f, "{}{column}", self.0.separator)?;
+            }
+        }
+        Ok(())
+    }
 }
