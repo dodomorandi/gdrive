@@ -86,9 +86,11 @@ pub async fn download(config: Config) -> Result<(), Error> {
 
     err_if_file_exists(&file, &config)?;
 
-    err_if_shortcut(&file, &config)?;
-
     if drive_file::is_shortcut(&file) {
+        if !config.follow_shortcuts {
+            return Err(Error::IsShortcut(FileIdentifier::from(file)));
+        }
+
         let google_drive3::api::File {
             shortcut_details,
             name,
@@ -374,14 +376,6 @@ fn err_if_file_exists(file: &google_drive3::api::File, config: &Config) -> Resul
         }
 
         None => Ok(()),
-    }
-}
-
-fn err_if_shortcut(file: &google_drive3::api::File, config: &Config) -> Result<(), Error> {
-    if drive_file::is_shortcut(file) && !config.follow_shortcuts {
-        Err(Error::IsShortcut(FileIdentifier::from(file)))
-    } else {
-        Ok(())
     }
 }
 
