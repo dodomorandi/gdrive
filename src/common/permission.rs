@@ -1,4 +1,5 @@
-use std::fmt;
+use std::error::Error;
+use std::fmt::{self, Display};
 use std::str::FromStr;
 
 #[derive(Debug, Clone, Copy, Default, Eq, PartialEq)]
@@ -11,6 +12,15 @@ pub enum Role {
     #[default]
     Reader,
 }
+
+const ROLES: [Role; 6] = [
+    Role::Owner,
+    Role::Organizer,
+    Role::FileOrganizer,
+    Role::Writer,
+    Role::Commenter,
+    Role::Reader,
+];
 
 impl fmt::Display for Role {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -26,7 +36,7 @@ impl fmt::Display for Role {
 }
 
 impl FromStr for Role {
-    type Err = String;
+    type Err = InvalidRole;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
@@ -36,10 +46,28 @@ impl FromStr for Role {
             "writer" => Ok(Role::Writer),
             "commenter" => Ok(Role::Commenter),
             "reader" => Ok(Role::Reader),
-            _ => Err(format!("'{s}' is not a valid role, valid roles are: owner, organizer, fileOrganizer, writer, commenter, reader")),
+            _ => Err(InvalidRole),
         }
     }
 }
+
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+pub struct InvalidRole;
+
+impl Display for InvalidRole {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str("role is invalid, valid roles are: ")?;
+        let mut roles = ROLES.iter();
+        let role = roles.next().unwrap();
+        write!(f, "{role}")?;
+        for role in roles {
+            write!(f, ", {role}")?;
+        }
+        Ok(())
+    }
+}
+
+impl Error for InvalidRole {}
 
 #[derive(Debug, Clone, Copy, Default, Eq, PartialEq)]
 pub enum Type {
