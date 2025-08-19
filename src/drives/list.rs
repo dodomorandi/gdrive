@@ -44,7 +44,7 @@ fn print_drives_table(config: &Config, drives: Vec<google_drive3::api::Drive>) {
         table,
         &table::DisplayConfig {
             skip_header: config.skip_header,
-            separator: config.field_separator.clone(),
+            separator: &config.field_separator,
         },
     );
 }

@@ -9,12 +9,12 @@ pub struct Table<H: Display, V: Display, const COLUMNS: usize> {
 }
 
 #[derive(Debug, Clone)]
-pub struct DisplayConfig {
+pub struct DisplayConfig<'a> {
     pub skip_header: bool,
-    pub separator: String,
+    pub separator: &'a str,
 }
 
-impl DisplayConfig {
+impl DisplayConfig<'_> {
     fn display_row<'a, T>(&'a self, value: &'a [T]) -> DisplayRow<'a, T>
     where
         T: Display,
@@ -23,11 +23,11 @@ impl DisplayConfig {
     }
 }
 
-impl Default for DisplayConfig {
+impl Default for DisplayConfig<'static> {
     fn default() -> Self {
         Self {
             skip_header: false,
-            separator: String::from("\t"),
+            separator: "\t",
         }
     }
 }
@@ -51,7 +51,7 @@ pub fn write<W: Write, H: Display, V: Display, const COLUMNS: usize>(
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct DisplayRow<'a, T>(&'a DisplayConfig, &'a [T]);
+pub struct DisplayRow<'a, T>(&'a DisplayConfig<'a>, &'a [T]);
 
 impl<T> Display for DisplayRow<'_, T>
 where

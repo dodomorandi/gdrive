@@ -71,7 +71,7 @@ pub async fn list(config: Config) -> Result<(), Error> {
         table,
         &table::DisplayConfig {
             skip_header: config.skip_header,
-            separator: config.field_separator,
+            separator: &config.field_separator,
         },
     );
 
