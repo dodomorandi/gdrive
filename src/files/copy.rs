@@ -100,27 +100,29 @@ pub enum Error {
     Copy(Box<google_drive3::Error>),
 }
 
-impl error::Error for Error {}
-
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        let s = match self {
+            Error::Hub(_) => "unable to get drive hub",
+            Error::GetFile(_) => "unable to get source file",
+            Error::SourceIsADirectory => "source is a directory",
+            Error::GetDestinationFolder(_) => "unable to get destination folder",
+            Error::DestinationNotADirectory => "destination is not a directory",
+            Error::Copy(_) => "unable to perform the actual copy",
+        };
+
+        f.write_str(s)
+    }
+}
+
+impl error::Error for Error {
+    fn source(&self) -> Option<&(dyn error::Error + 'static)> {
         match self {
-            Error::Hub(err) => write!(f, "{err}"),
-            Error::GetFile(err) => {
-                write!(f, "Failed to get file: {err}")
+            Error::Hub(source) => Some(source),
+            Error::GetFile(source) | Error::GetDestinationFolder(source) | Error::Copy(source) => {
+                Some(source)
             }
-            Error::GetDestinationFolder(err) => {
-                write!(f, "Failed to get destination folder: {err}")
-            }
-            Error::DestinationNotADirectory => {
-                write!(f, "Can only copy to a directory")
-            }
-            Error::SourceIsADirectory => {
-                write!(f, "Copy directories is not supported")
-            }
-            Error::Copy(err) => {
-                write!(f, "Failed to move file: {err}")
-            }
+            Error::DestinationNotADirectory | Error::SourceIsADirectory => None,
         }
     }
 }
