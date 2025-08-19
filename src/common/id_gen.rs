@@ -25,16 +25,12 @@ impl<'a> IdGen<'a> {
         if let Some(id) = self.ids.pop() {
             Ok(id)
         } else {
-            self.ids = self.generate_ids().await?;
+            self.ids = generate_ids::generate_ids(self.hub, 1000, self.delegate_config)
+                .await
+                .map_err(|err| Error::GenerateIds(Box::new(err)))?;
             let id = self.ids.pop().ok_or(Error::OutOfIds)?;
             Ok(id)
         }
-    }
-
-    async fn generate_ids(&self) -> Result<Vec<String>, Error> {
-        generate_ids::generate_ids(self.hub, 1000, self.delegate_config)
-            .await
-            .map_err(|err| Error::GenerateIds(Box::new(err)))
     }
 }
 
