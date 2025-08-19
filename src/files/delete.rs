@@ -6,6 +6,7 @@ use std::{
 use crate::{
     common::{
         drive_file,
+        file_tree_drive::errors::FileIdentifier,
         hub_helper::{get_hub, GetHubError},
     },
     files,
@@ -24,12 +25,7 @@ pub async fn delete(config: Config) -> Result<(), Error> {
         .map_err(|err| Error::GetFile(Box::new(err)))?;
 
     if drive_file::is_directory(&file) && !config.delete_directories {
-        let name = file
-            .name
-            .as_ref()
-            .map(ToString::to_string)
-            .unwrap_or_default();
-        return Err(Error::IsDirectory(name));
+        return Err(Error::IsDirectory(FileIdentifier::from(file)));
     }
 
     hub.files()
@@ -50,21 +46,30 @@ pub enum Error {
     Hub(GetHubError),
     GetFile(Box<google_drive3::Error>),
     DeleteFile(Box<google_drive3::Error>),
-    IsDirectory(String),
+    IsDirectory(FileIdentifier),
 }
-
-impl error::Error for Error {}
 
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            Error::Hub(err) => write!(f, "{err}"),
-            Error::GetFile(err) => write!(f, "Failed getting file: {err}"),
-            Error::DeleteFile(err) => write!(f, "Failed to delete file: {err}"),
-            Error::IsDirectory(name) => write!(
+            Error::Hub(_) => f.write_str("unable to get drive hub"),
+            Error::GetFile(_) => f.write_str("unable to get file to delete"),
+            Error::DeleteFile(_) => f.write_str("unable to delete file"),
+            Error::IsDirectory(identifier) => write!(
                 f,
-                "'{name}' is a directory, use --recursive to delete directories"
+                "file{} is a directory, use --recursive to delete directories",
+                identifier.display(),
             ),
+        }
+    }
+}
+
+impl error::Error for Error {
+    fn source(&self) -> Option<&(dyn error::Error + 'static)> {
+        match self {
+            Error::Hub(source) => Some(source),
+            Error::GetFile(source) | Error::DeleteFile(source) => Some(source),
+            Error::IsDirectory(_) => None,
         }
     }
 }
