@@ -19,7 +19,7 @@ use tokio::{
 use crate::{
     common::{
         drive_file,
-        file_tree_drive::{self, FileTreeDrive},
+        file_tree_drive::{self, errors::FileIdentifier, FileTreeDrive},
         hub_helper::{get_hub, GetHubError},
         md5_writer::Md5Writer,
         parse_md5_digest, FileTreeLike, FolderLike,
@@ -97,9 +97,8 @@ pub async fn download(config: Config) -> Result<(), Error> {
         } = file;
         let target_file_id = shortcut_details.and_then(|details| details.target_id);
 
-        let file_id = target_file_id.ok_or_else(|| {
-            Error::MissingShortcutTarget(file_tree_drive::errors::FileIdentifier::new(name, id))
-        })?;
+        let file_id = target_file_id
+            .ok_or_else(|| Error::MissingShortcutTarget(FileIdentifier::new(name, id)))?;
 
         download(Config { file_id, ..config }).await?;
     } else if drive_file::is_directory(&file) {
@@ -123,9 +122,10 @@ pub async fn download_regular(
     if config.destination == Destination::Stdout {
         save_body_to_stdout(body).await?;
     } else {
-        let file_name = file.name.clone().ok_or_else(|| {
-            Error::MissingFileName(file_tree_drive::errors::FileIdentifier::from(file))
-        })?;
+        let file_name = file
+            .name
+            .clone()
+            .ok_or_else(|| Error::MissingFileName(FileIdentifier::from(file)))?;
         let root_path = config.canonical_destination_root()?;
         let abs_file_path = root_path.join(&file_name);
 
@@ -212,9 +212,9 @@ pub enum Error {
     Hub(GetHubError),
     GetFile(Box<google_drive3::Error>),
     DownloadFile(Box<google_drive3::Error>),
-    MissingFileName(file_tree_drive::errors::FileIdentifier),
-    FileExists(file_tree_drive::errors::FileIdentifier),
-    IsDirectory(file_tree_drive::errors::FileIdentifier),
+    MissingFileName(FileIdentifier),
+    FileExists(FileIdentifier),
+    IsDirectory(FileIdentifier),
     Md5Mismatch {
         expected: Option<Digest>,
         actual: Digest,
@@ -229,8 +229,8 @@ pub enum Error {
     DestinationPathDoesNotExist(PathBuf),
     DestinationPathNotADirectory(PathBuf),
     CanonicalizeDestinationPath(PathBuf, io::Error),
-    MissingShortcutTarget(file_tree_drive::errors::FileIdentifier),
-    IsShortcut(file_tree_drive::errors::FileIdentifier),
+    MissingShortcutTarget(FileIdentifier),
+    IsShortcut(FileIdentifier),
     StdoutNotValidDestination,
 }
 
@@ -349,9 +349,10 @@ pub async fn save_body_to_stdout(mut body: hyper::Body) -> Result<(), Error> {
 }
 
 fn err_if_file_exists(file: &google_drive3::api::File, config: &Config) -> Result<(), Error> {
-    let file_name = file.name.clone().ok_or_else(|| {
-        Error::MissingFileName(file_tree_drive::errors::FileIdentifier::from(file))
-    })?;
+    let file_name = file
+        .name
+        .clone()
+        .ok_or_else(|| Error::MissingFileName(FileIdentifier::from(file)))?;
 
     let file_path = match &config.destination {
         Destination::CurrentDir => Some(PathBuf::from(".").join(file_name)),
@@ -362,9 +363,7 @@ fn err_if_file_exists(file: &google_drive3::api::File, config: &Config) -> Resul
     match file_path {
         Some(path) => {
             if path.exists() && config.existing_file_action == ExistingFileAction::Abort {
-                Err(Error::FileExists(
-                    file_tree_drive::errors::FileIdentifier::from(file),
-                ))
+                Err(Error::FileExists(FileIdentifier::from(file)))
             } else {
                 Ok(())
             }
@@ -376,9 +375,7 @@ fn err_if_file_exists(file: &google_drive3::api::File, config: &Config) -> Resul
 
 fn err_if_directory(file: &google_drive3::api::File, config: &Config) -> Result<(), Error> {
     if drive_file::is_directory(file) && !config.download_directories {
-        Err(Error::IsDirectory(
-            file_tree_drive::errors::FileIdentifier::from(file),
-        ))
+        Err(Error::IsDirectory(FileIdentifier::from(file)))
     } else {
         Ok(())
     }
@@ -386,9 +383,7 @@ fn err_if_directory(file: &google_drive3::api::File, config: &Config) -> Result<
 
 fn err_if_shortcut(file: &google_drive3::api::File, config: &Config) -> Result<(), Error> {
     if drive_file::is_shortcut(file) && !config.follow_shortcuts {
-        Err(Error::IsShortcut(
-            file_tree_drive::errors::FileIdentifier::from(file),
-        ))
+        Err(Error::IsShortcut(FileIdentifier::from(file)))
     } else {
         Ok(())
     }
