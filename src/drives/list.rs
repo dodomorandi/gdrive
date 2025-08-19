@@ -72,15 +72,22 @@ pub enum Error {
     ListDrives(google_drive3::Error),
 }
 
-impl error::Error for Error {}
+impl error::Error for Error {
+    fn source(&self) -> Option<&(dyn error::Error + 'static)> {
+        match self {
+            Error::Hub(source) => Some(source),
+            Error::ListDrives(source) => Some(source),
+        }
+    }
+}
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            Error::Hub(err) => write!(f, "{err}"),
-            Error::ListDrives(err) => {
-                write!(f, "Failed to list drives: {err}")
-            }
-        }
+        let s = match self {
+            Error::Hub(_) => "unable to get drive hub",
+            Error::ListDrives(_) => "failed to list drives",
+        };
+
+        f.write_str(s)
     }
 }
