@@ -9,6 +9,8 @@ use crate::common::file_tree;
 use crate::common::file_tree::FileTree;
 use crate::common::hub_helper;
 use crate::common::id_gen::IdGen;
+use crate::common::FileTreeLike;
+use crate::common::FolderLike;
 use crate::files;
 use crate::files::info::DisplayConfig;
 use crate::files::mkdir;

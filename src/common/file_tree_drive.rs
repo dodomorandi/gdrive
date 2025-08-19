@@ -12,7 +12,11 @@ use std::ops::Not;
 use std::path::PathBuf;
 use std::sync::Arc;
 
+use super::file_tree_like;
 use super::parse_md5_digest;
+use super::FileLike;
+use super::FileTreeLike;
+use super::FolderInfoLike;
 use super::FolderLike;
 
 #[derive(Debug, Clone)]
@@ -30,61 +34,17 @@ impl FileTreeDrive {
             .map_err(errors::FileTreeDrive)?;
         Ok(FileTreeDrive { root })
     }
+}
 
-    #[must_use]
-    pub fn folders(&self) -> Vec<&Folder> {
-        let mut folders = vec![];
+impl FileTreeLike for FileTreeDrive {
+    type Folder = Folder;
 
-        folders.push(&self.root);
-        self.root.folders_recursive_in(&mut folders);
-
-        folders.sort_by(|a, b| {
-            let parent_count_a = a.ancestor_count();
-            let parent_count_b = b.ancestor_count();
-
-            parent_count_a
-                .cmp(&parent_count_b)
-                .then_with(|| a.info.name.cmp(&b.info.name))
-        });
-
-        folders
-    }
-
-    #[must_use]
-    pub fn info(&self) -> TreeInfo {
-        let mut file_count = 0;
-        let mut folder_count = 0;
-        let mut total_file_size = 0;
-
-        for folder in self.folders() {
-            folder_count += 1;
-
-            for file in folder.files() {
-                file_count += 1;
-                total_file_size += file.size;
-            }
-        }
-
-        TreeInfo {
-            file_count,
-            folder_count,
-            total_file_size,
-        }
+    fn root(&self) -> &Self::Folder {
+        &self.root
     }
 }
 
-#[derive(Debug, Clone)]
-pub struct TreeInfo {
-    pub file_count: u64,
-    pub folder_count: u64,
-    pub total_file_size: u64,
-}
-
-#[derive(Debug, Clone)]
-pub enum Node {
-    Folder(Folder),
-    File(File),
-}
+type Node = file_tree_like::Node<Folder>;
 
 #[derive(Debug, Clone)]
 pub struct Folder {
@@ -154,41 +114,19 @@ impl Folder {
 
         Ok(folder)
     }
+}
 
-    #[must_use]
-    pub fn files(&self) -> Vec<File> {
-        let mut files = vec![];
+impl FolderLike for Folder {
+    type File = File;
 
-        for child in &self.children {
-            if let Node::File(file) = child {
-                files.push(file.clone());
-            }
-        }
+    type Info = FolderInfo;
 
-        files.sort_by(|a, b| a.name.cmp(&b.name));
-
-        files
+    fn children(&self) -> &[file_tree_like::Node<Self>] {
+        &self.children
     }
 
-    #[must_use]
-    pub fn folders_recursive(&self) -> Vec<&Folder> {
-        let mut folders = vec![];
-        self.folders_recursive_in(&mut folders);
-        folders
-    }
-
-    fn folders_recursive_in<'a>(&'a self, folders: &mut Vec<&'a Folder>) {
-        self.children.iter().for_each(|child| {
-            if let Node::Folder(folder) = child {
-                folders.push(folder);
-                folder.folders_recursive_in(folders);
-            }
-        });
-    }
-
-    #[must_use]
-    pub fn ancestor_count(&self) -> usize {
-        FolderLike::ancestor_count(&*self.info)
+    fn info(&self) -> &Arc<Self::Info> {
+        &self.info
     }
 }
 
@@ -216,9 +154,13 @@ impl FolderInfo {
     }
 }
 
-impl FolderLike for FolderInfo {
-    fn parent(&self) -> Option<&Self> {
-        self.parent.as_deref()
+impl FolderInfoLike for FolderInfo {
+    fn name(&self) -> &str {
+        &self.name
+    }
+
+    fn parent(&self) -> Option<&Arc<Self>> {
+        self.parent.as_ref()
     }
 }
 
@@ -270,6 +212,16 @@ impl File {
     #[must_use]
     pub fn relative_path(&self) -> PathBuf {
         self.parent.relative_path().join(&self.name)
+    }
+}
+
+impl FileLike for File {
+    fn name(&self) -> &str {
+        &self.name
+    }
+
+    fn size(&self) -> u64 {
+        self.size
     }
 }
 

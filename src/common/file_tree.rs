@@ -1,6 +1,7 @@
 pub mod errors;
 
 use crate::common::file_info::FileInfo;
+use crate::common::file_tree_like;
 use crate::common::id_gen::IdGen;
 use async_recursion::async_recursion;
 use std::borrow::Cow;
@@ -9,6 +10,9 @@ use std::path::Path;
 use std::path::PathBuf;
 use std::sync::Arc;
 
+use super::FileLike;
+use super::FileTreeLike;
+use super::FolderInfoLike;
 use super::FolderLike;
 
 #[derive(Debug, Clone)]
@@ -27,59 +31,17 @@ impl FileTree {
             .map_err(errors::FileTree::Folder)?;
         Ok(FileTree { root })
     }
+}
 
-    #[must_use]
-    pub fn folders(&self) -> Vec<&Folder> {
-        let mut folders = vec![&self.root];
-        self.root.folders_recursive_in(&mut folders);
+impl FileTreeLike for FileTree {
+    type Folder = Folder;
 
-        folders.sort_by(|a, b| {
-            let parent_count_a = a.ancestor_count();
-            let parent_count_b = b.ancestor_count();
-
-            parent_count_a
-                .cmp(&parent_count_b)
-                .then_with(|| a.info.name.cmp(&b.info.name))
-        });
-
-        folders
-    }
-
-    #[must_use]
-    pub fn info(&self) -> TreeInfo {
-        let mut file_count = 0;
-        let mut folder_count = 0;
-        let mut total_file_size = 0;
-
-        for folder in self.folders() {
-            folder_count += 1;
-
-            for file in folder.files() {
-                file_count += 1;
-                total_file_size += file.size;
-            }
-        }
-
-        TreeInfo {
-            file_count,
-            folder_count,
-            total_file_size,
-        }
+    fn root(&self) -> &Self::Folder {
+        &self.root
     }
 }
 
-#[derive(Debug, Clone)]
-pub struct TreeInfo {
-    pub file_count: u64,
-    pub folder_count: u64,
-    pub total_file_size: u64,
-}
-
-#[derive(Debug, Clone)]
-pub enum Node {
-    Folder(Folder),
-    File(File),
-}
+type Node = file_tree_like::Node<Folder>;
 
 #[derive(Debug, Clone)]
 pub struct FolderInfo {
@@ -162,44 +124,21 @@ impl Folder {
     }
 
     #[must_use]
-    pub fn files(&self) -> Vec<File> {
-        let mut files = vec![];
-
-        for child in &self.children {
-            if let Node::File(file) = child {
-                files.push(file.clone());
-            }
-        }
-
-        files.sort_by(|a, b| a.name.cmp(&b.name));
-
-        files
-    }
-
-    #[must_use]
     pub fn relative_path(&self) -> &Path {
         get_relative_path(&self.info.path, &self.info)
     }
+}
 
-    #[must_use]
-    pub fn folders_recursive(&self) -> Vec<&Folder> {
-        let mut folders = vec![];
-        self.folders_recursive_in(&mut folders);
-        folders
+impl FolderLike for Folder {
+    type File = File;
+    type Info = FolderInfo;
+
+    fn children(&self) -> &[file_tree_like::Node<Self>] {
+        &self.children
     }
 
-    fn folders_recursive_in<'a>(&'a self, folders: &mut Vec<&'a Self>) {
-        self.children.iter().for_each(|child| {
-            if let Node::Folder(folder) = child {
-                folders.push(folder);
-                folder.folders_recursive_in(folders);
-            }
-        });
-    }
-
-    #[must_use]
-    pub fn ancestor_count(&self) -> usize {
-        FolderLike::ancestor_count(&*self.info)
+    fn info(&self) -> &Arc<Self::Info> {
+        &self.info
     }
 }
 
@@ -213,9 +152,13 @@ impl FolderInfo {
     }
 }
 
-impl FolderLike for FolderInfo {
-    fn parent(&self) -> Option<&Self> {
-        self.parent.as_deref()
+impl FolderInfoLike for FolderInfo {
+    fn name(&self) -> &str {
+        &self.name
+    }
+
+    fn parent(&self) -> Option<&Arc<Self>> {
+        self.parent.as_ref()
     }
 }
 
@@ -277,6 +220,16 @@ impl File {
     }
 }
 
+impl FileLike for File {
+    fn name(&self) -> &str {
+        &self.name
+    }
+
+    fn size(&self) -> u64 {
+        self.size
+    }
+}
+
 fn get_relative_path<'a>(path: &'a Path, folder_info: &FolderInfo) -> &'a Path {
     folder_info
         .root()
@@ -293,7 +246,7 @@ mod tests {
         sync::Arc,
     };
 
-    use crate::common::{drive_file::MIME_TYPE_CSV_MIME, file_tree::FolderInfo};
+    use crate::common::{drive_file::MIME_TYPE_CSV_MIME, file_tree::FolderInfo, FolderLike};
 
     use super::{File, Folder, Node};
 

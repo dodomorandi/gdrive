@@ -4,6 +4,8 @@ use crate::common::file_tree_drive::FileTreeDrive;
 use crate::common::hub_helper;
 use crate::common::md5_writer::Md5Writer;
 use crate::common::parse_md5_digest;
+use crate::common::FileTreeLike;
+use crate::common::FolderLike;
 use crate::files;
 use crate::hub::Hub;
 use async_recursion::async_recursion;
