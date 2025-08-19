@@ -1,6 +1,7 @@
 use std::{
     error,
     fmt::{Display, Formatter},
+    ops::Not,
 };
 
 use crate::{
@@ -35,7 +36,9 @@ pub async fn copy(config: Config) -> Result<(), Error> {
         .await
         .map_err(|err| Error::GetDestinationFolder(Box::new(err)))?;
 
-    err_if_not_directory(&to_parent)?;
+    if drive_file::is_directory(&to_parent).not() {
+        return Err(Error::DestinationNotADirectory);
+    }
 
     println!(
         "Copying '{}' to '{}'",
@@ -119,13 +122,5 @@ impl Display for Error {
                 write!(f, "Failed to move file: {err}")
             }
         }
-    }
-}
-
-fn err_if_not_directory(file: &google_drive3::api::File) -> Result<(), Error> {
-    if drive_file::is_directory(file) {
-        Ok(())
-    } else {
-        Err(Error::DestinationNotADirectory)
     }
 }
