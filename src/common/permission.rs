@@ -78,6 +78,8 @@ pub enum Type {
     Anyone,
 }
 
+const TYPES: [Type; 4] = [Type::User, Type::Group, Type::Domain, Type::Anyone];
+
 impl Type {
     #[must_use]
     pub fn requires_email(&self) -> bool {
@@ -116,7 +118,7 @@ impl fmt::Display for Type {
 }
 
 impl FromStr for Type {
-    type Err = String;
+    type Err = InvalidType;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
@@ -124,9 +126,25 @@ impl FromStr for Type {
             "group" => Ok(Type::Group),
             "domain" => Ok(Type::Domain),
             "anyone" => Ok(Type::Anyone),
-            _ => Err(format!(
-                "'{s}' is not a valid type, valid types are: user, group, domain, anyone"
-            )),
+            _ => Err(InvalidType),
         }
     }
 }
+
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+pub struct InvalidType;
+
+impl Display for InvalidType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str("type is invalid, valid types are: ")?;
+        let mut types = TYPES.iter();
+        let ty = types.next().unwrap();
+        write!(f, "{ty}")?;
+        for ty in types {
+            write!(f, ", {ty}")?;
+        }
+        Ok(())
+    }
+}
+
+impl Error for InvalidType {}
