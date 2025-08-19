@@ -3,7 +3,7 @@ use std::{error, fmt, io};
 use crate::{
     common::{
         delegate::{UploadDelegate, UploadDelegateConfig},
-        hub_helper::{self, GetHubError},
+        hub_helper::{get_hub, GetHubError},
         table::{self, Table},
     },
     hub::Hub,
@@ -15,7 +15,7 @@ pub struct Config {
 }
 
 pub async fn list(config: Config) -> Result<(), Error> {
-    let hub = hub_helper::get_hub().await.map_err(Error::Hub)?;
+    let hub = get_hub().await.map_err(Error::Hub)?;
     let delegate_config = UploadDelegateConfig::default();
 
     let drives = list_drives(&hub, &delegate_config)

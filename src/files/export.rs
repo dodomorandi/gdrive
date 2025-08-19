@@ -9,7 +9,7 @@ use mime::Mime;
 use crate::{
     common::{
         drive_file::{DocType, FileExtension},
-        hub_helper::{self, GetHubError},
+        hub_helper::{get_hub, GetHubError},
         parse_md5_digest,
     },
     files,
@@ -30,7 +30,7 @@ pub enum ExistingFileAction {
 }
 
 pub async fn export(config: Config) -> Result<(), Error> {
-    let hub = hub_helper::get_hub().await.map_err(Error::Hub)?;
+    let hub = get_hub().await.map_err(Error::Hub)?;
 
     err_if_file_exists(&config)?;
 

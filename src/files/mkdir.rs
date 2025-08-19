@@ -8,7 +8,7 @@ use crate::{
         delegate::{UploadDelegate, UploadDelegateConfig},
         drive_file::MIME_TYPE_DRIVE_FOLDER,
         empty_file::EmptyFile,
-        hub_helper::{self, GetHubError},
+        hub_helper::{get_hub, GetHubError},
     },
     hub::Hub,
 };
@@ -22,7 +22,7 @@ pub struct Config {
 }
 
 pub async fn mkdir(config: Config) -> Result<(), Error> {
-    let hub = hub_helper::get_hub().await.map_err(Error::Hub)?;
+    let hub = get_hub().await.map_err(Error::Hub)?;
     let delegate_config = UploadDelegateConfig::default();
 
     let file = create_directory(&hub, &config, &delegate_config)

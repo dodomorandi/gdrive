@@ -15,7 +15,7 @@ use crate::{
         file_helper,
         file_info::{self, FileInfo},
         file_tree::{self, FileTree},
-        hub_helper::{self, GetHubError},
+        hub_helper::{get_hub, GetHubError},
         id_gen::IdGen,
         FileTreeLike, FolderLike,
     },
@@ -39,7 +39,7 @@ pub struct Config {
 }
 
 pub async fn upload(config: Config) -> Result<(), Error> {
-    let hub = hub_helper::get_hub().await.map_err(Error::Hub)?;
+    let hub = get_hub().await.map_err(Error::Hub)?;
 
     let delegate_config = UploadDelegateConfig {
         chunk_size: config.chunk_size.clone(),

@@ -10,7 +10,7 @@ use crate::{
         delegate::UploadDelegateConfig,
         drive_file::{self, DocType},
         file_info::{self, FileInfo},
-        hub_helper::{self, GetHubError},
+        hub_helper::{get_hub, GetHubError},
     },
     files::{self, info::DisplayConfig},
 };
@@ -23,7 +23,7 @@ pub struct Config {
 }
 
 pub async fn import(config: Config) -> Result<(), Error> {
-    let hub = hub_helper::get_hub().await.map_err(Error::Hub)?;
+    let hub = get_hub().await.map_err(Error::Hub)?;
     let delegate_config = UploadDelegateConfig::default();
 
     let doc_type =

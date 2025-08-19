@@ -6,7 +6,7 @@ use std::{
 use crate::{
     common::{
         delegate::UploadDelegateConfig,
-        hub_helper::{self, GetHubError},
+        hub_helper::{get_hub, GetHubError},
     },
     files::{self, update::PatchFile},
 };
@@ -18,7 +18,7 @@ pub struct Config {
 }
 
 pub async fn rename(config: Config) -> Result<(), Error> {
-    let hub = hub_helper::get_hub().await.map_err(Error::Hub)?;
+    let hub = get_hub().await.map_err(Error::Hub)?;
     let delegate_config = UploadDelegateConfig::default();
 
     let old_file = files::info::get_file(&hub, &config.file_id)

@@ -7,7 +7,7 @@ use std::{
 use crate::{
     common::{
         delegate::{UploadDelegate, UploadDelegateConfig},
-        hub_helper::{self, GetHubError},
+        hub_helper::{get_hub, GetHubError},
         table::{self, Table},
     },
     files,
@@ -22,7 +22,7 @@ pub struct Config {
 }
 
 pub async fn list(config: Config) -> Result<(), Error> {
-    let hub = hub_helper::get_hub().await.map_err(Error::Hub)?;
+    let hub = get_hub().await.map_err(Error::Hub)?;
     let delegate_config = UploadDelegateConfig::default();
 
     files::info::get_file(&hub, &config.file_id)

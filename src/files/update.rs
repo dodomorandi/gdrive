@@ -12,7 +12,7 @@ use crate::{
         delegate::{BackoffConfig, ChunkSize, UploadDelegate, UploadDelegateConfig},
         file_helper,
         file_info::{self, FileInfo},
-        hub_helper::{self, GetHubError},
+        hub_helper::{get_hub, GetHubError},
     },
     files::{
         self,
@@ -31,7 +31,7 @@ pub struct Config {
 }
 
 pub async fn update(config: Config) -> Result<(), Error> {
-    let hub = hub_helper::get_hub().await.map_err(Error::Hub)?;
+    let hub = get_hub().await.map_err(Error::Hub)?;
 
     let delegate_config = UploadDelegateConfig {
         chunk_size: config.chunk_size,

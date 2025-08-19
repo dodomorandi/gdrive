@@ -7,7 +7,7 @@ use bytesize::ByteSize;
 use google_drive3::chrono::{self, DateTime};
 
 use crate::{
-    common::hub_helper::{self, GetHubError},
+    common::hub_helper::{get_hub, GetHubError},
     hub::Hub,
 };
 
@@ -17,7 +17,7 @@ pub struct Config {
 }
 
 pub async fn info(config: Config) -> Result<(), Error> {
-    let hub = hub_helper::get_hub().await.map_err(Error::Hub)?;
+    let hub = get_hub().await.map_err(Error::Hub)?;
 
     let file = get_file(&hub, &config.file_id)
         .await

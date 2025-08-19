@@ -20,7 +20,7 @@ use crate::{
     common::{
         drive_file,
         file_tree_drive::{self, FileTreeDrive},
-        hub_helper::{self, GetHubError},
+        hub_helper::{get_hub, GetHubError},
         md5_writer::Md5Writer,
         parse_md5_digest, FileTreeLike, FolderLike,
     },
@@ -78,7 +78,7 @@ pub enum ExistingFileAction {
 
 #[async_recursion]
 pub async fn download(config: Config) -> Result<(), Error> {
-    let hub = hub_helper::get_hub().await.map_err(Error::Hub)?;
+    let hub = get_hub().await.map_err(Error::Hub)?;
 
     let file = files::info::get_file(&hub, &config.file_id)
         .await

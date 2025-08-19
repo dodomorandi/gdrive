@@ -7,7 +7,7 @@ use crate::{
     common::{
         delegate::{UploadDelegate, UploadDelegateConfig},
         drive_file,
-        hub_helper::{self, GetHubError},
+        hub_helper::{get_hub, GetHubError},
     },
     files::{self, info::DisplayConfig},
     hub::Hub,
@@ -20,7 +20,7 @@ pub struct Config {
 }
 
 pub async fn copy(config: Config) -> Result<(), Error> {
-    let hub = hub_helper::get_hub().await.map_err(Error::Hub)?;
+    let hub = get_hub().await.map_err(Error::Hub)?;
     let delegate_config = UploadDelegateConfig::default();
 
     let file = files::info::get_file(&hub, &config.file_id)

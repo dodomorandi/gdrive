@@ -6,7 +6,7 @@ use std::{
 use crate::{
     common::{
         drive_file,
-        hub_helper::{self, GetHubError},
+        hub_helper::{get_hub, GetHubError},
     },
     files,
 };
@@ -17,7 +17,7 @@ pub struct Config {
 }
 
 pub async fn delete(config: Config) -> Result<(), Error> {
-    let hub = hub_helper::get_hub().await.map_err(Error::Hub)?;
+    let hub = get_hub().await.map_err(Error::Hub)?;
 
     let file = files::info::get_file(&hub, &config.file_id)
         .await
