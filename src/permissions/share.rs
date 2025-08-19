@@ -46,7 +46,7 @@ pub async fn share(config: Config) -> Result<(), Error> {
 
     print_grant_details(&file, &config);
 
-    create_permission(&hub, delegate_config, &config)
+    create_permission(&hub, &delegate_config, &config)
         .await
         .map_err(|err| Error::CreatePermission(Box::new(err)))?;
 
@@ -55,7 +55,7 @@ pub async fn share(config: Config) -> Result<(), Error> {
 
 pub async fn create_permission(
     hub: &Hub,
-    delegate_config: UploadDelegateConfig,
+    delegate_config: &UploadDelegateConfig,
     config: &Config,
 ) -> Result<google_drive3::api::Permission, google_drive3::Error> {
     let mut delegate = UploadDelegate::new(delegate_config);

@@ -43,7 +43,7 @@ pub async fn copy(config: Config) -> Result<(), Error> {
         to_folder_id: config.to_folder_id,
     };
 
-    let new_file = copy_file(&hub, delegate_config, &copy_config)
+    let new_file = copy_file(&hub, &delegate_config, &copy_config)
         .await
         .map_err(|err| Error::Copy(Box::new(err)))?;
 
@@ -60,7 +60,7 @@ pub struct CopyConfig {
 
 pub async fn copy_file(
     hub: &Hub,
-    delegate_config: UploadDelegateConfig,
+    delegate_config: &UploadDelegateConfig,
     config: &CopyConfig,
 ) -> Result<google_drive3::api::File, google_drive3::Error> {
     let mut delegate = UploadDelegate::new(delegate_config);

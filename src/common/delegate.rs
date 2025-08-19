@@ -14,16 +14,16 @@ pub struct UploadDelegateConfig {
     pub print_chunk_info: bool,
 }
 
-pub struct UploadDelegate {
-    config: UploadDelegateConfig,
+pub struct UploadDelegate<'a> {
+    config: &'a UploadDelegateConfig,
     backoff: Backoff,
     resumable_upload_url: Option<String>,
     previous_chunk: Option<google_drive3::client::ContentRange>,
 }
 
-impl UploadDelegate {
+impl<'a> UploadDelegate<'a> {
     #[must_use]
-    pub fn new(config: UploadDelegateConfig) -> UploadDelegate {
+    pub fn new(config: &'a UploadDelegateConfig) -> Self {
         let backoff = Backoff::new(&config.backoff_config);
 
         UploadDelegate {
@@ -62,7 +62,7 @@ impl UploadDelegate {
     }
 }
 
-impl google_drive3::client::Delegate for UploadDelegate {
+impl google_drive3::client::Delegate for UploadDelegate<'_> {
     fn chunk_size(&mut self) -> u64 {
         self.config.chunk_size.in_bytes()
     }

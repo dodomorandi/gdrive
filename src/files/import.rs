@@ -55,7 +55,7 @@ pub async fn import(config: Config) -> Result<(), Error> {
         println!("Importing {} as a {}", config.file_path.display(), doc_type);
     }
 
-    let file = files::upload::upload_file(&hub, reader, None, file_info, delegate_config)
+    let file = files::upload::upload_file(&hub, reader, None, file_info, &delegate_config)
         .await
         .map_err(Error::UploadFile)?;
 

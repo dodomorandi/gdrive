@@ -7,16 +7,16 @@ use std::fmt::Formatter;
 
 pub struct IdGen<'a> {
     hub: &'a Hub,
-    delegate_config: UploadDelegateConfig,
+    delegate_config: &'a UploadDelegateConfig,
     ids: Vec<String>,
 }
 
 impl<'a> IdGen<'a> {
     #[must_use]
-    pub fn new(hub: &'a Hub, delegate_config: &UploadDelegateConfig) -> Self {
+    pub fn new(hub: &'a Hub, delegate_config: &'a UploadDelegateConfig) -> Self {
         Self {
             hub,
-            delegate_config: delegate_config.clone(),
+            delegate_config,
             ids: Vec::new(),
         }
     }
@@ -32,7 +32,7 @@ impl<'a> IdGen<'a> {
     }
 
     async fn generate_ids(&self) -> Result<Vec<String>, Error> {
-        generate_ids::generate_ids(self.hub, 1000, self.delegate_config.clone())
+        generate_ids::generate_ids(self.hub, 1000, self.delegate_config)
             .await
             .map_err(|err| Error::GenerateIds(Box::new(err)))
     }

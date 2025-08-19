@@ -21,7 +21,7 @@ pub async fn mkdir(config: Config) -> Result<(), Error> {
     let hub = hub_helper::get_hub().await.map_err(Error::Hub)?;
     let delegate_config = UploadDelegateConfig::default();
 
-    let file = create_directory(&hub, &config, delegate_config)
+    let file = create_directory(&hub, &config, &delegate_config)
         .await
         .map_err(Error::CreateDirectory)?;
 
@@ -41,7 +41,7 @@ pub async fn mkdir(config: Config) -> Result<(), Error> {
 pub async fn create_directory(
     hub: &Hub,
     config: &Config,
-    delegate_config: UploadDelegateConfig,
+    delegate_config: &UploadDelegateConfig,
 ) -> Result<google_drive3::api::File, google_drive3::Error> {
     let dst_file = google_drive3::api::File {
         id: config.id.clone(),

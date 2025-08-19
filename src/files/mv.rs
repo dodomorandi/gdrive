@@ -48,7 +48,7 @@ pub async fn mv(config: Config) -> Result<(), Error> {
         new_parent_id: config.to_folder_id,
     };
 
-    change_parent(&hub, delegate_config, &change_parent_config)
+    change_parent(&hub, &delegate_config, &change_parent_config)
         .await
         .map_err(|err| Error::Move(Box::new(err)))?;
 
@@ -63,7 +63,7 @@ pub struct ChangeParentConfig {
 
 pub async fn change_parent(
     hub: &Hub,
-    delegate_config: UploadDelegateConfig,
+    delegate_config: &UploadDelegateConfig,
     config: &ChangeParentConfig,
 ) -> Result<google_drive3::api::File, google_drive3::Error> {
     let mut delegate = UploadDelegate::new(delegate_config);

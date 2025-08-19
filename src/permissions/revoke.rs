@@ -24,10 +24,9 @@ pub async fn revoke(config: Config) -> Result<(), Error> {
         .await
         .map_err(|err| Error::GetFile(Box::new(err)))?;
 
-    let permissions =
-        permissions::list::list_permissions(&hub, delegate_config.clone(), &config.file_id)
-            .await
-            .map_err(|err| Error::ListPermissions(Box::new(err)))?;
+    let permissions = permissions::list::list_permissions(&hub, &delegate_config, &config.file_id)
+        .await
+        .map_err(|err| Error::ListPermissions(Box::new(err)))?;
 
     let delete_list = config.action.get_matching_permissions(permissions)?;
 
@@ -41,7 +40,7 @@ pub async fn revoke(config: Config) -> Result<(), Error> {
 
         delete_permission(
             &hub,
-            delegate_config.clone(),
+            &delegate_config,
             &config.file_id,
             &permission.id.clone().unwrap_or_default(),
         )
@@ -54,7 +53,7 @@ pub async fn revoke(config: Config) -> Result<(), Error> {
 
 pub async fn delete_permission(
     hub: &Hub,
-    delegate_config: UploadDelegateConfig,
+    delegate_config: &UploadDelegateConfig,
     file_id: &str,
     permission_id: &str,
 ) -> Result<(), google_drive3::Error> {

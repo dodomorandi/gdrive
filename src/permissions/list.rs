@@ -26,7 +26,7 @@ pub async fn list(config: Config) -> Result<(), Error> {
         .await
         .map_err(Error::GetFile)?;
 
-    let permissions = list_permissions(&hub, delegate_config, &config.file_id)
+    let permissions = list_permissions(&hub, &delegate_config, &config.file_id)
         .await
         .map_err(Error::ListPermissions)?;
 
@@ -66,7 +66,7 @@ fn print_permissions_table(config: &Config, permissions: Vec<google_drive3::api:
 
 pub async fn list_permissions(
     hub: &Hub,
-    delegate_config: UploadDelegateConfig,
+    delegate_config: &UploadDelegateConfig,
     file_id: &str,
 ) -> Result<Vec<google_drive3::api::Permission>, google_drive3::Error> {
     let mut delegate = UploadDelegate::new(delegate_config);

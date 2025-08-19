@@ -18,7 +18,7 @@ pub async fn list(config: Config) -> Result<(), Error> {
     let hub = hub_helper::get_hub().await.map_err(Error::Hub)?;
     let delegate_config = UploadDelegateConfig::default();
 
-    let drives = list_drives(&hub, delegate_config)
+    let drives = list_drives(&hub, &delegate_config)
         .await
         .map_err(Error::ListDrives)?;
 
@@ -51,7 +51,7 @@ fn print_drives_table(config: &Config, drives: Vec<google_drive3::api::Drive>) {
 
 pub async fn list_drives(
     hub: &Hub,
-    delegate_config: UploadDelegateConfig,
+    delegate_config: &UploadDelegateConfig,
 ) -> Result<Vec<google_drive3::api::Drive>, google_drive3::Error> {
     let mut delegate = UploadDelegate::new(delegate_config);
 

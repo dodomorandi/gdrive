@@ -60,9 +60,9 @@ pub async fn upload(config: Config) -> Result<(), Error> {
         err_if_directory(path, &config)?;
 
         if path.is_dir() {
-            upload_directory(&hub, &config, delegate_config).await?;
+            upload_directory(&hub, &config, &delegate_config).await?;
         } else {
-            upload_regular(&hub, &config, delegate_config).await?;
+            upload_regular(&hub, &config, &delegate_config).await?;
         }
     } else {
         let tmp_file = file_helper::stdin_to_file().map_err(Error::StdinToFile)?;
@@ -73,7 +73,7 @@ pub async fn upload(config: Config) -> Result<(), Error> {
                 file_path: Some(tmp_file.as_ref().to_path_buf()),
                 ..config
             },
-            delegate_config,
+            &delegate_config,
         )
         .await?;
     }
@@ -84,7 +84,7 @@ pub async fn upload(config: Config) -> Result<(), Error> {
 pub async fn upload_regular(
     hub: &Hub,
     config: &Config,
-    delegate_config: UploadDelegateConfig,
+    delegate_config: &UploadDelegateConfig,
 ) -> Result<(), Error> {
     let file_path = config.file_path.as_ref().unwrap();
     let file = fs::File::open(file_path).map_err(|err| Error::OpenFile(file_path.clone(), err))?;
@@ -130,9 +130,9 @@ pub async fn upload_regular(
 pub async fn upload_directory(
     hub: &Hub,
     config: &Config,
-    delegate_config: UploadDelegateConfig,
+    delegate_config: &UploadDelegateConfig,
 ) -> Result<(), Error> {
-    let mut ids = IdGen::new(hub, &delegate_config);
+    let mut ids = IdGen::new(hub, delegate_config);
     let tree = FileTree::from_path(config.file_path.as_ref().unwrap(), &mut ids)
         .await
         .map_err(Error::CreateFileTree)?;
@@ -172,7 +172,7 @@ pub async fn upload_directory(
                 parents: folder_parents,
                 print_only_id: false,
             },
-            delegate_config.clone(),
+            delegate_config,
         )
         .await
         .map_err(|err| Error::Mkdir(Box::new(err)))?;
@@ -207,7 +207,7 @@ pub async fn upload_directory(
                 os_file,
                 Some(file.drive_id.clone()),
                 file_info,
-                delegate_config.clone(),
+                delegate_config,
             )
             .await
             .map_err(|err| Error::Upload(Box::new(err)))?;
@@ -235,7 +235,7 @@ pub async fn upload_file<RS>(
     src_file: RS,
     file_id: Option<String>,
     file_info: FileInfo<'_>,
-    delegate_config: UploadDelegateConfig,
+    delegate_config: &UploadDelegateConfig,
 ) -> Result<google_drive3::api::File, google_drive3::Error>
 where
     RS: google_drive3::client::ReadSeek,

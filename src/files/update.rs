@@ -77,7 +77,7 @@ pub async fn update(config: Config) -> Result<(), Error> {
 
     println!("Updating {} with {}", config.file_id, file_path.display());
 
-    let file = update_file(&hub, reader, &config.file_id, file_info, delegate_config)
+    let file = update_file(&hub, reader, &config.file_id, file_info, &delegate_config)
         .await
         .map_err(Error::Update)?;
 
@@ -94,7 +94,7 @@ pub async fn update_file<RS>(
     src_file: RS,
     file_id: &str,
     file_info: FileInfo<'_>,
-    delegate_config: UploadDelegateConfig,
+    delegate_config: &UploadDelegateConfig,
 ) -> Result<google_drive3::api::File, google_drive3::Error>
 where
     RS: google_drive3::client::ReadSeek,
@@ -127,7 +127,7 @@ where
 
 pub async fn update_metadata(
     hub: &Hub,
-    delegate_config: UploadDelegateConfig,
+    delegate_config: &UploadDelegateConfig,
     patch_file: PatchFile,
 ) -> Result<google_drive3::api::File, google_drive3::Error> {
     let mut delegate = UploadDelegate::new(delegate_config);

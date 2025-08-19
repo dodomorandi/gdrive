@@ -5,7 +5,7 @@ use crate::hub::Hub;
 pub async fn generate_ids(
     hub: &Hub,
     count: i32,
-    delegate_config: UploadDelegateConfig,
+    delegate_config: &UploadDelegateConfig,
 ) -> Result<Vec<String>, google_drive3::Error> {
     let mut delegate = UploadDelegate::new(delegate_config);
 
