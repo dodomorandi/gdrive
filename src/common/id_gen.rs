@@ -44,18 +44,22 @@ pub enum Error {
     OutOfIds,
 }
 
-impl error::Error for Error {}
+impl error::Error for Error {
+    fn source(&self) -> Option<&(dyn error::Error + 'static)> {
+        match self {
+            Error::GenerateIds(source) => Some(source),
+            Error::OutOfIds => None,
+        }
+    }
+}
 
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Error::GenerateIds(err) => {
-                write!(f, "Failed generate id's: {err}")
-            }
+        let s = match self {
+            Error::GenerateIds(_) => "failed generate drive identifiers",
+            Error::OutOfIds => "no more identifiers available",
+        };
 
-            Error::OutOfIds => {
-                write!(f, "No more id's available")
-            }
-        }
+        f.write_str(s)
     }
 }
