@@ -33,20 +33,20 @@ impl error::Error for Error {
         match self {
             Error::LoadCurrentAccount(source) => Some(source),
             Error::LoadSecret(source) => Some(source),
-            Error::Hub(error) => Some(error),
-            // FIXME
-            Error::Auth(_) => None,
+            Error::Hub(source) | Error::Auth(source) => Some(source),
         }
     }
 }
 
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        match self {
-            Error::LoadCurrentAccount(_) => f.write_str("unable to load current account"),
-            Error::LoadSecret(_) => f.write_str("unable to load secret"),
-            Error::Auth(err) => write!(f, "Auth error: {err}"),
-            Error::Hub(_) => f.write_str("unable to create Google Drive hub"),
-        }
+        let s = match self {
+            Error::LoadCurrentAccount(_) => "unable to load current account",
+            Error::LoadSecret(_) => "unable to load secret",
+            Error::Auth(_) => "unable to authenticate",
+            Error::Hub(_) => "unable to create Google Drive hub",
+        };
+
+        f.write_str(s)
     }
 }
