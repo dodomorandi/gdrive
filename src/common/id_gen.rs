@@ -40,6 +40,7 @@ impl<'a> IdGen<'a> {
 
 #[derive(Debug)]
 pub enum Error {
+    // TODO: remove this allocation
     GenerateIds(Box<google_drive3::Error>),
     OutOfIds,
 }
