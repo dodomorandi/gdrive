@@ -21,40 +21,40 @@ impl<'a> IdGen<'a> {
         }
     }
 
-    pub async fn next(&mut self) -> Result<String, Error> {
+    pub async fn next(&mut self) -> Result<String, NextError> {
         if let Some(id) = self.ids.pop() {
             Ok(id)
         } else {
             self.ids = generate_ids::generate_ids(self.hub, 1000, self.delegate_config)
                 .await
-                .map_err(|err| Error::GenerateIds(Box::new(err)))?;
-            let id = self.ids.pop().ok_or(Error::OutOfIds)?;
+                .map_err(|err| NextError::GenerateIds(Box::new(err)))?;
+            let id = self.ids.pop().ok_or(NextError::OutOfIds)?;
             Ok(id)
         }
     }
 }
 
 #[derive(Debug)]
-pub enum Error {
+pub enum NextError {
     // TODO: remove this allocation
     GenerateIds(Box<google_drive3::Error>),
     OutOfIds,
 }
 
-impl error::Error for Error {
+impl error::Error for NextError {
     fn source(&self) -> Option<&(dyn error::Error + 'static)> {
         match self {
-            Error::GenerateIds(source) => Some(source),
-            Error::OutOfIds => None,
+            NextError::GenerateIds(source) => Some(source),
+            NextError::OutOfIds => None,
         }
     }
 }
 
-impl Display for Error {
+impl Display for NextError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let s = match self {
-            Error::GenerateIds(_) => "failed generate drive identifiers",
-            Error::OutOfIds => "no more identifiers available",
+            NextError::GenerateIds(_) => "failed generate drive identifiers",
+            NextError::OutOfIds => "no more identifiers available",
         };
 
         f.write_str(s)

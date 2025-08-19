@@ -36,7 +36,7 @@ impl Error for FileTree {
 #[derive(Debug)]
 pub enum Folder {
     InvalidPath,
-    GenerateId(id_gen::Error),
+    GenerateId(id_gen::NextError),
     ReadDir(io::Error),
     ReadDirEntry(io::Error),
     Nested { path: PathBuf, source: Box<Folder> },
@@ -88,7 +88,7 @@ impl Error for Folder {
 pub enum File {
     InvalidPath,
     OpenFile(io::Error),
-    GenerateId(id_gen::Error),
+    GenerateId(id_gen::NextError),
 }
 
 impl Display for File {
