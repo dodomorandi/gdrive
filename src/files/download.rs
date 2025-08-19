@@ -116,7 +116,7 @@ pub async fn download(config: Config) -> Result<(), Error> {
     Ok(())
 }
 
-pub async fn download_regular(
+async fn download_regular(
     hub: &Hub,
     file: &google_drive3::api::File,
     config: &Config,
@@ -144,7 +144,7 @@ pub async fn download_regular(
     Ok(())
 }
 
-pub async fn download_directory(
+async fn download_directory(
     hub: &Hub,
     file: google_drive3::api::File,
     config: &Config,
@@ -200,7 +200,7 @@ pub async fn download_directory(
     Ok(())
 }
 
-pub async fn download_file(hub: &Hub, file_id: &str) -> Result<hyper::Body, google_drive3::Error> {
+async fn download_file(hub: &Hub, file_id: &str) -> Result<hyper::Body, google_drive3::Error> {
     let (response, _) = hub
         .files()
         .get(file_id)
