@@ -1,9 +1,10 @@
-use crate::app_config;
-use crate::app_config::AppConfig;
-use std::error;
-use std::fmt::Display;
-use std::fmt::Formatter;
-use std::ops::Not;
+use std::{
+    error,
+    fmt::{Display, Formatter},
+    ops::Not,
+};
+
+use crate::app_config::{self, AppConfig};
 
 #[derive(Debug, Clone)]
 pub struct Config {

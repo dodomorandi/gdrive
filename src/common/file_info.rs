@@ -1,9 +1,10 @@
-use std::borrow::Cow;
-use std::error;
-use std::fmt::Display;
-use std::fmt::Formatter;
-use std::fs;
-use std::path::Path;
+use std::{
+    borrow::Cow,
+    error,
+    fmt::{Display, Formatter},
+    fs,
+    path::Path,
+};
 
 pub struct FileInfo<'a> {
     pub name: Cow<'a, str>,

@@ -1,22 +1,25 @@
-use crate::common::delegate::BackoffConfig;
-use crate::common::delegate::ChunkSize;
-use crate::common::delegate::UploadDelegate;
-use crate::common::delegate::UploadDelegateConfig;
-use crate::common::file_helper;
-use crate::common::file_info;
-use crate::common::file_info::FileInfo;
-use crate::common::hub_helper;
-use crate::common::hub_helper::GetHubError;
-use crate::files;
-use crate::files::info;
-use crate::files::info::DisplayConfig;
-use crate::hub::Hub;
+use std::{
+    error,
+    fmt::{Display, Formatter},
+    path::PathBuf,
+    time::Duration,
+};
+
 use mime::Mime;
-use std::error;
-use std::fmt::Display;
-use std::fmt::Formatter;
-use std::path::PathBuf;
-use std::time::Duration;
+
+use crate::{
+    common::{
+        delegate::{BackoffConfig, ChunkSize, UploadDelegate, UploadDelegateConfig},
+        file_helper,
+        file_info::{self, FileInfo},
+        hub_helper::{self, GetHubError},
+    },
+    files::{
+        self,
+        info::{self, DisplayConfig},
+    },
+    hub::Hub,
+};
 
 pub struct Config {
     pub file_id: String,

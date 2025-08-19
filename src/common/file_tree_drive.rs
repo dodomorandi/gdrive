@@ -1,23 +1,15 @@
 pub mod errors;
 
-use crate::common::drive_file;
-use crate::common::file_tree_drive::errors::FileIdentifier;
-use crate::files::list;
-use crate::files::list::ListQuery;
-use crate::files::list::ListSortOrder;
-use crate::hub::Hub;
-use async_recursion::async_recursion;
-use std::iter;
-use std::ops::Not;
-use std::path::PathBuf;
-use std::sync::Arc;
+use std::{iter, ops::Not, path::PathBuf, sync::Arc};
 
-use super::file_tree_like;
-use super::parse_md5_digest;
-use super::FileLike;
-use super::FileTreeLike;
-use super::FolderInfoLike;
-use super::FolderLike;
+use async_recursion::async_recursion;
+
+use super::{file_tree_like, parse_md5_digest, FileLike, FileTreeLike, FolderInfoLike, FolderLike};
+use crate::{
+    common::{drive_file, file_tree_drive::errors::FileIdentifier},
+    files::list::{self, ListQuery, ListSortOrder},
+    hub::Hub,
+};
 
 #[derive(Debug, Clone)]
 pub struct FileTreeDrive {

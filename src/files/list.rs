@@ -1,18 +1,20 @@
-use crate::common::drive_file;
-use crate::common::hub_helper;
-use crate::common::hub_helper::GetHubError;
-use crate::common::table;
-use crate::common::table::Table;
-use crate::files;
-use crate::files::info::DisplayConfig;
-use crate::hub::Hub;
-use std::cmp::min;
-use std::error;
-use std::fmt;
-use std::fmt::Display;
-use std::fmt::Formatter;
-use std::io;
-use std::str::FromStr;
+use std::{
+    cmp::min,
+    error,
+    fmt::{self, Display, Formatter},
+    io,
+    str::FromStr,
+};
+
+use crate::{
+    common::{
+        drive_file,
+        hub_helper::{self, GetHubError},
+        table::{self, Table},
+    },
+    files::{self, info::DisplayConfig},
+    hub::Hub,
+};
 
 const MAX_PAGE_SIZE: usize = 1000;
 

@@ -1,9 +1,9 @@
-use crate::common::delegate::UploadDelegateConfig;
-use crate::files::generate_ids;
-use crate::hub::Hub;
-use std::error;
-use std::fmt::Display;
-use std::fmt::Formatter;
+use std::{
+    error,
+    fmt::{Display, Formatter},
+};
+
+use crate::{common::delegate::UploadDelegateConfig, files::generate_ids, hub::Hub};
 
 pub struct IdGen<'a> {
     hub: &'a Hub,

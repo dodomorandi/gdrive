@@ -1,18 +1,19 @@
-use crate::common::delegate::UploadDelegateConfig;
-use crate::common::drive_file;
-use crate::common::drive_file::DocType;
-use crate::common::file_info;
-use crate::common::file_info::FileInfo;
-use crate::common::hub_helper;
-use crate::common::hub_helper::GetHubError;
-use crate::files;
-use crate::files::info::DisplayConfig;
-use std::error;
-use std::fmt::Display;
-use std::fmt::Formatter;
-use std::fs;
-use std::io;
-use std::path::PathBuf;
+use std::{
+    error,
+    fmt::{Display, Formatter},
+    fs, io,
+    path::PathBuf,
+};
+
+use crate::{
+    common::{
+        delegate::UploadDelegateConfig,
+        drive_file::{self, DocType},
+        file_info::{self, FileInfo},
+        hub_helper::{self, GetHubError},
+    },
+    files::{self, info::DisplayConfig},
+};
 
 #[derive(Clone, Debug)]
 pub struct Config {

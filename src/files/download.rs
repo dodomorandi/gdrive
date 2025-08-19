@@ -1,33 +1,32 @@
-use crate::common::drive_file;
-use crate::common::file_tree_drive;
-use crate::common::file_tree_drive::FileTreeDrive;
-use crate::common::hub_helper;
-use crate::common::hub_helper::GetHubError;
-use crate::common::md5_writer::Md5Writer;
-use crate::common::parse_md5_digest;
-use crate::common::FileTreeLike;
-use crate::common::FolderLike;
-use crate::files;
-use crate::hub::Hub;
+use std::{
+    error,
+    fmt::{Display, Formatter},
+    io::{self, Write},
+    path::{Path, PathBuf},
+};
+
 use async_recursion::async_recursion;
 use bytesize::ByteSize;
 use error_trace::ErrorTrace;
 use futures::stream::StreamExt;
 use google_drive3::hyper;
 use md5::Digest;
-use std::error;
-use std::fmt::Display;
-use std::fmt::Formatter;
-use std::io;
-use std::io::Write;
-use std::path::Path;
-use std::path::PathBuf;
-use tokio::fs;
-use tokio::fs::File;
-use tokio::io::AsyncRead;
-use tokio::io::AsyncReadExt;
-use tokio::io::AsyncWriteExt;
-use tokio::io::BufReader;
+use tokio::{
+    fs::{self, File},
+    io::{AsyncRead, AsyncReadExt, AsyncWriteExt, BufReader},
+};
+
+use crate::{
+    common::{
+        drive_file,
+        file_tree_drive::{self, FileTreeDrive},
+        hub_helper::{self, GetHubError},
+        md5_writer::Md5Writer,
+        parse_md5_digest, FileTreeLike, FolderLike,
+    },
+    files,
+    hub::Hub,
+};
 
 pub struct Config {
     pub file_id: String,

@@ -1,16 +1,20 @@
+use std::{
+    error,
+    fmt::{Display, Formatter},
+    path::PathBuf,
+};
+
 use mime::Mime;
 
-use crate::common::drive_file::DocType;
-use crate::common::drive_file::FileExtension;
-use crate::common::hub_helper;
-use crate::common::hub_helper::GetHubError;
-use crate::common::parse_md5_digest;
-use crate::files;
-use crate::hub::Hub;
-use std::error;
-use std::fmt::Display;
-use std::fmt::Formatter;
-use std::path::PathBuf;
+use crate::{
+    common::{
+        drive_file::{DocType, FileExtension},
+        hub_helper::{self, GetHubError},
+        parse_md5_digest,
+    },
+    files,
+    hub::Hub,
+};
 
 #[derive(Clone, Debug)]
 pub struct Config {

@@ -1,11 +1,11 @@
-use crate::app_config;
-use crate::hub;
-use std::borrow::Cow;
-use std::error;
-use std::fmt::Display;
-use std::fmt::Formatter;
-use std::io;
-use std::io::Write;
+use std::{
+    borrow::Cow,
+    error,
+    fmt::{Display, Formatter},
+    io::{self, Write},
+};
+
+use crate::{app_config, hub};
 
 pub async fn add() -> Result<(), Error> {
     println!("To add an account you need a Google Client ID and Client Secret.");

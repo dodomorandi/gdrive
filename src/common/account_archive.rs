@@ -1,9 +1,10 @@
 pub mod errors;
 
-use std::fs::File;
-use std::ops::Not;
-use std::path::Path;
-use std::path::PathBuf;
+use std::{
+    fs::File,
+    ops::Not,
+    path::{Path, PathBuf},
+};
 
 /// Creates an archive of the given source directory.
 ///

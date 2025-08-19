@@ -1,6 +1,8 @@
-use std::error::Error;
-use std::fmt::{self, Display};
-use std::str::FromStr;
+use std::{
+    error::Error,
+    fmt::{self, Display},
+    str::FromStr,
+};
 
 #[derive(Debug, Clone, Copy, Default, Eq, PartialEq)]
 pub enum Role {

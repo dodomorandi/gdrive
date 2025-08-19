@@ -1,7 +1,8 @@
-use std::io::Write;
-use std::pin::Pin;
-use std::task::Poll;
-use std::{io, task};
+use std::{
+    io::{self, Write},
+    pin::Pin,
+    task::{self, Poll},
+};
 
 use pin_project_lite::pin_project;
 use tokio::io::AsyncWrite;

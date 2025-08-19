@@ -1,6 +1,7 @@
-use crate::common::delegate::UploadDelegate;
-use crate::common::delegate::UploadDelegateConfig;
-use crate::hub::Hub;
+use crate::{
+    common::delegate::{UploadDelegate, UploadDelegateConfig},
+    hub::Hub,
+};
 
 pub async fn generate_ids(
     hub: &Hub,

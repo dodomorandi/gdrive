@@ -1,16 +1,17 @@
+use std::{
+    borrow::Cow,
+    error,
+    fmt::{Display, Formatter, Write},
+    ops::Not,
+    path::Path,
+};
+
 use error_trace::ErrorTrace;
 
-use crate::app_config;
-use crate::app_config::set_file_permissions;
-use crate::app_config::AppConfig;
-use crate::common::account_archive;
-use std::borrow::Cow;
-use std::error;
-use std::fmt::Display;
-use std::fmt::Formatter;
-use std::fmt::Write;
-use std::ops::Not;
-use std::path::Path;
+use crate::{
+    app_config::{self, set_file_permissions, AppConfig},
+    common::account_archive,
+};
 
 #[derive(Debug, Clone)]
 pub struct Config {

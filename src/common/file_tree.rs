@@ -1,19 +1,16 @@
 pub mod errors;
 
-use crate::common::file_info::FileInfo;
-use crate::common::file_tree_like;
-use crate::common::id_gen::IdGen;
-use async_recursion::async_recursion;
-use std::borrow::Cow;
-use std::fs;
-use std::path::Path;
-use std::path::PathBuf;
-use std::sync::Arc;
+use std::{
+    borrow::Cow,
+    fs,
+    path::{Path, PathBuf},
+    sync::Arc,
+};
 
-use super::FileLike;
-use super::FileTreeLike;
-use super::FolderInfoLike;
-use super::FolderLike;
+use async_recursion::async_recursion;
+
+use super::{FileLike, FileTreeLike, FolderInfoLike, FolderLike};
+use crate::common::{file_info::FileInfo, file_tree_like, id_gen::IdGen};
 
 #[derive(Debug, Clone)]
 pub struct FileTree {
@@ -246,9 +243,8 @@ mod tests {
         sync::Arc,
     };
 
-    use crate::common::{drive_file::MIME_TYPE_CSV_MIME, file_tree::FolderInfo, FolderLike};
-
     use super::{File, Folder, Node};
+    use crate::common::{drive_file::MIME_TYPE_CSV_MIME, file_tree::FolderInfo, FolderLike};
 
     #[test]
     fn folder_folders_recursive() {

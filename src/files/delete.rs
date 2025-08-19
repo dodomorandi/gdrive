@@ -1,11 +1,15 @@
-use std::error;
-use std::fmt::Display;
-use std::fmt::Formatter;
+use std::{
+    error,
+    fmt::{Display, Formatter},
+};
 
-use crate::common::drive_file;
-use crate::common::hub_helper;
-use crate::common::hub_helper::GetHubError;
-use crate::files;
+use crate::{
+    common::{
+        drive_file,
+        hub_helper::{self, GetHubError},
+    },
+    files,
+};
 
 pub struct Config {
     pub file_id: String,

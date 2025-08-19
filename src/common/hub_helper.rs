@@ -1,12 +1,13 @@
-use crate::app_config;
-use crate::app_config::AppConfig;
-use crate::hub::Auth;
-use crate::hub::Hub;
-use std::error::Error;
-use std::fmt;
-use std::fmt::Display;
-use std::fmt::Formatter;
-use std::io;
+use std::{
+    error::Error,
+    fmt::{self, Display, Formatter},
+    io,
+};
+
+use crate::{
+    app_config::{self, AppConfig},
+    hub::{Auth, Hub},
+};
 
 pub async fn get_hub() -> Result<Hub, GetHubError> {
     let app_cfg = AppConfig::load_current_account().map_err(GetHubError::LoadCurrentAccount)?;

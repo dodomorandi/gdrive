@@ -1,13 +1,15 @@
-use bytesize::ByteSize;
-use google_drive3::chrono;
-use google_drive3::chrono::DateTime;
+use std::{
+    error,
+    fmt::{Display, Formatter},
+};
 
-use crate::common::hub_helper;
-use crate::common::hub_helper::GetHubError;
-use crate::hub::Hub;
-use std::error;
-use std::fmt::Display;
-use std::fmt::Formatter;
+use bytesize::ByteSize;
+use google_drive3::chrono::{self, DateTime};
+
+use crate::{
+    common::hub_helper::{self, GetHubError},
+    hub::Hub,
+};
 
 pub struct Config {
     pub file_id: String,

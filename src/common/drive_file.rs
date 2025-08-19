@@ -1,7 +1,6 @@
+use std::{fmt, path::Path, sync::LazyLock};
+
 use mime::Mime;
-use std::fmt;
-use std::path::Path;
-use std::sync::LazyLock;
 
 macro_rules! create_mime_from_str {
     (

@@ -8,15 +8,13 @@ pub mod hub;
 pub mod permissions;
 pub mod version;
 
+use std::{path::PathBuf, process::ExitCode};
+
 use clap::{Parser, Subcommand};
-use common::delegate::ChunkSize;
-use common::permission;
+use common::{delegate::ChunkSize, permission};
 use error_trace::ErrorTrace;
-use files::list::ListQuery;
-use files::list::ListSortOrder;
+use files::list::{ListQuery, ListSortOrder};
 use mime::Mime;
-use std::path::PathBuf;
-use std::process::ExitCode;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None, disable_version_flag = true)]

@@ -1,15 +1,18 @@
-use crate::common::delegate::UploadDelegate;
-use crate::common::delegate::UploadDelegateConfig;
-use crate::common::hub_helper;
-use crate::common::hub_helper::GetHubError;
-use crate::common::table;
-use crate::common::table::Table;
-use crate::files;
-use crate::hub::Hub;
-use std::error;
-use std::fmt::Display;
-use std::fmt::Formatter;
-use std::io;
+use std::{
+    error,
+    fmt::{Display, Formatter},
+    io,
+};
+
+use crate::{
+    common::{
+        delegate::{UploadDelegate, UploadDelegateConfig},
+        hub_helper::{self, GetHubError},
+        table::{self, Table},
+    },
+    files,
+    hub::Hub,
+};
 
 #[derive(Clone, Debug)]
 pub struct Config {

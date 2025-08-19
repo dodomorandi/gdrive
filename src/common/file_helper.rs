@@ -1,9 +1,12 @@
+use std::{
+    error::Error,
+    fmt::{self, Display},
+    fs,
+    io::{self, Read, Seek},
+    path::{Path, PathBuf},
+};
+
 use mktemp::Temp;
-use std::error::Error;
-use std::fmt::{self, Display};
-use std::io::{Read, Seek};
-use std::path::{Path, PathBuf};
-use std::{fs, io};
 
 pub fn stdin_to_file() -> Result<Temp, StdinToFileError> {
     let tmp_file = Temp::new_file().map_err(StdinToFileError::NewTempFile)?;

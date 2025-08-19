@@ -1,10 +1,13 @@
-use crate::app_config;
-use crate::app_config::AppConfig;
-use crate::common::account_archive;
-use std::error;
-use std::fmt::Display;
-use std::fmt::Formatter;
-use std::path::PathBuf;
+use std::{
+    error,
+    fmt::{Display, Formatter},
+    path::PathBuf,
+};
+
+use crate::{
+    app_config::{self, AppConfig},
+    common::account_archive,
+};
 
 #[derive(Debug, Clone)]
 pub struct Config {

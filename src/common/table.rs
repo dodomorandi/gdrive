@@ -1,6 +1,8 @@
-use std::fmt::{self, Display};
-use std::io;
-use std::io::Write;
+use std::{
+    fmt::{self, Display},
+    io::{self, Write},
+};
+
 use tabwriter::TabWriter;
 
 pub struct Table<H: Display, V: Display, const COLUMNS: usize> {

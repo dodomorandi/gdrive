@@ -1,18 +1,19 @@
+use std::{
+    future::Future,
+    io,
+    ops::Deref,
+    path::{Path, PathBuf},
+    pin::Pin,
+};
+
+use google_drive3::{
+    hyper::{self, client::HttpConnector},
+    hyper_rustls::{HttpsConnector, HttpsConnectorBuilder},
+    oauth2::{self, authenticator::Authenticator, authenticator_delegate::InstalledFlowDelegate},
+    DriveHub,
+};
+
 use crate::app_config;
-use google_drive3::hyper;
-use google_drive3::hyper::client::HttpConnector;
-use google_drive3::hyper_rustls::HttpsConnector;
-use google_drive3::hyper_rustls::HttpsConnectorBuilder;
-use google_drive3::oauth2;
-use google_drive3::oauth2::authenticator::Authenticator;
-use google_drive3::oauth2::authenticator_delegate::InstalledFlowDelegate;
-use google_drive3::DriveHub;
-use std::future::Future;
-use std::io;
-use std::ops::Deref;
-use std::path::Path;
-use std::path::PathBuf;
-use std::pin::Pin;
 
 pub struct HubConfig {
     pub secret: oauth2::ApplicationSecret,

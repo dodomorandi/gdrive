@@ -1,10 +1,12 @@
+use std::{
+    fmt::{self, Display},
+    str::FromStr,
+    time::Duration,
+};
+
 use bytesize::ByteSize;
 use error_trace::ErrorTrace;
-use google_drive3::hyper;
-use google_drive3::hyper::http;
-use std::fmt::{self, Display};
-use std::str::FromStr;
-use std::time::Duration;
+use google_drive3::hyper::{self, http};
 
 #[derive(Debug, Clone, Default)]
 pub struct UploadDelegateConfig {

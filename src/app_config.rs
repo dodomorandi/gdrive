@@ -1,13 +1,13 @@
 pub mod errors;
 
-use serde::Deserialize;
-use serde::Serialize;
-use std::fs;
-use std::io;
-use std::ops::Not;
-use std::path::Path;
-use std::path::PathBuf;
-use std::sync::OnceLock;
+use std::{
+    fs, io,
+    ops::Not,
+    path::{Path, PathBuf},
+    sync::OnceLock,
+};
+
+use serde::{Deserialize, Serialize};
 
 const SYSTEM_CONFIG_DIR_NAME: &str = ".config";
 const BASE_PATH_DIR_NAME: &str = "gdrive3";

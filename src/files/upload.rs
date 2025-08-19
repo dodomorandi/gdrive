@@ -1,31 +1,27 @@
-use crate::common::delegate::BackoffConfig;
-use crate::common::delegate::ChunkSize;
-use crate::common::delegate::UploadDelegate;
-use crate::common::delegate::UploadDelegateConfig;
-use crate::common::file_helper;
-use crate::common::file_info;
-use crate::common::file_info::FileInfo;
-use crate::common::file_tree;
-use crate::common::file_tree::FileTree;
-use crate::common::hub_helper;
-use crate::common::hub_helper::GetHubError;
-use crate::common::id_gen::IdGen;
-use crate::common::FileTreeLike;
-use crate::common::FolderLike;
-use crate::files;
-use crate::files::info::DisplayConfig;
-use crate::files::mkdir;
-use crate::hub::Hub;
+use std::{
+    error,
+    fmt::{Display, Formatter},
+    fs, io,
+    path::{Path, PathBuf},
+    time::Duration,
+};
+
 use bytesize::ByteSize;
 use mime::Mime;
-use std::error;
-use std::fmt::Display;
-use std::fmt::Formatter;
-use std::fs;
-use std::io;
-use std::path::Path;
-use std::path::PathBuf;
-use std::time::Duration;
+
+use crate::{
+    common::{
+        delegate::{BackoffConfig, ChunkSize, UploadDelegate, UploadDelegateConfig},
+        file_helper,
+        file_info::{self, FileInfo},
+        file_tree::{self, FileTree},
+        hub_helper::{self, GetHubError},
+        id_gen::IdGen,
+        FileTreeLike, FolderLike,
+    },
+    files::{self, info::DisplayConfig, mkdir},
+    hub::Hub,
+};
 
 #[expect(
     clippy::struct_excessive_bools,

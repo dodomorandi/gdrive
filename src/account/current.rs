@@ -1,8 +1,9 @@
-use crate::app_config;
-use crate::app_config::AppConfig;
-use std::error;
-use std::fmt::Display;
-use std::fmt::Formatter;
+use std::{
+    error,
+    fmt::{Display, Formatter},
+};
+
+use crate::app_config::{self, AppConfig};
 
 pub fn current() -> Result<(), Error> {
     let accounts = app_config::list_accounts().map_err(Error::List)?;
