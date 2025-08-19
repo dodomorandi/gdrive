@@ -1,5 +1,6 @@
 use crate::common::delegate::UploadDelegateConfig;
 use crate::common::hub_helper;
+use crate::common::hub_helper::GetHubError;
 use crate::files;
 use crate::files::update::PatchFile;
 use std::error;
@@ -37,7 +38,7 @@ pub async fn rename(config: Config) -> Result<(), Error> {
 
 #[derive(Debug)]
 pub enum Error {
-    Hub(hub_helper::Error),
+    Hub(GetHubError),
     GetFile(google_drive3::Error),
     Rename(google_drive3::Error),
 }

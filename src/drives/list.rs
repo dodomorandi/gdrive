@@ -1,6 +1,7 @@
 use crate::common::delegate::UploadDelegate;
 use crate::common::delegate::UploadDelegateConfig;
 use crate::common::hub_helper;
+use crate::common::hub_helper::GetHubError;
 use crate::common::table;
 use crate::common::table::Table;
 use crate::hub::Hub;
@@ -67,7 +68,7 @@ pub async fn list_drives(
 
 #[derive(Debug)]
 pub enum Error {
-    Hub(hub_helper::Error),
+    Hub(GetHubError),
     ListDrives(google_drive3::Error),
 }
 

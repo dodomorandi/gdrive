@@ -2,6 +2,7 @@ use crate::common::delegate::UploadDelegate;
 use crate::common::delegate::UploadDelegateConfig;
 use crate::common::drive_file;
 use crate::common::hub_helper;
+use crate::common::hub_helper::GetHubError;
 use crate::files;
 use crate::files::info::DisplayConfig;
 use crate::hub::Hub;
@@ -83,7 +84,7 @@ pub async fn copy_file(
 
 #[derive(Debug)]
 pub enum Error {
-    Hub(hub_helper::Error),
+    Hub(GetHubError),
     GetFile(Box<google_drive3::Error>),
     GetDestinationFolder(Box<google_drive3::Error>),
     DestinationNotADirectory,

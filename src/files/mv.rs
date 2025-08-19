@@ -2,6 +2,7 @@ use crate::common::delegate::UploadDelegate;
 use crate::common::delegate::UploadDelegateConfig;
 use crate::common::drive_file;
 use crate::common::hub_helper;
+use crate::common::hub_helper::GetHubError;
 use crate::files;
 use crate::hub::Hub;
 use std::error;
@@ -85,7 +86,7 @@ pub async fn change_parent(
 
 #[derive(Debug)]
 pub enum Error {
-    Hub(hub_helper::Error),
+    Hub(GetHubError),
     GetFile(Box<google_drive3::Error>),
     GetOldParent(String, Box<google_drive3::Error>),
     GetNewParent(Box<google_drive3::Error>),

@@ -2,6 +2,7 @@ use crate::common::drive_file;
 use crate::common::file_tree_drive;
 use crate::common::file_tree_drive::FileTreeDrive;
 use crate::common::hub_helper;
+use crate::common::hub_helper::GetHubError;
 use crate::common::md5_writer::Md5Writer;
 use crate::common::parse_md5_digest;
 use crate::common::FileTreeLike;
@@ -209,7 +210,7 @@ pub async fn download_file(hub: &Hub, file_id: &str) -> Result<hyper::Body, goog
 
 #[derive(Debug)]
 pub enum Error {
-    Hub(hub_helper::Error),
+    Hub(GetHubError),
     GetFile(Box<google_drive3::Error>),
     DownloadFile(Box<google_drive3::Error>),
     MissingFileName(file_tree_drive::errors::FileIdentifier),

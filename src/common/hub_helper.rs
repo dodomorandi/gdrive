@@ -2,49 +2,49 @@ use crate::app_config;
 use crate::app_config::AppConfig;
 use crate::hub::Auth;
 use crate::hub::Hub;
-use std::error;
+use std::error::Error;
 use std::fmt;
 use std::fmt::Display;
 use std::fmt::Formatter;
 use std::io;
 
-pub async fn get_hub() -> Result<Hub, Error> {
-    let app_cfg = AppConfig::load_current_account().map_err(Error::LoadCurrentAccount)?;
-    let secret = app_cfg.load_secret().map_err(Error::LoadSecret)?;
+pub async fn get_hub() -> Result<Hub, GetHubError> {
+    let app_cfg = AppConfig::load_current_account().map_err(GetHubError::LoadCurrentAccount)?;
+    let secret = app_cfg.load_secret().map_err(GetHubError::LoadSecret)?;
     let auth = Auth::new(&secret, app_cfg.tokens_path())
         .await
-        .map_err(Error::Auth)?;
+        .map_err(GetHubError::Auth)?;
 
-    let hub = Hub::new(auth).map_err(Error::Hub)?;
+    let hub = Hub::new(auth).map_err(GetHubError::Hub)?;
 
     Ok(hub)
 }
 
 #[derive(Debug)]
-pub enum Error {
+pub enum GetHubError {
     LoadCurrentAccount(app_config::errors::LoadCurrentAccount),
     LoadSecret(app_config::errors::LoadSecret),
     Auth(io::Error),
     Hub(io::Error),
 }
 
-impl error::Error for Error {
-    fn source(&self) -> Option<&(dyn error::Error + 'static)> {
+impl Error for GetHubError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
-            Error::LoadCurrentAccount(source) => Some(source),
-            Error::LoadSecret(source) => Some(source),
-            Error::Hub(source) | Error::Auth(source) => Some(source),
+            GetHubError::LoadCurrentAccount(source) => Some(source),
+            GetHubError::LoadSecret(source) => Some(source),
+            GetHubError::Hub(source) | GetHubError::Auth(source) => Some(source),
         }
     }
 }
 
-impl Display for Error {
+impl Display for GetHubError {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         let s = match self {
-            Error::LoadCurrentAccount(_) => "unable to load current account",
-            Error::LoadSecret(_) => "unable to load secret",
-            Error::Auth(_) => "unable to authenticate",
-            Error::Hub(_) => "unable to create Google Drive hub",
+            GetHubError::LoadCurrentAccount(_) => "unable to load current account",
+            GetHubError::LoadSecret(_) => "unable to load secret",
+            GetHubError::Auth(_) => "unable to authenticate",
+            GetHubError::Hub(_) => "unable to create Google Drive hub",
         };
 
         f.write_str(s)

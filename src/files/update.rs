@@ -6,6 +6,7 @@ use crate::common::file_helper;
 use crate::common::file_info;
 use crate::common::file_info::FileInfo;
 use crate::common::hub_helper;
+use crate::common::hub_helper::GetHubError;
 use crate::files;
 use crate::files::info;
 use crate::files::info::DisplayConfig;
@@ -145,7 +146,7 @@ pub async fn update_metadata(
 
 #[derive(Debug)]
 pub enum Error {
-    Hub(hub_helper::Error),
+    Hub(GetHubError),
     FileInfo {
         path: PathBuf,
         source: file_info::FromFileError,

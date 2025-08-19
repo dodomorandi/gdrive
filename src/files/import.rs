@@ -4,6 +4,7 @@ use crate::common::drive_file::DocType;
 use crate::common::file_info;
 use crate::common::file_info::FileInfo;
 use crate::common::hub_helper;
+use crate::common::hub_helper::GetHubError;
 use crate::files;
 use crate::files::info::DisplayConfig;
 use std::error;
@@ -71,7 +72,7 @@ pub async fn import(config: Config) -> Result<(), Error> {
 
 #[derive(Debug)]
 pub enum Error {
-    Hub(hub_helper::Error),
+    Hub(GetHubError),
     OpenFile(PathBuf, io::Error),
     FileInfo {
         path: PathBuf,

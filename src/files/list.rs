@@ -1,5 +1,6 @@
 use crate::common::drive_file;
 use crate::common::hub_helper;
+use crate::common::hub_helper::GetHubError;
 use crate::common::table;
 use crate::common::table::Table;
 use crate::files;
@@ -217,7 +218,7 @@ impl fmt::Display for ListSortOrder {
 
 #[derive(Debug)]
 pub enum Error {
-    Hub(hub_helper::Error),
+    Hub(GetHubError),
     ListFiles(Box<google_drive3::Error>),
 }
 

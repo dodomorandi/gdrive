@@ -4,6 +4,7 @@ use std::fmt::Formatter;
 
 use crate::common::drive_file;
 use crate::common::hub_helper;
+use crate::common::hub_helper::GetHubError;
 use crate::files;
 
 pub struct Config {
@@ -35,7 +36,7 @@ pub async fn delete(config: Config) -> Result<(), Error> {
 
 #[derive(Debug)]
 pub enum Error {
-    Hub(hub_helper::Error),
+    Hub(GetHubError),
     GetFile(Box<google_drive3::Error>),
     DeleteFile(Box<google_drive3::Error>),
     IsDirectory(String),

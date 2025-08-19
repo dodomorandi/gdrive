@@ -1,6 +1,7 @@
 use crate::common::delegate::UploadDelegate;
 use crate::common::delegate::UploadDelegateConfig;
 use crate::common::hub_helper;
+use crate::common::hub_helper::GetHubError;
 use crate::common::permission;
 use crate::files;
 use crate::hub::Hub;
@@ -87,7 +88,7 @@ pub async fn create_permission(
 
 #[derive(Debug)]
 pub enum Error {
-    Hub(hub_helper::Error),
+    Hub(GetHubError),
     GetFile(Box<google_drive3::Error>),
     CreatePermission(Box<google_drive3::Error>),
     MissingEmail(permission::Type),

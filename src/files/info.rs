@@ -3,6 +3,7 @@ use google_drive3::chrono;
 use google_drive3::chrono::DateTime;
 
 use crate::common::hub_helper;
+use crate::common::hub_helper::GetHubError;
 use crate::hub::Hub;
 use std::error;
 use std::fmt::Display;
@@ -145,7 +146,7 @@ pub fn format_date_time(utc_time: DateTime<chrono::Utc>) -> String {
 
 #[derive(Debug)]
 pub enum Error {
-    Hub(hub_helper::Error),
+    Hub(GetHubError),
     GetFile(google_drive3::Error),
 }
 

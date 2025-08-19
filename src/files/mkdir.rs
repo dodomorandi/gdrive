@@ -3,6 +3,7 @@ use crate::common::delegate::UploadDelegateConfig;
 use crate::common::drive_file::MIME_TYPE_DRIVE_FOLDER;
 use crate::common::empty_file::EmptyFile;
 use crate::common::hub_helper;
+use crate::common::hub_helper::GetHubError;
 use crate::hub::Hub;
 use std::error;
 use std::fmt::Display;
@@ -69,7 +70,7 @@ pub async fn create_directory(
 
 #[derive(Debug)]
 pub enum Error {
-    Hub(hub_helper::Error),
+    Hub(GetHubError),
     CreateDirectory(google_drive3::Error),
 }
 

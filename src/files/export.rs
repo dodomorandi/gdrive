@@ -3,6 +3,7 @@ use mime::Mime;
 use crate::common::drive_file::DocType;
 use crate::common::drive_file::FileExtension;
 use crate::common::hub_helper;
+use crate::common::hub_helper::GetHubError;
 use crate::common::parse_md5_digest;
 use crate::files;
 use crate::hub::Hub;
@@ -82,7 +83,7 @@ pub async fn export_file(
 
 #[derive(Debug)]
 pub enum Error {
-    Hub(hub_helper::Error),
+    Hub(GetHubError),
     FileExists(PathBuf),
     GetFile(Box<google_drive3::Error>),
     ExportFile(Box<google_drive3::Error>),

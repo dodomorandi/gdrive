@@ -8,6 +8,7 @@ use crate::common::file_info::FileInfo;
 use crate::common::file_tree;
 use crate::common::file_tree::FileTree;
 use crate::common::hub_helper;
+use crate::common::hub_helper::GetHubError;
 use crate::common::id_gen::IdGen;
 use crate::common::FileTreeLike;
 use crate::common::FolderLike;
@@ -271,7 +272,7 @@ where
 
 #[derive(Debug)]
 pub enum Error {
-    Hub(hub_helper::Error),
+    Hub(GetHubError),
     FileInfo {
         path: PathBuf,
         source: file_info::FromFileError,
