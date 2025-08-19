@@ -27,7 +27,9 @@ pub async fn copy(config: Config) -> Result<(), Error> {
         .await
         .map_err(|err| Error::GetFile(Box::new(err)))?;
 
-    err_if_directory(&file)?;
+    if drive_file::is_directory(&file) {
+        return Err(Error::SourceIsADirectory);
+    }
 
     let to_parent = files::info::get_file(&hub, &config.to_folder_id)
         .await
@@ -117,14 +119,6 @@ impl Display for Error {
                 write!(f, "Failed to move file: {err}")
             }
         }
-    }
-}
-
-fn err_if_directory(file: &google_drive3::api::File) -> Result<(), Error> {
-    if drive_file::is_directory(file) {
-        Err(Error::SourceIsADirectory)
-    } else {
-        Ok(())
     }
 }
 
