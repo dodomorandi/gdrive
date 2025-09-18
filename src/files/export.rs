@@ -94,7 +94,7 @@ pub enum Error {
     MissingDriveMime,
     UnsupportedDriveMime(String),
     UnsupportedExportExtension(DocType),
-    SaveFile(files::download::Error),
+    SaveFile(files::download::errors::SaveBodyToFile),
 }
 
 impl error::Error for Error {}
