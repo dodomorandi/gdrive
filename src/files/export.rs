@@ -102,45 +102,58 @@ pub enum Error {
     SaveFile(files::download::errors::SaveBodyToFile),
 }
 
-impl error::Error for Error {}
-
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            Error::Hub(err) => write!(f, "{err}"),
+            Error::Hub(_) => f.write_str("unable to get drive hub"),
             Error::FileExists(path) => {
                 write!(
                     f,
-                    "File '{}' already exists, use --overwrite to overwrite it",
+                    "file '{}' already exists, use --overwrite to overwrite it",
                     path.display()
                 )
             }
-            Error::GetFile(err) => {
-                write!(f, "Failed to get file: {err}")
-            }
-            Error::ExportFile(err) => {
-                write!(f, "Failed to export file: {err}")
-            }
-            Error::MissingDriveMime => write!(f, "Drive file does not have a mime type"),
+            Error::GetFile(_) => f.write_str("unable to get file"),
+            Error::ExportFile(_) => f.write_str("unable to export file"),
+            Error::MissingDriveMime => f.write_str("drive file does not have a mime type"),
             Error::UnsupportedDriveMime(mime) => {
-                write!(f, "Mime type on drive file '{mime}' is not supported")
+                write!(f, "mime type on drive file '{mime}' is not supported")
             }
             Error::UnsupportedExportExtension(doc_type) => {
-                let supported_types = doc_type
-                    .supported_export_types()
-                    .iter()
-                    .map(ToString::to_string)
-                    .collect::<Vec<_>>()
-                    .join(", ");
-
                 write!(
                     f,
-                    "Export of a {doc_type} to this file type is not supported, supported file types are: {supported_types}"
-                )
+                    "export of a {doc_type} to this file type is not supported, supported file \
+                    types are: "
+                )?;
+
+                let mut types = doc_type.supported_export_types().iter();
+                if let Some(ty) = types.next() {
+                    write!(f, "{ty}")?;
+                    for ty in types {
+                        write!(f, ", {ty}")?;
+                    }
+                } else {
+                    f.write_str("[NONE]")?;
+                }
+                Ok(())
             }
-            Error::SaveFile(err) => {
-                write!(f, "Failed to save file: {err}")
+            Error::SaveFile(_) => {
+                write!(f, "failed to save file")
             }
+        }
+    }
+}
+
+impl error::Error for Error {
+    fn source(&self) -> Option<&(dyn error::Error + 'static)> {
+        match self {
+            Error::Hub(source) => Some(source),
+            Error::FileExists(_)
+            | Error::MissingDriveMime
+            | Error::UnsupportedDriveMime(_)
+            | Error::UnsupportedExportExtension(_)
+            | Error::SaveFile(_) => None,
+            Error::GetFile(source) | Error::ExportFile(source) => Some(source),
         }
     }
 }
