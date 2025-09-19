@@ -32,7 +32,9 @@ pub enum ExistingFileAction {
 pub async fn export(config: Config) -> Result<(), Error> {
     let hub = get_hub().await.map_err(Error::Hub)?;
 
-    err_if_file_exists(&config)?;
+    if config.file_path.exists() && config.existing_file_action == ExistingFileAction::Abort {
+        return Err(Error::FileExists(config.file_path));
+    }
 
     let file = files::info::get_file(&hub, &config.file_id)
         .await
@@ -137,14 +139,6 @@ impl Display for Error {
                 write!(f, "Failed to save file: {err}")
             }
         }
-    }
-}
-
-fn err_if_file_exists(config: &Config) -> Result<(), Error> {
-    if config.file_path.exists() && config.existing_file_action == ExistingFileAction::Abort {
-        Err(Error::FileExists(config.file_path.clone()))
-    } else {
-        Ok(())
     }
 }
 
