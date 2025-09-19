@@ -1,6 +1,7 @@
 use std::{
     error,
     fmt::{Display, Formatter},
+    ops::Not,
     path::PathBuf,
 };
 
@@ -47,7 +48,9 @@ pub async fn export(config: Config) -> Result<(), Error> {
     let extension = FileExtension::from_path(&config.file_path)
         .ok_or(Error::UnsupportedExportExtension(doc_type))?;
 
-    err_if_unsupported(doc_type, extension)?;
+    if doc_type.can_export_to(extension).not() {
+        return Err(Error::UnsupportedExportExtension(doc_type));
+    }
 
     let mime_type = extension.get_export_mime();
 
@@ -139,13 +142,5 @@ impl Display for Error {
                 write!(f, "Failed to save file: {err}")
             }
         }
-    }
-}
-
-fn err_if_unsupported(doc_type: DocType, extension: FileExtension) -> Result<(), Error> {
-    if doc_type.can_export_to(extension) {
-        Ok(())
-    } else {
-        Err(Error::UnsupportedExportExtension(doc_type))
     }
 }
