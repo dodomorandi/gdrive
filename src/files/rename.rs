@@ -31,7 +31,7 @@ pub async fn rename(config: Config) -> Result<(), Error> {
         config.name
     );
 
-    let patch_file = PatchFile::new(config.file_id).with_name(&config.name);
+    let patch_file = PatchFile::new(config.file_id).with_name(config.name);
 
     files::update::update_metadata(&hub, &delegate_config, patch_file)
         .await

@@ -211,14 +211,12 @@ impl PatchFile {
     }
 
     #[must_use]
-    pub fn with_name(&self, name: &str) -> Self {
-        Self {
-            file: google_drive3::api::File {
-                name: Some(name.to_string()),
-                ..self.file.clone()
-            },
-            ..self.clone()
-        }
+    pub fn with_name(mut self, name: impl Into<String>) -> Self {
+        self.file = google_drive3::api::File {
+            name: Some(name.into()),
+            ..self.file
+        };
+        self
     }
 
     #[must_use]
