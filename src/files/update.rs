@@ -168,28 +168,29 @@ pub enum Error {
     Update(google_drive3::Error),
 }
 
-impl error::Error for Error {
-    fn source(&self) -> Option<&(dyn error::Error + 'static)> {
+impl Display for Error {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            Error::FileInfo { source, .. } => Some(source),
-            // FIXME: correctly impl std::error::Error
-            _ => None,
+            Error::Hub(_) => f.write_str("unable to get drive hub"),
+            Error::FileInfo { path, source: _ } => {
+                write!(f, "unable to get file info for '{}'", path.display())
+            }
+            Error::OpenFile(path, _) => {
+                write!(f, "unable to open file '{}'", path.display())
+            }
+            Error::GetFile(_) => f.write_str("unable to get file"),
+            Error::Update(_) => f.write_str("unable to update file"),
         }
     }
 }
 
-impl Display for Error {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+impl error::Error for Error {
+    fn source(&self) -> Option<&(dyn error::Error + 'static)> {
         match self {
-            Error::Hub(err) => write!(f, "{err}"),
-            Error::FileInfo { path, source: _ } => {
-                write!(f, "unable to get file info for '{}'", path.display())
-            }
-            Error::OpenFile(path, err) => {
-                write!(f, "Failed to open file '{}': {}", path.display(), err)
-            }
-            Error::GetFile(err) => write!(f, "Failed to get file: {err}"),
-            Error::Update(err) => write!(f, "Failed to update file: {err}"),
+            Error::Hub(source) => Some(source),
+            Error::FileInfo { source, .. } => Some(source),
+            Error::OpenFile(_, source) => Some(source),
+            Error::GetFile(source) | Error::Update(source) => Some(source),
         }
     }
 }
