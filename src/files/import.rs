@@ -66,8 +66,7 @@ pub async fn import(config: Config) -> Result<(), Error> {
         print!("{}", file.id.unwrap_or_default());
     } else {
         println!("File successfully imported");
-        let fields = files::info::prepare_fields(&file, &DisplayConfig::default());
-        files::info::print_fields(&fields);
+        files::info::print_file_info(&file, &DisplayConfig::default());
     }
 
     Ok(())

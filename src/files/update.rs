@@ -86,8 +86,7 @@ pub async fn update(config: Config) -> Result<(), Error> {
 
     println!("File successfully updated");
 
-    let fields = files::info::prepare_fields(&file, &DisplayConfig::default());
-    files::info::print_fields(&fields);
+    files::info::print_file_info(&file, &DisplayConfig::default());
 
     Ok(())
 }

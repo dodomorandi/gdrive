@@ -51,14 +51,15 @@ pub async fn list(config: Config) -> Result<(), Error> {
             file_type,
             file.size
                 .map(|bytes| {
-                    files::info::format_bytes(
-                        bytes.try_into().unwrap_or(0),
-                        &DisplayConfig::default(),
-                    )
+                    files::info::DisplayBytes {
+                        bytes: bytes.try_into().unwrap_or(0),
+                        config: &DisplayConfig::default(),
+                    }
+                    .to_string()
                 })
                 .unwrap_or_default(),
             file.created_time
-                .map(files::info::format_date_time)
+                .map(|created_time| files::info::format_date_time(created_time).to_string())
                 .unwrap_or_default(),
         ]);
     }

@@ -55,8 +55,7 @@ pub async fn copy(config: Config) -> Result<(), Error> {
         .await
         .map_err(|err| Error::Copy(Box::new(err)))?;
 
-    let fields = files::info::prepare_fields(&new_file, &DisplayConfig::default());
-    files::info::print_fields(&fields);
+    files::info::print_file_info(&new_file, &DisplayConfig::default());
 
     Ok(())
 }

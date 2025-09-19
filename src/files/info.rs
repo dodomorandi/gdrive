@@ -1,10 +1,14 @@
 use std::{
     error,
-    fmt::{Display, Formatter},
+    fmt::{self, Display, Formatter},
 };
 
 use bytesize::ByteSize;
-use google_drive3::chrono::{self, DateTime};
+use google_drive3::chrono::{
+    self,
+    format::{DelayedFormat, StrftimeItems},
+    DateTime,
+};
 
 use crate::{
     common::hub_helper::{get_hub, GetHubError},
@@ -23,14 +27,12 @@ pub async fn info(config: Config) -> Result<(), Error> {
         .await
         .map_err(Error::GetFile)?;
 
-    let fields = prepare_fields(
+    print_file_info(
         &file,
         &DisplayConfig {
             size_in_bytes: config.size_in_bytes,
         },
     );
-
-    print_fields(&fields);
 
     Ok(())
 }
@@ -55,99 +57,101 @@ pub async fn get_file(
     Ok(file)
 }
 
-pub fn print_fields(fields: &Vec<Field>) {
-    for field in fields {
-        if let Some(value) = &field.value {
-            println!("{}: {}", field.name, value);
-        }
-    }
-}
-
 #[derive(Debug, Clone, Default)]
 pub struct DisplayConfig {
     pub size_in_bytes: bool,
 }
 
-pub struct Field {
-    pub name: String,
-    pub value: Option<String>,
+pub(crate) fn print_file_info(file: &google_drive3::api::File, display_config: &DisplayConfig) {
+    let google_drive3::api::File {
+        created_time,
+        id,
+        md5_checksum,
+        mime_type,
+        modified_time,
+        name,
+        parents,
+        shared,
+        size,
+        web_view_link,
+        ..
+    } = file;
+
+    print_field("Id", id.as_ref());
+    print_field("Name", name.as_ref());
+    print_field("Mime", mime_type.as_ref());
+    print_field(
+        "Size",
+        size.map(|bytes| DisplayBytes {
+            bytes: u64::try_from(bytes).unwrap_or(0),
+            config: display_config,
+        }),
+    );
+    print_field("Created", created_time.map(format_date_time));
+    print_field("Modified", modified_time.map(format_date_time));
+    print_field("MD5", md5_checksum.as_ref());
+    print_field("Shared", shared.map(format_bool));
+    print_field("Parents", parents.as_deref().map(DisplayJoinedSlice));
+    print_field("ViewUrl", web_view_link.as_ref());
 }
 
-pub fn prepare_fields(file: &google_drive3::api::File, config: &DisplayConfig) -> Vec<Field> {
-    vec![
-        Field {
-            name: String::from("Id"),
-            value: file.id.clone(),
-        },
-        Field {
-            name: String::from("Name"),
-            value: file.name.clone(),
-        },
-        Field {
-            name: String::from("Mime"),
-            value: file.mime_type.clone(),
-        },
-        Field {
-            name: String::from("Size"),
-            value: file
-                .size
-                .map(|bytes| format_bytes(bytes.try_into().unwrap_or(0), config)),
-        },
-        Field {
-            name: String::from("Created"),
-            value: file.created_time.map(format_date_time),
-        },
-        Field {
-            name: String::from("Modified"),
-            value: file.modified_time.map(format_date_time),
-        },
-        Field {
-            name: String::from("MD5"),
-            value: file.md5_checksum.clone(),
-        },
-        Field {
-            name: String::from("Shared"),
-            value: file.shared.map(format_bool),
-        },
-        Field {
-            name: String::from("Parents"),
-            value: file.parents.as_deref().map(format_list),
-        },
-        Field {
-            name: String::from("ViewUrl"),
-            value: file.web_view_link.clone(),
-        },
-    ]
+fn print_field(name: &str, value: Option<impl Display>) {
+    if let Some(value) = value {
+        println!("{name}: {value}");
+    }
 }
 
 // TODO: move to common
 #[must_use]
-pub fn format_bool(b: bool) -> String {
+pub fn format_bool(b: bool) -> &'static str {
     if b {
-        String::from("True")
+        "True"
     } else {
-        String::from("False")
+        "False"
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+struct DisplayJoinedSlice<'a, T>(pub &'a [T]);
+
+impl<T> Display for DisplayJoinedSlice<'_, T>
+where
+    T: Display,
+{
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        let mut iter = self.0.iter();
+        if let Some(first) = iter.next() {
+            write!(f, "{first}")?;
+            for element in iter {
+                write!(f, ", {element}")?;
+            }
+        }
+        Ok(())
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct DisplayBytes<'a> {
+    pub bytes: u64,
+    pub config: &'a DisplayConfig,
+}
+
+impl Display for DisplayBytes<'_> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        let &Self { bytes, config } = self;
+
+        if config.size_in_bytes {
+            write!(f, "{bytes}")
+        } else {
+            write!(f, "{}", ByteSize::b(bytes).display().si())
+        }
     }
 }
 
 #[must_use]
-pub fn format_list(list: &[String]) -> String {
-    list.join(", ")
-}
-
-#[must_use]
-pub fn format_bytes(bytes: u64, config: &DisplayConfig) -> String {
-    if config.size_in_bytes {
-        bytes.to_string()
-    } else {
-        ByteSize::b(bytes).display().si().to_string()
-    }
-}
-
-#[must_use]
-pub fn format_date_time(utc_time: DateTime<chrono::Utc>) -> String {
-    let local_time: DateTime<chrono::Local> = DateTime::from(utc_time);
-    local_time.format("%Y-%m-%d %H:%M:%S").to_string()
+pub fn format_date_time(utc_time: DateTime<chrono::Utc>) -> DelayedFormat<StrftimeItems<'static>> {
+    let local_time = DateTime::<chrono::Local>::from(utc_time);
+    local_time.format("%Y-%m-%d %H:%M:%S")
 }
 
 #[derive(Debug)]
@@ -157,7 +161,7 @@ pub enum Error {
 }
 
 impl Display for Error {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         match self {
             Error::Hub(_) => f.write_str("unable to get drive hub"),
             Error::GetFile(_) => f.write_str("unable to get file"),

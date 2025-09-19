@@ -48,7 +48,8 @@ fn print_permissions_table(config: &Config, permissions: Vec<google_drive3::api:
             permission.role.unwrap_or_default(),
             permission.email_address.unwrap_or_default(),
             permission.domain.unwrap_or_default(),
-            files::info::format_bool(permission.allow_file_discovery.unwrap_or_default()),
+            files::info::format_bool(permission.allow_file_discovery.unwrap_or_default())
+                .to_string(),
         ]);
     }
 
