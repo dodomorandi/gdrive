@@ -1,9 +1,6 @@
 pub(crate) mod errors;
 
-use std::{
-    io::{self, Write},
-    path::{Path, PathBuf},
-};
+use std::path::{Path, PathBuf};
 
 use async_recursion::async_recursion;
 use bytesize::ByteSize;
@@ -13,7 +10,7 @@ use google_drive3::hyper;
 use md5::Digest;
 use tokio::{
     fs::{self, File},
-    io::{AsyncRead, AsyncReadExt, AsyncWriteExt, BufReader},
+    io::{self, AsyncRead, AsyncReadExt, AsyncWriteExt, BufReader},
 };
 
 use crate::{
@@ -278,6 +275,7 @@ pub async fn save_body_to_stdout(mut body: hyper::Body) -> Result<(), errors::Sa
         let chunk = chunk_result.map_err(errors::SaveBodyToStdout::ReadChunk)?;
         stdout
             .write_all(&chunk)
+            .await
             .map_err(errors::SaveBodyToStdout::WriteChunk)?;
     }
 
