@@ -218,14 +218,4 @@ impl PatchFile {
         };
         self
     }
-
-    #[must_use]
-    pub fn id(&self) -> String {
-        self.id.clone()
-    }
-
-    #[must_use]
-    pub fn file(&self) -> google_drive3::api::File {
-        self.file.clone()
-    }
 }
