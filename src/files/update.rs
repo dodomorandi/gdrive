@@ -112,7 +112,11 @@ where
     let req = hub
         .files()
         .update(dst_file, file_id)
-        .param("fields", "id,name,size,createdTime,modifiedTime,md5Checksum,mimeType,parents,shared,description,webContentLink,webViewLink")
+        .param(
+            "fields",
+            "id,name,size,createdTime,modifiedTime,md5Checksum,mimeType,parents,shared,\
+            description,webContentLink,webViewLink",
+        )
         .add_scope(google_drive3::api::Scope::Full)
         .delegate(&mut delegate)
         .supports_all_drives(true);
@@ -138,11 +142,16 @@ pub async fn update_metadata(
     let (_, file) = hub
         .files()
         .update(patch_file.file, &patch_file.id)
-        .param("fields", "id,name,size,createdTime,modifiedTime,md5Checksum,mimeType,parents,shared,description,webContentLink,webViewLink")
+        .param(
+            "fields",
+            "id,name,size,createdTime,modifiedTime,md5Checksum,mimeType,parents,shared,\
+            description,webContentLink,webViewLink",
+        )
         .add_scope(google_drive3::api::Scope::Full)
         .delegate(&mut delegate)
         .supports_all_drives(true)
-        .doit_without_upload().await?;
+        .doit_without_upload()
+        .await?;
 
     Ok(file)
 }
