@@ -42,8 +42,9 @@ pub async fn export(config: Config) -> Result<(), Error> {
         .map_err(|err| Error::GetFile(Box::new(err)))?;
 
     let drive_mime = file.mime_type.ok_or(Error::MissingDriveMime)?;
-    let doc_type = DocType::from_mime_type(&drive_mime)
-        .ok_or(Error::UnsupportedDriveMime(drive_mime.clone()))?;
+    let Some(doc_type) = DocType::from_mime_type(&drive_mime) else {
+        return Err(Error::UnsupportedDriveMime(drive_mime));
+    };
 
     let extension = FileExtension::from_path(&config.file_path)
         .ok_or(Error::UnsupportedExportExtension(doc_type))?;
