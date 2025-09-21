@@ -225,13 +225,20 @@ pub enum Error {
     ListFiles(Box<google_drive3::Error>),
 }
 
-impl error::Error for Error {}
-
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            Error::Hub(e) => write!(f, "{e}"),
-            Error::ListFiles(e) => write!(f, "Failed to list files: {e}"),
+            Error::Hub(_) => f.write_str("unable to get drive hub"),
+            Error::ListFiles(_) => f.write_str("unable to list files"),
+        }
+    }
+}
+
+impl error::Error for Error {
+    fn source(&self) -> Option<&(dyn error::Error + 'static)> {
+        match self {
+            Error::Hub(source) => Some(source),
+            Error::ListFiles(source) => Some(source),
         }
     }
 }
