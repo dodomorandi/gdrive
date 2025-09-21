@@ -294,4 +294,13 @@ mod tests {
         assert_eq!(truncate_middle("hello world", 5), "he…ld");
         assert_eq!(truncate_middle("hello world", 6), "he…rld");
     }
+
+    #[test]
+    fn truncate_middle_multibyte() {
+        assert_eq!(truncate_middle("🤡🧑🌾😞", 5), "🤡🧑🌾😞");
+        assert_eq!(truncate_middle("🤡🧑🌾😞🧐", 5), "🤡🧑🌾😞🧐");
+        assert_eq!(truncate_middle("🤡🧑🌾😞🧐✅", 5), "🤡🧑…🧐✅");
+        assert_eq!(truncate_middle("🤡🧑🌾😞🧐✅❌😃", 5), "🤡🧑…❌😃");
+        assert_eq!(truncate_middle("🤡🧑🌾😞🧐✅❌😃", 6), "🤡🧑…✅❌😃");
+    }
 }
