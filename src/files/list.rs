@@ -149,14 +149,12 @@ pub enum ListQuery {
     None,
 }
 
-impl FromStr for ListQuery {
-    type Err = String;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        if s.is_empty() {
-            Ok(ListQuery::None)
+impl From<String> for ListQuery {
+    fn from(value: String) -> Self {
+        if value.is_empty() {
+            Self::None
         } else {
-            Ok(ListQuery::Custom(s.to_string()))
+            Self::Custom(value)
         }
     }
 }
