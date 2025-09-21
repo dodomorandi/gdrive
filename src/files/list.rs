@@ -131,8 +131,8 @@ pub async fn list_files(
         }
     }
 
-    let max_files = min(config.max_files, collected_files.len());
-    Ok(collected_files[0..max_files].to_vec())
+    collected_files.truncate(config.max_files);
+    Ok(collected_files)
 }
 
 #[derive(Debug, Clone, Default)]
