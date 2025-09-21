@@ -178,9 +178,7 @@ impl Display for ListQuery {
                 write!(f, "{query}")
             }
 
-            ListQuery::None => {
-                write!(f, "")
-            }
+            ListQuery::None => Ok(()),
         }
     }
 }
