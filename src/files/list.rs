@@ -1,4 +1,5 @@
 use std::{
+    borrow::Cow,
     cmp::min,
     error,
     fmt::{self, Display, Formatter},
@@ -43,7 +44,7 @@ pub async fn list(config: Config) -> Result<(), Error> {
 
     for file in files {
         let file_type = simplified_file_type(&file);
-        let file_name = format_file_name(&config, &file);
+        let file_name = format_file_name(&config, &file).into_owned();
 
         values.push([
             file.id.unwrap_or_default(),
@@ -252,34 +253,53 @@ fn simplified_file_type(file: &google_drive3::api::File) -> &'static str {
     }
 }
 
-fn format_file_name(config: &Config, file: &google_drive3::api::File) -> String {
+fn format_file_name<'a>(config: &Config, file: &'a google_drive3::api::File) -> Cow<'a, str> {
     let file_name = file.name.as_ref();
 
     if config.truncate_name {
-        file_name
-            .map(|s| truncate_middle(s, 41))
-            .unwrap_or_default()
+        file_name.map_or(Cow::Borrowed(""), |s| truncate_middle(s, 41))
     } else {
-        file_name.map(ToString::to_string).unwrap_or_default()
+        Cow::Borrowed(file_name.map(String::as_str).unwrap_or_default())
     }
 }
 
 // Truncates string to given max length, and inserts ellipsis into
 // the middle of the string to signify that the string has been truncated
-fn truncate_middle(s: &str, max_length: usize) -> String {
-    let chars: Vec<char> = s.chars().collect();
-
-    if chars.len() <= max_length {
-        return s.to_string();
-    }
-
+fn truncate_middle(s: &str, max_length: usize) -> Cow<'_, str> {
     let tail_count = max_length / 2;
     let head_count = max_length - tail_count - 1;
 
-    let head: String = chars[0..head_count].iter().collect();
-    let tail: String = chars[chars.len() - tail_count..].iter().collect();
+    let mut chars_iter = s.char_indices();
+    // Advance the iterator by head_count.
+    // TODO: replace with `advance_by` when stabilized
+    chars_iter.by_ref().take(head_count).count();
+    let mut tail_end_iter = chars_iter.clone().skip(tail_count);
+    if tail_end_iter.next().is_none() {
+        return Cow::Borrowed(s);
+    }
+    let head_end_index = chars_iter.next().unwrap().0;
 
-    [head, tail].join("…")
+    let mut tail_windows = 1;
+    let mut tail;
+    loop {
+        tail = chars_iter.as_str();
+        chars_iter.next().unwrap();
+        tail_windows += 1;
+        if tail_end_iter.next().is_none() {
+            break;
+        }
+    }
+    if tail_windows <= 2 {
+        return Cow::Borrowed(s);
+    }
+
+    let truncated_len = head_end_index + '…'.len_utf8() + tail.len();
+    let mut truncated = String::with_capacity(truncated_len);
+    truncated.push_str(&s[..head_end_index]);
+    truncated.push('…');
+    truncated.push_str(tail);
+    debug_assert_eq!(truncated.len(), truncated_len);
+    Cow::Owned(truncated)
 }
 
 #[cfg(test)]
