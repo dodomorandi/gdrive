@@ -31,9 +31,9 @@ pub async fn list(config: Config) -> Result<(), Error> {
     let hub = get_hub().await.map_err(Error::Hub)?;
     let files = list_files(
         &hub,
-        &ListFilesConfig {
-            query: config.query.clone(),
-            order_by: config.order_by.clone(),
+        ListFilesConfig {
+            query: &config.query,
+            order_by: &config.order_by,
             max_files: config.max_files,
         },
     )
@@ -81,15 +81,16 @@ pub async fn list(config: Config) -> Result<(), Error> {
     Ok(())
 }
 
-pub struct ListFilesConfig {
-    pub query: ListQuery,
-    pub order_by: ListSortOrder,
+#[derive(Debug, Clone, Copy)]
+pub struct ListFilesConfig<'a> {
+    pub query: &'a ListQuery,
+    pub order_by: &'a ListSortOrder,
     pub max_files: usize,
 }
 
 pub async fn list_files(
     hub: &Hub,
-    config: &ListFilesConfig,
+    config: ListFilesConfig<'_>,
 ) -> Result<Vec<google_drive3::api::File>, Error> {
     let mut collected_files: Vec<google_drive3::api::File> = vec![];
     let mut next_page_token: Option<String> = None;
