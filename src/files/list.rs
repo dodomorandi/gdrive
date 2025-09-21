@@ -191,11 +191,11 @@ pub enum ListSortOrder {
 }
 
 impl FromStr for ListSortOrder {
-    type Err = String;
+    type Err = &'static str;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         if s.is_empty() {
-            Err("Sort by can't be an empty string".to_string())
+            Err("Sort by can't be an empty string")
         } else {
             Ok(ListSortOrder::Custom(s.to_string()))
         }
