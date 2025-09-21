@@ -48,7 +48,7 @@ pub async fn list(config: Config) -> Result<(), Error> {
         values.push([
             file.id.unwrap_or_default(),
             file_name,
-            file_type,
+            file_type.to_owned(),
             file.size
                 .map(|bytes| {
                     files::info::DisplayBytes {
@@ -240,15 +240,15 @@ impl error::Error for Error {
     }
 }
 
-fn simplified_file_type(file: &google_drive3::api::File) -> String {
+fn simplified_file_type(file: &google_drive3::api::File) -> &'static str {
     if drive_file::is_directory(file) {
-        String::from("folder")
+        "folder"
     } else if drive_file::is_binary(file) {
-        String::from("regular")
+        "regular"
     } else if drive_file::is_shortcut(file) {
-        String::from("shortcut")
+        "shortcut"
     } else {
-        String::from("document")
+        "document"
     }
 }
 
