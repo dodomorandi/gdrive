@@ -281,3 +281,17 @@ fn truncate_middle(s: &str, max_length: usize) -> String {
 
     [head, tail].join("…")
 }
+
+#[cfg(test)]
+mod tests {
+    use super::truncate_middle;
+
+    #[test]
+    fn truncate_middle_ascii() {
+        assert_eq!(truncate_middle("hell", 5), "hell");
+        assert_eq!(truncate_middle("hello", 5), "hello");
+        assert_eq!(truncate_middle("hellow", 5), "he…ow");
+        assert_eq!(truncate_middle("hello world", 5), "he…ld");
+        assert_eq!(truncate_middle("hello world", 6), "he…rld");
+    }
+}
