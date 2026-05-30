@@ -20,7 +20,7 @@ pub fn import(config: &Config) -> Result<(), Error> {
 
     let accounts = app_config::list_accounts().map_err(Error::ListAccounts)?;
     if accounts.contains(&account_name) {
-        return Err(Error::AccountExists(account_name.to_string()));
+        return Err(Error::AccountExists(account_name.clone()));
     }
 
     let config_base_path = AppConfig::default_base_path().map_err(Error::DefaultBasePath)?;

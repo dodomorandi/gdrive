@@ -137,7 +137,7 @@ fn get_old_parent_id(file: &google_drive3::api::File) -> Result<String, Error> {
 
         Some(parents) => match &parents[..] {
             [] => Err(Error::NoParents),
-            [parent_id] => Ok(parent_id.to_string()),
+            [parent_id] => Ok(parent_id.clone()),
             _ => Err(Error::MultipleParents),
         },
     }

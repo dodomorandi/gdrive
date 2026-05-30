@@ -183,7 +183,7 @@ impl File {
             .ok_or(E::InvalidPath)?;
 
         let os_file = fs::File::open(path).map_err(E::OpenFile)?;
-        let size = os_file.metadata().map(|m| m.len()).unwrap_or(0);
+        let size = os_file.metadata().map_or(0, |m| m.len());
         let mime_type = mime_guess::from_path(path)
             .first()
             .unwrap_or(mime::APPLICATION_OCTET_STREAM);

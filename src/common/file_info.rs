@@ -27,7 +27,7 @@ impl<'a> FileInfo<'a> {
             .map(|s| s.to_string_lossy())
             .ok_or(FromFileError)?;
 
-        let file_size = file.metadata().map(|m| m.len()).unwrap_or(0);
+        let file_size = file.metadata().map_or(0, |m| m.len());
 
         let mime_type = config.mime_type.map_or_else(
             || {

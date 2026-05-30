@@ -147,7 +147,7 @@ impl RevokeAction {
 
             RevokeAction::Id(id) => Self::find_permission_by_id(permissions, id)
                 .map(|p| vec![p])
-                .ok_or_else(|| Error::PermissionNotFound(id.to_string())),
+                .ok_or_else(|| Error::PermissionNotFound(id.clone())),
         }
     }
 
