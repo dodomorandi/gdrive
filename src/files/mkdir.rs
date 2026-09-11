@@ -1,7 +1,10 @@
 use std::{
     error,
     fmt::{Display, Formatter},
+    sync::LazyLock,
 };
+
+use mime::Mime;
 
 use crate::{
     common::{
@@ -52,6 +55,9 @@ pub async fn create_directory(
     config: &Config,
     delegate_config: &UploadDelegateConfig,
 ) -> FileResult {
+    static DRIVE_FOLDER_MIME: LazyLock<Mime> =
+        LazyLock::new(|| MIME_TYPE_DRIVE_FOLDER.parse().unwrap());
+
     let dst_file = google_drive3::api::File {
         id: config.id.clone(),
         name: Some(config.name.clone()),
@@ -70,9 +76,9 @@ pub async fn create_directory(
         .delegate(&mut delegate)
         .supports_all_drives(true);
 
-    let mime_type: mime::Mime = MIME_TYPE_DRIVE_FOLDER.parse().unwrap();
-
-    let (_, file) = req.upload(EmptyFile, mime_type).await?;
+    let (_, file) = req
+        .upload(EmptyFile, Mime::clone(&*DRIVE_FOLDER_MIME))
+        .await?;
 
     Ok(file)
 }
