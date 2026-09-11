@@ -288,10 +288,13 @@ pub enum Error {
 impl error::Error for Error {
     fn source(&self) -> Option<&(dyn error::Error + 'static)> {
         match self {
+            Error::Hub(source) => Some(source),
             Error::FileInfo { source, .. } => Some(source),
+            Error::OpenFile(_, source) => Some(source),
             Error::StdinToFile(source) => Some(source),
-            // FIXME: correctly impl std::error::Error
-            _ => None,
+            Error::Upload(source) | Error::Mkdir(source) => Some(source),
+            Error::IsDirectory(_) | Error::DriveFolderMissingId => None,
+            Error::CreateFileTree(file_tree) => Some(file_tree),
         }
     }
 }
@@ -299,23 +302,25 @@ impl error::Error for Error {
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            Error::Hub(err) => write!(f, "{err}"),
+            Error::Hub(_) => f.write_str("unable to get drive hub"),
             Error::FileInfo { path, source: _ } => {
                 write!(f, "unable to get file info for '{}'", path.display())
             }
-            Error::OpenFile(path, err) => {
-                write!(f, "Failed to open file '{}': {}", path.display(), err)
+            Error::OpenFile(path, _) => {
+                write!(f, "unable to open file '{}'", path.display())
             }
             Error::StdinToFile(_) => f.write_str("unable to write stdin to file"),
-            Error::Upload(err) => write!(f, "Failed to upload file: {err}"),
+            Error::Upload(_) => f.write_str("unable to upload file"),
             Error::IsDirectory(path) => write!(
                 f,
                 "'{}' is a directory, use --recursive to upload directories",
                 path.display()
             ),
-            Error::DriveFolderMissingId => write!(f, "Folder created on drive does not have an id"),
-            Error::CreateFileTree(err) => write!(f, "Failed to create file tree: {err}"),
-            Error::Mkdir(err) => write!(f, "Failed to create directory: {err}"),
+            Error::DriveFolderMissingId => {
+                f.write_str("folder created on drive does not have an id")
+            }
+            Error::CreateFileTree(_) => f.write_str("unable to create file tree"),
+            Error::Mkdir(_) => f.write_str("unable to create directory"),
         }
     }
 }
