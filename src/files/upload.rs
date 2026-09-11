@@ -2,7 +2,8 @@ use std::{
     error,
     fmt::{Display, Formatter},
     fs, io,
-    path::{Path, PathBuf},
+    ops::Not,
+    path::PathBuf,
     time::Duration,
 };
 
@@ -53,7 +54,9 @@ pub async fn upload(config: Config) -> Result<(), Error> {
     };
 
     if let Some(path) = &config.file_path {
-        err_if_directory(path, &config)?;
+        if path.is_dir() && config.upload_directories.not() {
+            return Err(Error::IsDirectory(path.to_owned()));
+        }
 
         if path.is_dir() {
             upload_directory(&hub, &config, &delegate_config).await?;
@@ -322,13 +325,5 @@ impl Display for Error {
             Error::CreateFileTree(_) => f.write_str("unable to create file tree"),
             Error::Mkdir(_) => f.write_str("unable to create directory"),
         }
-    }
-}
-
-fn err_if_directory(path: &Path, config: &Config) -> Result<(), Error> {
-    if path.is_dir() && !config.upload_directories {
-        Err(Error::IsDirectory(path.to_owned()))
-    } else {
-        Ok(())
     }
 }
