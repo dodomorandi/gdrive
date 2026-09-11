@@ -1,6 +1,7 @@
 use std::{
     error,
     fmt::{Display, Formatter},
+    ops::Not,
 };
 
 use crate::{
@@ -37,7 +38,9 @@ pub async fn mv(config: Config) -> Result<(), Error> {
         .await
         .map_err(|err| Error::GetNewParent(Box::new(err)))?;
 
-    err_if_not_directory(&new_parent)?;
+    if drive_file::is_directory(&new_parent).not() {
+        return Err(Error::NotADirectory);
+    }
 
     println!(
         "Moving '{}' from '{}' to '{}'",
@@ -143,13 +146,5 @@ fn get_old_parent_id(file: &google_drive3::api::File) -> Result<String, Error> {
             [parent_id] => Ok(parent_id.clone()),
             _ => Err(Error::MultipleParents),
         },
-    }
-}
-
-fn err_if_not_directory(file: &google_drive3::api::File) -> Result<(), Error> {
-    if drive_file::is_directory(file) {
-        Ok(())
-    } else {
-        Err(Error::NotADirectory)
     }
 }
