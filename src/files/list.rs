@@ -272,7 +272,11 @@ fn truncate_middle(s: &str, max_length: usize) -> Cow<'_, str> {
     let mut chars_iter = s.char_indices();
     // Advance the iterator by head_count.
     // TODO: replace with `advance_by` when stabilized
-    chars_iter.by_ref().take(head_count).count();
+    for _ in 0..head_count {
+        if chars_iter.next().is_none() {
+            break;
+        }
+    }
     let mut tail_end_iter = chars_iter.clone().skip(tail_count);
     if tail_end_iter.next().is_none() {
         return Cow::Borrowed(s);
