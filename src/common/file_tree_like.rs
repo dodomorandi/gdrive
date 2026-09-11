@@ -1,6 +1,6 @@
 use std::{iter, sync::Arc};
 
-pub trait FileTreeLike: Sized {
+pub(crate) trait FileTreeLike: Sized {
     type Folder: FolderLike;
 
     #[must_use]
@@ -118,7 +118,7 @@ pub enum Node<F: FolderLike> {
 }
 
 #[derive(Debug, Clone)]
-pub struct TreeInfo {
+pub(crate) struct TreeInfo {
     pub file_count: u64,
     pub folder_count: u64,
     pub total_file_size: u64,
