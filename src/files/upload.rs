@@ -19,7 +19,7 @@ use crate::{
         id_gen::IdGen,
         FileTreeLike, FolderLike,
     },
-    files::{self, info::DisplayConfig, mkdir},
+    files::{self, info::DisplayConfig, mkdir, FileResult},
     hub::Hub,
 };
 
@@ -225,13 +225,17 @@ pub async fn upload_directory(
     Ok(())
 }
 
+#[expect(
+    clippy::result_large_err,
+    reason = "Ok variant is bigger, see test next to FileResult"
+)]
 pub async fn upload_file<RS>(
     hub: &Hub,
     src_file: RS,
     file_id: Option<String>,
     file_info: FileInfo<'_>,
     delegate_config: &UploadDelegateConfig,
-) -> Result<google_drive3::api::File, google_drive3::Error>
+) -> FileResult
 where
     RS: google_drive3::client::ReadSeek,
 {

@@ -30,7 +30,7 @@ pub async fn revoke(config: Config) -> Result<(), Error> {
 
     let permissions = permissions::list::list_permissions(&hub, &delegate_config, &config.file_id)
         .await
-        .map_err(|err| Error::ListPermissions(Box::new(err)))?;
+        .map_err(Error::ListPermissions)?;
 
     let delete_list = config.action.get_matching_permissions(permissions)?;
 
@@ -49,7 +49,7 @@ pub async fn revoke(config: Config) -> Result<(), Error> {
             &permission.id.clone().unwrap_or_default(),
         )
         .await
-        .map_err(|err| Error::DeletePermission(Box::new((permission.clone(), err))))?;
+        .map_err(|err| Error::DeletePermission(Box::new(permission.clone()), err))?;
     }
 
     Ok(())
@@ -60,7 +60,7 @@ pub async fn delete_permission(
     delegate_config: &UploadDelegateConfig,
     file_id: &str,
     permission_id: &str,
-) -> Result<(), google_drive3::Error> {
+) -> Result<(), Box<google_drive3::Error>> {
     let mut delegate = UploadDelegate::new(delegate_config);
 
     hub.permissions()
@@ -83,7 +83,10 @@ pub enum Error {
     Hub(GetHubError),
     GetFile(Box<google_drive3::Error>),
     ListPermissions(Box<google_drive3::Error>),
-    DeletePermission(Box<(google_drive3::api::Permission, google_drive3::Error)>),
+    DeletePermission(
+        Box<google_drive3::api::Permission>,
+        Box<google_drive3::Error>,
+    ),
     PermissionNotFound(String),
     UnknownPermissionType(String),
     UnknownPermissionRole(String),
@@ -101,8 +104,7 @@ impl Display for Error {
             Error::ListPermissions(err) => {
                 write!(f, "Failed to list permissions: {err}")
             }
-            Error::DeletePermission(data) => {
-                let (permission, err) = data.as_ref();
+            Error::DeletePermission(permission, err) => {
                 write!(
                     f,
                     "Failed to delete permission '{}': {}",

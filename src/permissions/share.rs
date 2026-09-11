@@ -57,6 +57,18 @@ pub async fn share(config: Config) -> Result<(), Error> {
     Ok(())
 }
 
+const _: () = {
+    if std::mem::size_of::<google_drive3::api::Permission>()
+        < std::mem::size_of::<google_drive3::Error>()
+    {
+        panic!("ok variant smaller than error");
+    }
+};
+
+#[expect(
+    clippy::result_large_err,
+    reason = "Ok variant is bigger, see test above"
+)]
 pub async fn create_permission(
     hub: &Hub,
     delegate_config: &UploadDelegateConfig,

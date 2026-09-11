@@ -20,7 +20,7 @@ pub fn switch(config: &Config) -> Result<(), Error> {
 
     let app_cfg = AppConfig::init_account(&config.account_name).map_err(Error::InitAccount)?;
     app_config::switch_account(&app_cfg).map_err(Error::SwitchAccount)?;
-    println!("Switched to account '{}'", &config.account_name);
+    println!("Switched to account '{}'", config.account_name);
 
     Ok(())
 }

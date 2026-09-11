@@ -57,7 +57,7 @@ pub async fn export(config: Config) -> Result<(), Error> {
 
     let body = export_file(&hub, &config.file_id, mime_type)
         .await
-        .map_err(|err| Error::ExportFile(Box::new(err)))?;
+        .map_err(Error::ExportFile)?;
 
     println!(
         "Exporting {} '{}' to {}",
@@ -80,7 +80,7 @@ pub async fn export_file(
     hub: &Hub,
     file_id: &str,
     mime_type: &Mime,
-) -> Result<hyper::Body, google_drive3::Error> {
+) -> Result<hyper::Body, Box<google_drive3::Error>> {
     let response = hub
         .files()
         .export(file_id, mime_type.as_ref())

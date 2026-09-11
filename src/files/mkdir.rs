@@ -10,6 +10,7 @@ use crate::{
         empty_file::EmptyFile,
         hub_helper::{get_hub, GetHubError},
     },
+    files::FileResult,
     hub::Hub,
 };
 
@@ -21,13 +22,13 @@ pub struct Config {
     pub print_only_id: bool,
 }
 
-pub async fn mkdir(config: Config) -> Result<(), Error> {
+pub async fn mkdir(config: Config) -> Result<(), Box<Error>> {
     let hub = get_hub().await.map_err(Error::Hub)?;
     let delegate_config = UploadDelegateConfig::default();
 
     let file = create_directory(&hub, &config, &delegate_config)
         .await
-        .map_err(Error::CreateDirectory)?;
+        .map_err(|err| Box::new(Error::CreateDirectory(err)))?;
 
     if config.print_only_id {
         print!("{}", file.id.unwrap_or_default());
@@ -42,11 +43,15 @@ pub async fn mkdir(config: Config) -> Result<(), Error> {
     Ok(())
 }
 
+#[expect(
+    clippy::result_large_err,
+    reason = "Ok variant is bigger, see test next to FileResult"
+)]
 pub async fn create_directory(
     hub: &Hub,
     config: &Config,
     delegate_config: &UploadDelegateConfig,
-) -> Result<google_drive3::api::File, google_drive3::Error> {
+) -> FileResult {
     let dst_file = google_drive3::api::File {
         id: config.id.clone(),
         name: Some(config.name.clone()),

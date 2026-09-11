@@ -7,7 +7,7 @@ use std::{
 
 use crate::{app_config, hub};
 
-pub async fn add() -> Result<(), Error> {
+pub async fn add() -> Result<(), Box<Error>> {
     println!("To add an account you need a Google Client ID and Client Secret.");
     println!(
         "Instructions for how to create credentials can be found here:\

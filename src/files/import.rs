@@ -22,7 +22,7 @@ pub struct Config {
     pub print_only_id: bool,
 }
 
-pub async fn import(config: Config) -> Result<(), Error> {
+pub async fn import(config: Config) -> Result<(), Box<Error>> {
     let hub = get_hub().await.map_err(Error::Hub)?;
     let delegate_config = UploadDelegateConfig::default();
 
@@ -32,7 +32,7 @@ pub async fn import(config: Config) -> Result<(), Error> {
 
     let file = match fs::File::open(&config.file_path) {
         Ok(file) => file,
-        Err(err) => return Err(Error::OpenFile(config.file_path, err)),
+        Err(err) => return Err(Box::new(Error::OpenFile(config.file_path, err))),
     };
 
     let file_info = match FileInfo::from_file(
@@ -45,10 +45,10 @@ pub async fn import(config: Config) -> Result<(), Error> {
     ) {
         Ok(file_info) => file_info,
         Err(source) => {
-            return Err(Error::FileInfo {
+            return Err(Box::new(Error::FileInfo {
                 path: config.file_path,
                 source,
-            })
+            }))
         }
     };
 

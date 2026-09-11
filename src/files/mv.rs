@@ -9,7 +9,7 @@ use crate::{
         drive_file,
         hub_helper::{get_hub, GetHubError},
     },
-    files,
+    files::{self, FileResult},
     hub::Hub,
 };
 
@@ -65,11 +65,15 @@ pub struct ChangeParentConfig {
     pub new_parent_id: String,
 }
 
+#[expect(
+    clippy::result_large_err,
+    reason = "Ok variant is bigger, see test next to FileResult"
+)]
 pub async fn change_parent(
     hub: &Hub,
     delegate_config: &UploadDelegateConfig,
     config: &ChangeParentConfig,
-) -> Result<google_drive3::api::File, google_drive3::Error> {
+) -> FileResult {
     let mut delegate = UploadDelegate::new(delegate_config);
 
     let empty_file = google_drive3::api::File::default();

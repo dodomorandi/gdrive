@@ -10,7 +10,7 @@ use crate::{
         drive_file,
         hub_helper::{get_hub, GetHubError},
     },
-    files::{self, info::DisplayConfig},
+    files::{self, info::DisplayConfig, FileResult},
     hub::Hub,
 };
 
@@ -65,11 +65,15 @@ pub struct CopyConfig {
     pub to_folder_id: String,
 }
 
+#[expect(
+    clippy::result_large_err,
+    reason = "Ok variant is bigger, see test next to FileResult"
+)]
 pub async fn copy_file(
     hub: &Hub,
     delegate_config: &UploadDelegateConfig,
     config: &CopyConfig,
-) -> Result<google_drive3::api::File, google_drive3::Error> {
+) -> FileResult {
     let mut delegate = UploadDelegate::new(delegate_config);
 
     let file = google_drive3::api::File {

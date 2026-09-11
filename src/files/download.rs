@@ -126,7 +126,7 @@ async fn download_regular(
 
     let body = download_file(hub, &config.file_id)
         .await
-        .map_err(|err| E::DownloadFile(Box::new(err)))?;
+        .map_err(E::DownloadFile)?;
 
     if config.destination == Destination::Stdout {
         save_body_to_stdout(body).await?;
@@ -193,7 +193,7 @@ async fn download_directory(
 
             let body = download_file(hub, &file.drive_id)
                 .await
-                .map_err(|err| E::DownloadFile(Box::new(err)))?;
+                .map_err(E::DownloadFile)?;
 
             println!("Downloading file '{}'", file_path.display());
             if let Err(source) = save_body_to_file(body, &abs_file_path, file.md5.as_ref()).await {
@@ -215,7 +215,7 @@ async fn download_directory(
     Ok(())
 }
 
-async fn download_file(hub: &Hub, file_id: &str) -> Result<hyper::Body, google_drive3::Error> {
+async fn download_file(hub: &Hub, file_id: &str) -> Result<hyper::Body, Box<google_drive3::Error>> {
     let (response, _) = hub
         .files()
         .get(file_id)

@@ -27,7 +27,7 @@ pub async fn list(config: Config) -> Result<(), Error> {
 
     files::info::get_file(&hub, &config.file_id)
         .await
-        .map_err(Error::GetFile)?;
+        .map_err(|err| Error::GetFile(Box::new(err)))?;
 
     let permissions = list_permissions(&hub, &delegate_config, &config.file_id)
         .await
@@ -72,7 +72,7 @@ pub async fn list_permissions(
     hub: &Hub,
     delegate_config: &UploadDelegateConfig,
     file_id: &str,
-) -> Result<Vec<google_drive3::api::Permission>, google_drive3::Error> {
+) -> Result<Vec<google_drive3::api::Permission>, Box<google_drive3::Error>> {
     let mut delegate = UploadDelegate::new(delegate_config);
 
     let (_, permission_list) = hub
@@ -94,8 +94,8 @@ pub async fn list_permissions(
 #[derive(Debug)]
 pub enum Error {
     Hub(GetHubError),
-    GetFile(google_drive3::Error),
-    ListPermissions(google_drive3::Error),
+    GetFile(Box<google_drive3::Error>),
+    ListPermissions(Box<google_drive3::Error>),
 }
 
 impl error::Error for Error {}

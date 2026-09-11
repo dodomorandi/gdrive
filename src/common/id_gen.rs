@@ -27,7 +27,7 @@ impl<'a> IdGen<'a> {
         } else {
             self.ids = generate_ids::generate_ids(self.hub, 1000, self.delegate_config)
                 .await
-                .map_err(|err| NextError::GenerateIds(Box::new(err)))?;
+                .map_err(NextError::GenerateIds)?;
             let id = self.ids.pop().ok_or(NextError::OutOfIds)?;
             Ok(id)
         }

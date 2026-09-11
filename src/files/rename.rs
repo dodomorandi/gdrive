@@ -17,7 +17,7 @@ pub struct Config {
     pub name: String,
 }
 
-pub async fn rename(config: Config) -> Result<(), Error> {
+pub async fn rename(config: Config) -> Result<(), Box<Error>> {
     let hub = get_hub().await.map_err(Error::Hub)?;
     let delegate_config = UploadDelegateConfig::default();
 

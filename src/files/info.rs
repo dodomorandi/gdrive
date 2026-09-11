@@ -12,6 +12,7 @@ use google_drive3::chrono::{
 
 use crate::{
     common::hub_helper::{get_hub, GetHubError},
+    files::FileResult,
     hub::Hub,
 };
 
@@ -20,7 +21,7 @@ pub struct Config {
     pub size_in_bytes: bool,
 }
 
-pub async fn info(config: Config) -> Result<(), Error> {
+pub async fn info(config: Config) -> Result<(), Box<Error>> {
     let hub = get_hub().await.map_err(Error::Hub)?;
 
     let file = get_file(&hub, &config.file_id)
@@ -37,10 +38,11 @@ pub async fn info(config: Config) -> Result<(), Error> {
     Ok(())
 }
 
-pub async fn get_file(
-    hub: &Hub,
-    file_id: &str,
-) -> Result<google_drive3::api::File, google_drive3::Error> {
+#[expect(
+    clippy::result_large_err,
+    reason = "Ok variant is bigger, see test next to FileResult"
+)]
+pub async fn get_file(hub: &Hub, file_id: &str) -> FileResult {
     let (_, file) = hub
         .files()
         .get(file_id)

@@ -14,7 +14,7 @@ pub struct Config {
     pub field_separator: String,
 }
 
-pub async fn list(config: Config) -> Result<(), Error> {
+pub async fn list(config: Config) -> Result<(), Box<Error>> {
     let hub = get_hub().await.map_err(Error::Hub)?;
     let delegate_config = UploadDelegateConfig::default();
 
@@ -52,7 +52,7 @@ fn print_drives_table(config: &Config, drives: Vec<google_drive3::api::Drive>) {
 pub async fn list_drives(
     hub: &Hub,
     delegate_config: &UploadDelegateConfig,
-) -> Result<Vec<google_drive3::api::Drive>, google_drive3::Error> {
+) -> Result<Vec<google_drive3::api::Drive>, Box<google_drive3::Error>> {
     let mut delegate = UploadDelegate::new(delegate_config);
 
     let (_, drives_list) = hub
@@ -69,7 +69,7 @@ pub async fn list_drives(
 #[derive(Debug)]
 pub enum Error {
     Hub(GetHubError),
-    ListDrives(google_drive3::Error),
+    ListDrives(Box<google_drive3::Error>),
 }
 
 impl error::Error for Error {

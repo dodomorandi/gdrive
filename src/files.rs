@@ -25,3 +25,13 @@ pub use mv::mv;
 pub use rename::rename;
 pub use update::update;
 pub use upload::upload;
+
+type FileResult = Result<google_drive3::api::File, google_drive3::Error>;
+
+const _: () = {
+    #[expect(clippy::manual_assert, reason = "cannot assert in const context")]
+    if std::mem::size_of::<google_drive3::api::File>() < std::mem::size_of::<google_drive3::Error>()
+    {
+        panic!("ok variant smaller than error");
+    }
+};

@@ -17,6 +17,7 @@ use crate::{
     files::{
         self,
         info::{self, DisplayConfig},
+        FileResult,
     },
     hub::Hub,
 };
@@ -30,7 +31,7 @@ pub struct Config {
     pub print_chunk_info: bool,
 }
 
-pub async fn update(config: Config) -> Result<(), Error> {
+pub async fn update(config: Config) -> Result<(), Box<Error>> {
     let hub = get_hub().await.map_err(Error::Hub)?;
 
     let delegate_config = UploadDelegateConfig {
@@ -47,10 +48,10 @@ pub async fn update(config: Config) -> Result<(), Error> {
     let mut file_helper = match file_helper::open_file(&config.file_path) {
         Ok(file_helper) => file_helper,
         Err(err) => {
-            return Err(Error::OpenFile(
+            return Err(Box::new(Error::OpenFile(
                 config.file_path.unwrap_or_else(|| PathBuf::from("<stdin>")),
                 err,
-            ))
+            )))
         }
     };
 
@@ -69,10 +70,10 @@ pub async fn update(config: Config) -> Result<(), Error> {
     let file_info = match FileInfo::from_file(file, file_info_config) {
         Ok(file_info) => file_info,
         Err(source) => {
-            return Err(Error::FileInfo {
+            return Err(Box::new(Error::FileInfo {
                 path: file_helper.into_path_buf(),
                 source,
-            })
+            }))
         }
     };
 
@@ -91,13 +92,17 @@ pub async fn update(config: Config) -> Result<(), Error> {
     Ok(())
 }
 
+#[expect(
+    clippy::result_large_err,
+    reason = "Ok variant is bigger, see test next to FileResult"
+)]
 pub async fn update_file<RS>(
     hub: &Hub,
     src_file: RS,
     file_id: &str,
     file_info: FileInfo<'_>,
     delegate_config: &UploadDelegateConfig,
-) -> Result<google_drive3::api::File, google_drive3::Error>
+) -> FileResult
 where
     RS: google_drive3::client::ReadSeek,
 {
@@ -131,11 +136,15 @@ where
     Ok(file)
 }
 
+#[expect(
+    clippy::result_large_err,
+    reason = "Ok variant is bigger, see test next to FileResult"
+)]
 pub async fn update_metadata(
     hub: &Hub,
     delegate_config: &UploadDelegateConfig,
     patch_file: PatchFile,
-) -> Result<google_drive3::api::File, google_drive3::Error> {
+) -> FileResult {
     let mut delegate = UploadDelegate::new(delegate_config);
 
     let (_, file) = hub
