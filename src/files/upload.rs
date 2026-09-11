@@ -1,7 +1,7 @@
 use std::{
     error,
     fmt::{Display, Formatter},
-    fs, io,
+    fs, io, mem,
     ops::Not,
     path::PathBuf,
     time::Duration,
@@ -39,7 +39,7 @@ pub struct Config {
     pub print_only_id: bool,
 }
 
-pub async fn upload(config: Config) -> Result<(), Error> {
+pub async fn upload(mut config: Config) -> Result<(), Error> {
     let hub = get_hub().await.map_err(Error::Hub)?;
 
     let delegate_config = UploadDelegateConfig {
@@ -53,9 +53,9 @@ pub async fn upload(config: Config) -> Result<(), Error> {
         print_chunk_info: config.print_chunk_info,
     };
 
-    if let Some(path) = &config.file_path {
+    if let Some(path) = &mut config.file_path {
         if path.is_dir() && config.upload_directories.not() {
-            return Err(Error::IsDirectory(path.to_owned()));
+            return Err(Error::IsDirectory(mem::take(path)));
         }
 
         if path.is_dir() {
