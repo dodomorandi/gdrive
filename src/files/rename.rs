@@ -47,18 +47,21 @@ pub enum Error {
     Rename(google_drive3::Error),
 }
 
-impl error::Error for Error {}
+impl error::Error for Error {
+    fn source(&self) -> Option<&(dyn error::Error + 'static)> {
+        match self {
+            Error::Hub(source) => Some(source),
+            Error::GetFile(source) | Error::Rename(source) => Some(source),
+        }
+    }
+}
 
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            Error::Hub(err) => write!(f, "{err}"),
-            Error::GetFile(err) => {
-                write!(f, "Failed to get file: {err}")
-            }
-            Error::Rename(err) => {
-                write!(f, "Failed to rename file: {err}")
-            }
+            Error::Hub(_) => f.write_str("unable to get drive hub"),
+            Error::GetFile(_) => f.write_str("unable to get file"),
+            Error::Rename(_) => f.write_str("unable to rename file"),
         }
     }
 }
