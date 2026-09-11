@@ -104,33 +104,32 @@ pub enum Error {
     Move(Box<google_drive3::Error>),
 }
 
-impl error::Error for Error {}
+impl error::Error for Error {
+    fn source(&self) -> Option<&(dyn error::Error + 'static)> {
+        match self {
+            Error::Hub(source) => Some(source),
+            Error::GetFile(source)
+            | Error::GetOldParent(_, source)
+            | Error::GetNewParent(source)
+            | Error::Move(source) => Some(source),
+            Error::NoParents | Error::MultipleParents | Error::NotADirectory => None,
+        }
+    }
+}
 
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         match self {
-            Error::Hub(err) => write!(f, "{err}"),
-            Error::GetFile(err) => {
-                write!(f, "Failed to get file: {err}")
+            Error::Hub(_) => f.write_str("unable to get drive hub"),
+            Error::GetFile(_) => f.write_str("unable to get file"),
+            Error::GetNewParent(_) => f.write_str("unable to get new parent"),
+            Error::GetOldParent(id, _) => {
+                write!(f, "unable to get old parent '{id}'")
             }
-            Error::GetNewParent(err) => {
-                write!(f, "Failed to get new parent: {err}")
-            }
-            Error::GetOldParent(id, err) => {
-                write!(f, "Failed to get old parent '{id}': {err}")
-            }
-            Error::NoParents => {
-                write!(f, "File has no parents")
-            }
-            Error::MultipleParents => {
-                write!(f, "Can't move file with multiple parents")
-            }
-            Error::NotADirectory => {
-                write!(f, "New parent is not a directory")
-            }
-            Error::Move(err) => {
-                write!(f, "Failed to move file: {err}")
-            }
+            Error::NoParents => f.write_str("file has no parents"),
+            Error::MultipleParents => f.write_str("can't move file with multiple parents"),
+            Error::NotADirectory => f.write_str("new parent is not a directory"),
+            Error::Move(_) => f.write_str("unable to move file"),
         }
     }
 }
