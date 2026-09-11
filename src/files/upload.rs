@@ -1,9 +1,9 @@
 use std::{
     error,
     fmt::{Display, Formatter},
-    fs, io, mem,
+    fs, io,
     ops::Not,
-    path::PathBuf,
+    path::{Path, PathBuf},
     time::Duration,
 };
 
@@ -39,38 +39,76 @@ pub struct Config {
     pub print_only_id: bool,
 }
 
-pub async fn upload(mut config: Config) -> Result<(), Error> {
+impl Config {
+    fn split(self) -> (CommonConfig, Option<PathBuf>, UploadDelegateConfig) {
+        let Self {
+            file_path,
+            mime_type,
+            parents,
+            chunk_size,
+            print_chunk_errors,
+            print_chunk_info,
+            upload_directories,
+            print_only_id,
+        } = self;
+        (
+            CommonConfig {
+                mime_type,
+                parents,
+                upload_directories,
+                print_only_id,
+            },
+            file_path,
+            UploadDelegateConfig {
+                chunk_size,
+                backoff_config: BackoffConfig {
+                    max_retries: 100_000,
+                    min_sleep: Duration::from_secs(1),
+                    max_sleep: Duration::from_secs(60),
+                },
+                print_chunk_errors,
+                print_chunk_info,
+            },
+        )
+    }
+}
+
+pub async fn upload(config: Config) -> Result<(), Error> {
     let hub = get_hub().await.map_err(Error::Hub)?;
 
-    let delegate_config = UploadDelegateConfig {
-        chunk_size: config.chunk_size.clone(),
-        backoff_config: BackoffConfig {
-            max_retries: 100_000,
-            min_sleep: Duration::from_secs(1),
-            max_sleep: Duration::from_secs(60),
-        },
-        print_chunk_errors: config.print_chunk_errors,
-        print_chunk_info: config.print_chunk_info,
-    };
+    let (common, file_path, delegate_config) = config.split();
 
-    if let Some(path) = &mut config.file_path {
-        if path.is_dir() && config.upload_directories.not() {
-            return Err(Error::IsDirectory(mem::take(path)));
+    if let Some(file_path) = file_path {
+        if file_path.is_dir() && common.upload_directories.not() {
+            return Err(Error::IsDirectory(file_path));
         }
 
-        if path.is_dir() {
-            upload_directory(&hub, &config, &delegate_config).await?;
+        if file_path.is_dir() {
+            upload_directory(
+                &hub,
+                UploadDirectoryConfig { file_path, common },
+                &delegate_config,
+            )
+            .await?;
         } else {
-            upload_regular(&hub, &config, &delegate_config).await?;
+            upload_regular(
+                &hub,
+                UploadRegularConfig {
+                    file_path: FilePath::Regular(file_path),
+                    common,
+                },
+                &delegate_config,
+            )
+            .await?;
         }
     } else {
         let tmp_file = file_helper::stdin_to_file().map_err(Error::StdinToFile)?;
 
         upload_regular(
             &hub,
-            &Config {
-                file_path: Some(tmp_file.as_ref().to_path_buf()),
-                ..config
+            UploadRegularConfig {
+                file_path: FilePath::Temp(tmp_file),
+                common,
             },
             &delegate_config,
         )
@@ -80,26 +118,66 @@ pub async fn upload(mut config: Config) -> Result<(), Error> {
     Ok(())
 }
 
+#[derive(Debug)]
+enum FilePath {
+    Regular(PathBuf),
+    Temp(mktemp::Temp),
+}
+
+impl FilePath {
+    fn as_path(&self) -> &Path {
+        match self {
+            FilePath::Regular(path_buf) => path_buf.as_path(),
+            FilePath::Temp(temp) => temp.as_path(),
+        }
+    }
+
+    fn into_path_buf(self) -> PathBuf {
+        match self {
+            FilePath::Regular(path_buf) => path_buf,
+            FilePath::Temp(temp) => temp.release(),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct CommonConfig {
+    mime_type: Option<Mime>,
+    parents: Option<Vec<String>>,
+    upload_directories: bool,
+    print_only_id: bool,
+}
+
+#[derive(Debug)]
+pub struct UploadRegularConfig {
+    file_path: FilePath,
+    common: CommonConfig,
+}
+
 pub async fn upload_regular(
     hub: &Hub,
-    config: &Config,
+    config: UploadRegularConfig,
     delegate_config: &UploadDelegateConfig,
 ) -> Result<(), Error> {
-    let file_path = config.file_path.as_ref().unwrap();
-    let file = fs::File::open(file_path).map_err(|err| Error::OpenFile(file_path.clone(), err))?;
+    let file = match fs::File::open(config.file_path.as_path()) {
+        Ok(file) => file,
+        Err(err) => {
+            return Err(Error::OpenFile(config.file_path.into_path_buf(), err));
+        }
+    };
 
     let file_info = match FileInfo::from_file(
         &file,
         file_info::Config {
-            file_path,
-            mime_type: config.mime_type.as_ref(),
-            parents: config.parents.clone(),
+            file_path: config.file_path.as_path(),
+            mime_type: config.common.mime_type.as_ref(),
+            parents: config.common.parents,
         },
     ) {
         Ok(file_info) => file_info,
         Err(source) => {
             return Err(Error::FileInfo {
-                path: file_path.clone(),
+                path: config.file_path.into_path_buf(),
                 source,
             })
         }
@@ -107,15 +185,15 @@ pub async fn upload_regular(
 
     let reader = std::io::BufReader::new(file);
 
-    if !config.print_only_id {
-        println!("Uploading {}", file_path.display());
+    if !config.common.print_only_id {
+        println!("Uploading {}", config.file_path.as_path().display());
     }
 
     let file = upload_file(hub, reader, None, file_info, delegate_config)
         .await
         .map_err(|err| Error::Upload(Box::new(err)))?;
 
-    if config.print_only_id {
+    if config.common.print_only_id {
         print!("{}", file.id.unwrap_or_default());
     } else {
         println!("File successfully uploaded");
@@ -125,19 +203,25 @@ pub async fn upload_regular(
     Ok(())
 }
 
+#[derive(Debug)]
+pub struct UploadDirectoryConfig {
+    file_path: PathBuf,
+    common: CommonConfig,
+}
+
 pub async fn upload_directory(
     hub: &Hub,
-    config: &Config,
+    config: UploadDirectoryConfig,
     delegate_config: &UploadDelegateConfig,
 ) -> Result<(), Error> {
     let mut ids = IdGen::new(hub, delegate_config);
-    let tree = FileTree::from_path(config.file_path.as_ref().unwrap(), &mut ids)
+    let tree = FileTree::from_path(&config.file_path, &mut ids)
         .await
         .map_err(Error::CreateFileTree)?;
 
     let tree_info = tree.info();
 
-    if !config.print_only_id {
+    if !config.common.print_only_id {
         println!(
             "Found {} files in {} directories with a total size of {}",
             tree_info.file_count,
@@ -152,9 +236,9 @@ pub async fn upload_directory(
             .parent
             .as_ref()
             .map(|p| vec![p.drive_id.clone()])
-            .or_else(|| config.parents.clone());
+            .or_else(|| config.common.parents.clone());
 
-        if !config.print_only_id {
+        if !config.common.print_only_id {
             println!(
                 "Creating directory '{}' with id: {}",
                 folder.relative_path().display(),
@@ -175,7 +259,7 @@ pub async fn upload_directory(
         .await
         .map_err(|err| Error::Mkdir(Box::new(err)))?;
 
-        if config.print_only_id {
+        if config.common.print_only_id {
             println!(
                 "{}: {}",
                 folder.relative_path().display(),
@@ -187,12 +271,16 @@ pub async fn upload_directory(
         let parents = Some(vec![folder_id.clone()]);
 
         for file in folder.files() {
-            let os_file = fs::File::open(&file.path)
-                .map_err(|err| Error::OpenFile(config.file_path.as_ref().unwrap().clone(), err))?;
+            let os_file = match fs::File::open(&file.path) {
+                Ok(os_file) => os_file,
+                Err(err) => {
+                    return Err(Error::OpenFile(config.file_path, err));
+                }
+            };
 
             let file_info = file.info(parents.clone());
 
-            if !config.print_only_id {
+            if !config.common.print_only_id {
                 println!(
                     "Uploading file '{}' with id: {}",
                     file.relative_path().display(),
@@ -210,13 +298,13 @@ pub async fn upload_directory(
             .await
             .map_err(|err| Error::Upload(Box::new(err)))?;
 
-            if config.print_only_id {
+            if config.common.print_only_id {
                 println!("{}: {}", file.relative_path().display(), file.drive_id);
             }
         }
     }
 
-    if !config.print_only_id {
+    if !config.common.print_only_id {
         println!(
             "Uploaded {} files in {} directories with a total size of {}",
             tree_info.file_count,
