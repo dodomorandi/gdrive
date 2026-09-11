@@ -30,9 +30,9 @@ pub async fn mv(config: Config) -> Result<(), Error> {
 
     let old_parent_id = get_old_parent_id(&old_file)?;
 
-    let old_parent = files::info::get_file(&hub, &old_parent_id)
+    let old_parent = files::info::get_file(&hub, old_parent_id)
         .await
-        .map_err(|err| Error::GetOldParent(old_parent_id.clone(), Box::new(err)))?;
+        .map_err(|err| Error::GetOldParent(old_parent_id.to_owned(), Box::new(err)))?;
 
     let new_parent = files::info::get_file(&hub, &config.to_folder_id)
         .await
@@ -44,28 +44,28 @@ pub async fn mv(config: Config) -> Result<(), Error> {
 
     println!(
         "Moving '{}' from '{}' to '{}'",
-        old_file.name.unwrap_or_default(),
+        old_file.name.as_deref().unwrap_or_default(),
         old_parent.name.unwrap_or_default(),
         new_parent.name.unwrap_or_default()
     );
 
     let change_parent_config = ChangeParentConfig {
-        file_id: config.file_id,
+        file_id: &config.file_id,
         old_parent_id,
-        new_parent_id: config.to_folder_id,
+        new_parent_id: &config.to_folder_id,
     };
 
-    change_parent(&hub, &delegate_config, &change_parent_config)
+    change_parent(&hub, &delegate_config, change_parent_config)
         .await
         .map_err(|err| Error::Move(Box::new(err)))?;
 
     Ok(())
 }
 
-pub struct ChangeParentConfig {
-    pub file_id: String,
-    pub old_parent_id: String,
-    pub new_parent_id: String,
+pub struct ChangeParentConfig<'a> {
+    pub file_id: &'a str,
+    pub old_parent_id: &'a str,
+    pub new_parent_id: &'a str,
 }
 
 #[expect(
@@ -75,7 +75,7 @@ pub struct ChangeParentConfig {
 pub async fn change_parent(
     hub: &Hub,
     delegate_config: &UploadDelegateConfig,
-    config: &ChangeParentConfig,
+    config: ChangeParentConfig<'_>,
 ) -> FileResult {
     let mut delegate = UploadDelegate::new(delegate_config);
 
@@ -83,9 +83,9 @@ pub async fn change_parent(
 
     let (_, file) = hub
         .files()
-        .update(empty_file, &config.file_id)
-        .remove_parents(&config.old_parent_id)
-        .add_parents(&config.new_parent_id)
+        .update(empty_file, config.file_id)
+        .remove_parents(config.old_parent_id)
+        .add_parents(config.new_parent_id)
         .param("fields", "id,name,size,createdTime,modifiedTime,md5Checksum,mimeType,parents,shared,description,webContentLink,webViewLink")
         .add_scope(google_drive3::api::Scope::Full)
         .delegate(&mut delegate)
@@ -137,13 +137,13 @@ impl Display for Error {
     }
 }
 
-fn get_old_parent_id(file: &google_drive3::api::File) -> Result<String, Error> {
+fn get_old_parent_id(file: &google_drive3::api::File) -> Result<&'_ str, Error> {
     match &file.parents {
         None => Err(Error::NoParents),
 
         Some(parents) => match &parents[..] {
             [] => Err(Error::NoParents),
-            [parent_id] => Ok(parent_id.clone()),
+            [parent_id] => Ok(parent_id.as_str()),
             _ => Err(Error::MultipleParents),
         },
     }
