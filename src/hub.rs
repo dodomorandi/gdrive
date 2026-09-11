@@ -1,10 +1,4 @@
-use std::{
-    future::Future,
-    io,
-    ops::Deref,
-    path::{Path, PathBuf},
-    pin::Pin,
-};
+use std::{future::Future, io, ops::Deref, path::Path, pin::Pin};
 
 use google_drive3::{
     hyper::{self, client::HttpConnector},
@@ -14,11 +8,6 @@ use google_drive3::{
 };
 
 use crate::app_config;
-
-pub struct HubConfig {
-    pub secret: oauth2::ApplicationSecret,
-    pub tokens_path: PathBuf,
-}
 
 pub struct Hub(DriveHub<HttpsConnector<HttpConnector>>);
 
