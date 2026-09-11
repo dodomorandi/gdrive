@@ -83,15 +83,20 @@ pub enum Error {
     CreateDirectory(google_drive3::Error),
 }
 
-impl error::Error for Error {}
+impl error::Error for Error {
+    fn source(&self) -> Option<&(dyn error::Error + 'static)> {
+        match self {
+            Error::Hub(source) => Some(source),
+            Error::CreateDirectory(source) => Some(source),
+        }
+    }
+}
 
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            Error::Hub(err) => write!(f, "{err}"),
-            Error::CreateDirectory(err) => {
-                write!(f, "Failed to create directory on drive: {err}")
-            }
+            Error::Hub(_) => f.write_str("unable to get drive hub"),
+            Error::CreateDirectory(_) => f.write_str("unable to create drive directory"),
         }
     }
 }
