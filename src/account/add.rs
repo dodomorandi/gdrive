@@ -7,7 +7,7 @@ use std::{
 
 use crate::{app_config, hub};
 
-pub async fn add() -> Result<(), Box<Error>> {
+pub(crate) async fn add() -> Result<(), Box<Error>> {
     println!("To add an account you need a Google Client ID and Client Secret.");
     println!(
         "Instructions for how to create credentials can be found here:\
@@ -71,7 +71,7 @@ pub async fn add() -> Result<(), Box<Error>> {
 }
 
 #[derive(Debug)]
-pub enum Error {
+pub(crate) enum Error {
     HubCreation(io::Error),
     Prompt(io::Error),
     Tempdir(io::Error),

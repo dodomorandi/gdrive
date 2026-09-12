@@ -22,16 +22,16 @@ use crate::{
     hub::Hub,
 };
 
-pub struct Config {
-    pub file_id: String,
-    pub file_path: Option<PathBuf>,
-    pub mime_type: Option<Mime>,
-    pub chunk_size: ChunkSize,
-    pub print_chunk_errors: bool,
-    pub print_chunk_info: bool,
+pub(crate) struct Config {
+    pub(crate) file_id: String,
+    pub(crate) file_path: Option<PathBuf>,
+    pub(crate) mime_type: Option<Mime>,
+    pub(crate) chunk_size: ChunkSize,
+    pub(crate) print_chunk_errors: bool,
+    pub(crate) print_chunk_info: bool,
 }
 
-pub async fn update(config: Config) -> Result<(), Box<Error>> {
+pub(crate) async fn update(config: Config) -> Result<(), Box<Error>> {
     let hub = get_hub().await.map_err(Error::Hub)?;
 
     let delegate_config = UploadDelegateConfig {
@@ -45,7 +45,7 @@ pub async fn update(config: Config) -> Result<(), Box<Error>> {
         print_chunk_info: config.print_chunk_info,
     };
 
-    let mut file_helper = match file_helper::open_file(&config.file_path) {
+    let mut file_helper = match file_helper::open_file(config.file_path.as_deref()) {
         Ok(file_helper) => file_helper,
         Err(err) => {
             return Err(Box::new(Error::OpenFile(
@@ -96,7 +96,7 @@ pub async fn update(config: Config) -> Result<(), Box<Error>> {
     clippy::result_large_err,
     reason = "Ok variant is bigger, see test next to FileResult"
 )]
-pub async fn update_file<RS>(
+async fn update_file<RS>(
     hub: &Hub,
     src_file: RS,
     file_id: &str,
@@ -140,7 +140,7 @@ where
     clippy::result_large_err,
     reason = "Ok variant is bigger, see test next to FileResult"
 )]
-pub async fn update_metadata(
+pub(crate) async fn update_metadata(
     hub: &Hub,
     delegate_config: &UploadDelegateConfig,
     patch_file: PatchFile,
@@ -165,7 +165,7 @@ pub async fn update_metadata(
 }
 
 #[derive(Debug)]
-pub enum Error {
+pub(crate) enum Error {
     Hub(GetHubError),
     FileInfo {
         path: PathBuf,
@@ -204,14 +204,14 @@ impl error::Error for Error {
 }
 
 #[derive(Debug, Clone)]
-pub struct PatchFile {
+pub(crate) struct PatchFile {
     id: String,
     file: google_drive3::api::File,
 }
 
 impl PatchFile {
     #[must_use]
-    pub fn new(id: String) -> Self {
+    pub(crate) fn new(id: String) -> Self {
         Self {
             id,
             file: google_drive3::api::File::default(),
@@ -219,7 +219,7 @@ impl PatchFile {
     }
 
     #[must_use]
-    pub fn with_name(mut self, name: impl Into<String>) -> Self {
+    pub(crate) fn with_name(mut self, name: impl Into<String>) -> Self {
         self.file = google_drive3::api::File {
             name: Some(name.into()),
             ..self.file

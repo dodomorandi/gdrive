@@ -16,12 +16,12 @@ use crate::{
     hub::Hub,
 };
 
-pub struct Config {
-    pub file_id: String,
-    pub size_in_bytes: bool,
+pub(crate) struct Config {
+    pub(crate) file_id: String,
+    pub(crate) size_in_bytes: bool,
 }
 
-pub async fn info(config: Config) -> Result<(), Box<Error>> {
+pub(crate) async fn info(config: Config) -> Result<(), Box<Error>> {
     let hub = get_hub().await.map_err(Error::Hub)?;
 
     let file = get_file(&hub, &config.file_id)
@@ -42,7 +42,7 @@ pub async fn info(config: Config) -> Result<(), Box<Error>> {
     clippy::result_large_err,
     reason = "Ok variant is bigger, see test next to FileResult"
 )]
-pub async fn get_file(hub: &Hub, file_id: &str) -> FileResult {
+pub(crate) async fn get_file(hub: &Hub, file_id: &str) -> FileResult {
     let (_, file) = hub
         .files()
         .get(file_id)
@@ -60,8 +60,8 @@ pub async fn get_file(hub: &Hub, file_id: &str) -> FileResult {
 }
 
 #[derive(Debug, Clone, Default)]
-pub struct DisplayConfig {
-    pub size_in_bytes: bool,
+pub(crate) struct DisplayConfig {
+    pub(crate) size_in_bytes: bool,
 }
 
 pub(crate) fn print_file_info(file: &google_drive3::api::File, display_config: &DisplayConfig) {
@@ -105,7 +105,7 @@ fn print_field(name: &str, value: Option<impl Display>) {
 
 // TODO: move to common
 #[must_use]
-pub fn format_bool(b: bool) -> &'static str {
+pub(crate) fn format_bool(b: bool) -> &'static str {
     if b {
         "True"
     } else {
@@ -114,7 +114,7 @@ pub fn format_bool(b: bool) -> &'static str {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-struct DisplayJoinedSlice<'a, T>(pub &'a [T]);
+struct DisplayJoinedSlice<'a, T>(pub(crate) &'a [T]);
 
 impl<T> Display for DisplayJoinedSlice<'_, T>
 where
@@ -133,9 +133,9 @@ where
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct DisplayBytes<'a> {
-    pub bytes: u64,
-    pub config: &'a DisplayConfig,
+pub(crate) struct DisplayBytes<'a> {
+    pub(crate) bytes: u64,
+    pub(crate) config: &'a DisplayConfig,
 }
 
 impl Display for DisplayBytes<'_> {
@@ -151,13 +151,15 @@ impl Display for DisplayBytes<'_> {
 }
 
 #[must_use]
-pub fn format_date_time(utc_time: DateTime<chrono::Utc>) -> DelayedFormat<StrftimeItems<'static>> {
+pub(crate) fn format_date_time(
+    utc_time: DateTime<chrono::Utc>,
+) -> DelayedFormat<StrftimeItems<'static>> {
     let local_time = DateTime::<chrono::Local>::from(utc_time);
     local_time.format("%Y-%m-%d %H:%M:%S")
 }
 
 #[derive(Debug)]
-pub enum Error {
+pub(crate) enum Error {
     Hub(GetHubError),
     GetFile(google_drive3::Error),
 }

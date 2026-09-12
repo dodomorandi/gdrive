@@ -18,14 +18,14 @@ use crate::{
 };
 
 #[derive(Clone, Debug)]
-pub struct Config {
-    pub id: Option<String>,
-    pub name: String,
-    pub parents: Option<Vec<String>>,
-    pub print_only_id: bool,
+pub(crate) struct Config {
+    pub(crate) id: Option<String>,
+    pub(crate) name: String,
+    pub(crate) parents: Option<Vec<String>>,
+    pub(crate) print_only_id: bool,
 }
 
-pub async fn mkdir(config: Config) -> Result<(), Box<Error>> {
+pub(crate) async fn mkdir(config: Config) -> Result<(), Box<Error>> {
     let hub = get_hub().await.map_err(Error::Hub)?;
     let delegate_config = UploadDelegateConfig::default();
 
@@ -50,7 +50,7 @@ pub async fn mkdir(config: Config) -> Result<(), Box<Error>> {
     clippy::result_large_err,
     reason = "Ok variant is bigger, see test next to FileResult"
 )]
-pub async fn create_directory(
+pub(crate) async fn create_directory(
     hub: &Hub,
     config: &Config,
     delegate_config: &UploadDelegateConfig,
@@ -84,7 +84,7 @@ pub async fn create_directory(
 }
 
 #[derive(Debug)]
-pub enum Error {
+pub(crate) enum Error {
     Hub(GetHubError),
     CreateDirectory(google_drive3::Error),
 }

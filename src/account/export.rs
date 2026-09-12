@@ -14,11 +14,11 @@ use crate::{
 };
 
 #[derive(Debug, Clone)]
-pub struct Config {
-    pub account_name: String,
+pub(crate) struct Config {
+    pub(crate) account_name: String,
 }
 
-pub fn export(config: &Config) -> Result<(), Error> {
+pub(crate) fn export(config: &Config) -> Result<(), Error> {
     let Config { account_name } = config;
     let accounts = app_config::list_accounts().map_err(Error::ListAccounts)?;
     if accounts.contains(account_name).not() {
@@ -45,7 +45,7 @@ pub fn export(config: &Config) -> Result<(), Error> {
 }
 
 #[derive(Debug)]
-pub enum Error {
+pub(crate) enum Error {
     ListAccounts(app_config::errors::ListAccounts),
     InitAccount(app_config::errors::InitAccount),
     AccountNotFound,

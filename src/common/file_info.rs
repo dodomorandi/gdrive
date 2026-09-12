@@ -6,21 +6,21 @@ use std::{
     path::Path,
 };
 
-pub struct FileInfo<'a> {
-    pub name: Cow<'a, str>,
-    pub mime_type: Cow<'a, mime::Mime>,
-    pub parents: Option<Vec<String>>,
-    pub size: u64,
+pub(crate) struct FileInfo<'a> {
+    pub(crate) name: Cow<'a, str>,
+    pub(crate) mime_type: Cow<'a, mime::Mime>,
+    pub(crate) parents: Option<Vec<String>>,
+    pub(crate) size: u64,
 }
 
-pub struct Config<'a> {
-    pub file_path: &'a Path,
-    pub mime_type: Option<&'a mime::Mime>,
-    pub parents: Option<Vec<String>>,
+pub(crate) struct Config<'a> {
+    pub(crate) file_path: &'a Path,
+    pub(crate) mime_type: Option<&'a mime::Mime>,
+    pub(crate) parents: Option<Vec<String>>,
 }
 
 impl<'a> FileInfo<'a> {
-    pub fn from_file(file: &fs::File, config: Config<'a>) -> Result<Self, FromFileError> {
+    pub(crate) fn from_file(file: &fs::File, config: Config<'a>) -> Result<Self, FromFileError> {
         let file_name = config
             .file_path
             .file_name()
@@ -48,7 +48,7 @@ impl<'a> FileInfo<'a> {
 }
 
 #[derive(Debug)]
-pub struct FromFileError;
+pub(crate) struct FromFileError;
 
 impl error::Error for FromFileError {}
 

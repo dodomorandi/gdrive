@@ -18,19 +18,19 @@ use crate::{
 };
 
 #[derive(Clone, Debug)]
-pub struct Config {
-    pub file_id: String,
-    pub file_path: PathBuf,
-    pub existing_file_action: ExistingFileAction,
+pub(crate) struct Config {
+    pub(crate) file_id: String,
+    pub(crate) file_path: PathBuf,
+    pub(crate) existing_file_action: ExistingFileAction,
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
-pub enum ExistingFileAction {
+pub(crate) enum ExistingFileAction {
     Abort,
     Overwrite,
 }
 
-pub async fn export(config: Config) -> Result<(), Error> {
+pub(crate) async fn export(config: Config) -> Result<(), Error> {
     let hub = get_hub().await.map_err(Error::Hub)?;
 
     if config.file_path.exists() && config.existing_file_action == ExistingFileAction::Abort {
@@ -76,7 +76,7 @@ pub async fn export(config: Config) -> Result<(), Error> {
     Ok(())
 }
 
-pub async fn export_file(
+async fn export_file(
     hub: &Hub,
     file_id: &str,
     mime_type: &Mime,
@@ -92,7 +92,7 @@ pub async fn export_file(
 }
 
 #[derive(Debug)]
-pub enum Error {
+pub(crate) enum Error {
     Hub(GetHubError),
     FileExists(PathBuf),
     GetFile(Box<google_drive3::Error>),
@@ -149,11 +149,11 @@ impl error::Error for Error {
     fn source(&self) -> Option<&(dyn error::Error + 'static)> {
         match self {
             Error::Hub(source) => Some(source),
+            Error::SaveFile(source) => Some(source),
             Error::FileExists(_)
             | Error::MissingDriveMime
             | Error::UnsupportedDriveMime(_)
-            | Error::UnsupportedExportExtension(_)
-            | Error::SaveFile(_) => None,
+            | Error::UnsupportedExportExtension(_) => None,
             Error::GetFile(source) | Error::ExportFile(source) => Some(source),
         }
     }

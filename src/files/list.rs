@@ -19,16 +19,16 @@ use crate::{
 
 const MAX_PAGE_SIZE: usize = 1000;
 
-pub struct Config {
-    pub query: ListQuery,
-    pub order_by: ListSortOrder,
-    pub max_files: usize,
-    pub skip_header: bool,
-    pub truncate_name: bool,
-    pub field_separator: String,
+pub(crate) struct Config {
+    pub(crate) query: ListQuery,
+    pub(crate) order_by: ListSortOrder,
+    pub(crate) max_files: usize,
+    pub(crate) skip_header: bool,
+    pub(crate) truncate_name: bool,
+    pub(crate) field_separator: String,
 }
 
-pub async fn list(config: Config) -> Result<(), Error> {
+pub(crate) async fn list(config: Config) -> Result<(), Error> {
     let hub = get_hub().await.map_err(Error::Hub)?;
     let files = list_files(
         &hub,
@@ -83,13 +83,13 @@ pub async fn list(config: Config) -> Result<(), Error> {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct ListFilesConfig<'a> {
-    pub query: &'a ListQuery,
-    pub order_by: &'a ListSortOrder,
-    pub max_files: usize,
+pub(crate) struct ListFilesConfig<'a> {
+    pub(crate) query: &'a ListQuery,
+    pub(crate) order_by: &'a ListSortOrder,
+    pub(crate) max_files: usize,
 }
 
-pub async fn list_files(
+pub(crate) async fn list_files(
     hub: &Hub,
     config: ListFilesConfig<'_>,
 ) -> Result<Vec<google_drive3::api::File>, Error> {
@@ -137,7 +137,7 @@ pub async fn list_files(
 }
 
 #[derive(Debug, Clone, Default)]
-pub enum ListQuery {
+pub(crate) enum ListQuery {
     #[default]
     RootNotTrashed,
     FilesOnDrive {
@@ -185,7 +185,7 @@ impl Display for ListQuery {
 }
 
 #[derive(Debug, Clone, Default)]
-pub enum ListSortOrder {
+pub(crate) enum ListSortOrder {
     #[default]
     FolderModifiedName,
     Custom(String),
@@ -218,7 +218,7 @@ impl fmt::Display for ListSortOrder {
 }
 
 #[derive(Debug)]
-pub enum Error {
+pub(crate) enum Error {
     Hub(GetHubError),
     ListFiles(Box<google_drive3::Error>),
 }

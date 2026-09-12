@@ -28,15 +28,15 @@ use crate::{
     clippy::struct_excessive_bools,
     reason = "they are orthogonal one each other"
 )]
-pub struct Config {
-    pub file_path: Option<PathBuf>,
-    pub mime_type: Option<Mime>,
-    pub parents: Option<Vec<String>>,
-    pub chunk_size: ChunkSize,
-    pub print_chunk_errors: bool,
-    pub print_chunk_info: bool,
-    pub upload_directories: bool,
-    pub print_only_id: bool,
+pub(crate) struct Config {
+    pub(crate) file_path: Option<PathBuf>,
+    pub(crate) mime_type: Option<Mime>,
+    pub(crate) parents: Option<Vec<String>>,
+    pub(crate) chunk_size: ChunkSize,
+    pub(crate) print_chunk_errors: bool,
+    pub(crate) print_chunk_info: bool,
+    pub(crate) upload_directories: bool,
+    pub(crate) print_only_id: bool,
 }
 
 impl Config {
@@ -73,7 +73,7 @@ impl Config {
     }
 }
 
-pub async fn upload(config: Config) -> Result<(), Error> {
+pub(crate) async fn upload(config: Config) -> Result<(), Error> {
     let hub = get_hub().await.map_err(Error::Hub)?;
 
     let (common, file_path, delegate_config) = config.split();
@@ -141,7 +141,7 @@ impl FilePath {
 }
 
 #[derive(Debug)]
-pub struct CommonConfig {
+struct CommonConfig {
     mime_type: Option<Mime>,
     parents: Option<Vec<String>>,
     upload_directories: bool,
@@ -149,12 +149,12 @@ pub struct CommonConfig {
 }
 
 #[derive(Debug)]
-pub struct UploadRegularConfig {
+struct UploadRegularConfig {
     file_path: FilePath,
     common: CommonConfig,
 }
 
-pub async fn upload_regular(
+async fn upload_regular(
     hub: &Hub,
     config: UploadRegularConfig,
     delegate_config: &UploadDelegateConfig,
@@ -204,12 +204,12 @@ pub async fn upload_regular(
 }
 
 #[derive(Debug)]
-pub struct UploadDirectoryConfig {
+struct UploadDirectoryConfig {
     file_path: PathBuf,
     common: CommonConfig,
 }
 
-pub async fn upload_directory(
+async fn upload_directory(
     hub: &Hub,
     config: UploadDirectoryConfig,
     delegate_config: &UploadDelegateConfig,
@@ -320,7 +320,7 @@ pub async fn upload_directory(
     clippy::result_large_err,
     reason = "Ok variant is bigger, see test next to FileResult"
 )]
-pub async fn upload_file<RS>(
+pub(crate) async fn upload_file<RS>(
     hub: &Hub,
     src_file: RS,
     file_id: Option<String>,
@@ -361,7 +361,7 @@ where
 }
 
 #[derive(Debug)]
-pub enum Error {
+pub(crate) enum Error {
     Hub(GetHubError),
     FileInfo {
         path: PathBuf,

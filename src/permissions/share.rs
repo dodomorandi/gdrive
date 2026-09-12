@@ -14,13 +14,13 @@ use crate::{
 };
 
 #[derive(Clone, Debug)]
-pub struct Config {
-    pub file_id: String,
-    pub role: permission::Role,
-    pub type_: permission::Type,
-    pub discoverable: bool,
-    pub email: Option<String>,
-    pub domain: Option<String>,
+pub(crate) struct Config {
+    pub(crate) file_id: String,
+    pub(crate) role: permission::Role,
+    pub(crate) type_: permission::Type,
+    pub(crate) discoverable: bool,
+    pub(crate) email: Option<String>,
+    pub(crate) domain: Option<String>,
 }
 
 impl Config {
@@ -37,7 +37,7 @@ impl Config {
     }
 }
 
-pub async fn share(config: Config) -> Result<(), Error> {
+pub(crate) async fn share(config: Config) -> Result<(), Error> {
     err_if_missing_email(&config)?;
     err_if_missing_domain(&config)?;
 
@@ -69,7 +69,7 @@ const _: () = {
     clippy::result_large_err,
     reason = "Ok variant is bigger, see test above"
 )]
-pub async fn create_permission(
+async fn create_permission(
     hub: &Hub,
     delegate_config: &UploadDelegateConfig,
     config: &Config,
@@ -103,7 +103,7 @@ pub async fn create_permission(
 }
 
 #[derive(Debug)]
-pub enum Error {
+pub(crate) enum Error {
     Hub(GetHubError),
     GetFile(Box<google_drive3::Error>),
     CreatePermission(Box<google_drive3::Error>),

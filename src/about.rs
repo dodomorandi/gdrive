@@ -1,4 +1,4 @@
-pub fn about() {
+pub(crate) fn about() {
     println!("gdrive is a command line application for interacting with Google Drive.");
     println!();
     println!(

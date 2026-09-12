@@ -7,11 +7,11 @@ use std::{
 use crate::app_config::{self, AppConfig};
 
 #[derive(Debug, Clone)]
-pub struct Config {
-    pub account_name: String,
+pub(crate) struct Config {
+    pub(crate) account_name: String,
 }
 
-pub fn switch(config: &Config) -> Result<(), Error> {
+pub(crate) fn switch(config: &Config) -> Result<(), Error> {
     let accounts = app_config::list_accounts().map_err(Error::ListAccounts)?;
 
     if accounts.contains(&config.account_name).not() {
@@ -26,7 +26,7 @@ pub fn switch(config: &Config) -> Result<(), Error> {
 }
 
 #[derive(Debug)]
-pub enum Error {
+pub(crate) enum Error {
     ListAccounts(app_config::errors::ListAccounts),
     AccountNotFound,
     InitAccount(app_config::errors::InitAccount),

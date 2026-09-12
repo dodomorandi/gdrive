@@ -5,7 +5,7 @@ use std::{
 
 use crate::{common::delegate::UploadDelegateConfig, files::generate_ids, hub::Hub};
 
-pub struct IdGen<'a> {
+pub(crate) struct IdGen<'a> {
     hub: &'a Hub,
     delegate_config: &'a UploadDelegateConfig,
     ids: Vec<String>,
@@ -13,7 +13,7 @@ pub struct IdGen<'a> {
 
 impl<'a> IdGen<'a> {
     #[must_use]
-    pub fn new(hub: &'a Hub, delegate_config: &'a UploadDelegateConfig) -> Self {
+    pub(crate) fn new(hub: &'a Hub, delegate_config: &'a UploadDelegateConfig) -> Self {
         Self {
             hub,
             delegate_config,
@@ -21,7 +21,7 @@ impl<'a> IdGen<'a> {
         }
     }
 
-    pub async fn next(&mut self) -> Result<String, NextError> {
+    pub(crate) async fn next(&mut self) -> Result<String, NextError> {
         if let Some(id) = self.ids.pop() {
             Ok(id)
         } else {
@@ -35,7 +35,7 @@ impl<'a> IdGen<'a> {
 }
 
 #[derive(Debug)]
-pub enum NextError {
+pub(crate) enum NextError {
     // TODO: remove this allocation
     GenerateIds(Box<google_drive3::Error>),
     OutOfIds,

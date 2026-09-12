@@ -16,13 +16,13 @@ use crate::{
 };
 
 #[derive(Clone, Debug)]
-pub struct Config {
-    pub file_path: PathBuf,
-    pub parents: Option<Vec<String>>,
-    pub print_only_id: bool,
+pub(crate) struct Config {
+    pub(crate) file_path: PathBuf,
+    pub(crate) parents: Option<Vec<String>>,
+    pub(crate) print_only_id: bool,
 }
 
-pub async fn import(config: Config) -> Result<(), Box<Error>> {
+pub(crate) async fn import(config: Config) -> Result<(), Box<Error>> {
     let hub = get_hub().await.map_err(Error::Hub)?;
     let delegate_config = UploadDelegateConfig::default();
 
@@ -73,7 +73,7 @@ pub async fn import(config: Config) -> Result<(), Box<Error>> {
 }
 
 #[derive(Debug)]
-pub enum Error {
+pub(crate) enum Error {
     Hub(GetHubError),
     OpenFile(PathBuf, io::Error),
     FileInfo {

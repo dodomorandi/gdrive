@@ -6,7 +6,7 @@ use std::{
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct DefaultBasePath;
+pub(crate) struct DefaultBasePath;
 
 impl Display for DefaultBasePath {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -17,7 +17,7 @@ impl Display for DefaultBasePath {
 impl Error for DefaultBasePath {}
 
 #[derive(Debug)]
-pub struct CreateAccountDir(pub io::Error);
+pub(crate) struct CreateAccountDir(pub(crate) io::Error);
 
 impl CreateAccountDir {
     const DISPLAY: &str = "unable to create account directory";
@@ -36,7 +36,7 @@ impl Error for CreateAccountDir {
 }
 
 #[derive(Debug)]
-pub enum InitAccount {
+pub(crate) enum InitAccount {
     DefaultBasePath(DefaultBasePath),
     CreateAccountDir(io::Error),
 }
@@ -74,7 +74,7 @@ impl From<CreateAccountDir> for InitAccount {
 }
 
 #[derive(Debug)]
-pub enum SaveSecret {
+pub(crate) enum SaveSecret {
     Serialize(serde_json::Error),
     Write { path: PathBuf, source: io::Error },
 }
@@ -100,7 +100,7 @@ impl Error for SaveSecret {
 }
 
 #[derive(Debug)]
-pub enum AddAccount {
+pub(crate) enum AddAccount {
     InitAccount(InitAccount),
     SaveSecret(SaveSecret),
     CopyTokens(io::Error),
@@ -128,7 +128,7 @@ impl Error for AddAccount {
 }
 
 #[derive(Debug)]
-pub enum SaveAccountConfig {
+pub(crate) enum SaveAccountConfig {
     Serialize(serde_json::Error),
     Write { path: PathBuf, source: io::Error },
 }
@@ -156,7 +156,7 @@ impl Error for SaveAccountConfig {
 }
 
 #[derive(Debug)]
-pub enum ListAccounts {
+pub(crate) enum ListAccounts {
     DefaultBasePath(DefaultBasePath),
     CreateBaseDir { path: PathBuf, source: io::Error },
     ListFiles { path: PathBuf, source: io::Error },
@@ -188,7 +188,7 @@ impl Error for ListAccounts {
 }
 
 #[derive(Debug)]
-pub enum LoadAccountConfig {
+pub(crate) enum LoadAccountConfig {
     DefaultBasePath(DefaultBasePath),
     AccountConfigMissing,
     ReadAccountConfig {
@@ -228,7 +228,7 @@ impl Error for LoadAccountConfig {
 }
 
 #[derive(Debug)]
-pub enum LoadCurrentAccount {
+pub(crate) enum LoadCurrentAccount {
     DefaultBasePath(DefaultBasePath),
     LoadAccountConfig(LoadAccountConfig),
 }
@@ -253,7 +253,7 @@ impl Error for LoadCurrentAccount {
 }
 
 #[derive(Debug)]
-pub enum RemoveAccount {
+pub(crate) enum RemoveAccount {
     RemoveDirectory { path: PathBuf, source: io::Error },
     LoadConfig(LoadAccountConfig),
     RemoveConfig { path: PathBuf, source: io::Error },
@@ -284,7 +284,7 @@ impl Error for RemoveAccount {
 }
 
 #[derive(Debug)]
-pub struct LoadAccount(pub DefaultBasePath);
+pub(crate) struct LoadAccount(pub(crate) DefaultBasePath);
 
 impl Display for LoadAccount {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -299,7 +299,7 @@ impl Error for LoadAccount {
 }
 
 #[derive(Debug)]
-pub enum LoadSecret {
+pub(crate) enum LoadSecret {
     Read {
         path: PathBuf,
         source: io::Error,

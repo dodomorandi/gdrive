@@ -15,12 +15,12 @@ use crate::{
 };
 
 #[derive(Clone, Debug)]
-pub struct Config {
-    pub file_id: String,
-    pub action: RevokeAction,
+pub(crate) struct Config {
+    pub(crate) file_id: String,
+    pub(crate) action: RevokeAction,
 }
 
-pub async fn revoke(config: Config) -> Result<(), Error> {
+pub(crate) async fn revoke(config: Config) -> Result<(), Error> {
     let hub = get_hub().await.map_err(Error::Hub)?;
     let delegate_config = UploadDelegateConfig::default();
 
@@ -55,7 +55,7 @@ pub async fn revoke(config: Config) -> Result<(), Error> {
     Ok(())
 }
 
-pub async fn delete_permission(
+async fn delete_permission(
     hub: &Hub,
     delegate_config: &UploadDelegateConfig,
     file_id: &str,
@@ -79,7 +79,7 @@ pub async fn delete_permission(
 }
 
 #[derive(Debug)]
-pub enum Error {
+pub(crate) enum Error {
     Hub(GetHubError),
     GetFile(Box<google_drive3::Error>),
     ListPermissions(Box<google_drive3::Error>),
@@ -124,7 +124,7 @@ impl Display for Error {
 }
 
 #[derive(Clone, Debug, Default)]
-pub enum RevokeAction {
+pub(crate) enum RevokeAction {
     #[default]
     Anyone,
     AllExceptOwner,

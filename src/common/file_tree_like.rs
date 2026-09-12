@@ -48,7 +48,7 @@ pub(crate) trait FileTreeLike: Sized {
     }
 }
 
-pub trait FolderLike: Sized {
+pub(crate) trait FolderLike: Sized {
     type File: FileLike;
     type Info: FolderInfoLike;
 
@@ -68,6 +68,7 @@ pub trait FolderLike: Sized {
     }
 
     #[must_use]
+    #[cfg_attr(not(test), expect(dead_code))]
     fn folders_recursive(&self) -> Vec<&Self> {
         let mut folders = vec![];
         self.folders_recursive_in(&mut folders);
@@ -90,7 +91,7 @@ pub trait FolderLike: Sized {
     }
 }
 
-pub trait FolderInfoLike: Sized {
+pub(crate) trait FolderInfoLike: Sized {
     #[must_use]
     fn name(&self) -> &str;
 
@@ -103,7 +104,7 @@ pub trait FolderInfoLike: Sized {
     }
 }
 
-pub trait FileLike: Clone {
+pub(crate) trait FileLike: Clone {
     #[must_use]
     fn name(&self) -> &str;
 
@@ -112,16 +113,16 @@ pub trait FileLike: Clone {
 }
 
 #[derive(Debug, Clone)]
-pub enum Node<F: FolderLike> {
+pub(crate) enum Node<F: FolderLike> {
     Folder(F),
     File(F::File),
 }
 
 #[derive(Debug, Clone)]
 pub(crate) struct TreeInfo {
-    pub file_count: u64,
-    pub folder_count: u64,
-    pub total_file_size: u64,
+    pub(crate) file_count: u64,
+    pub(crate) folder_count: u64,
+    pub(crate) total_file_size: u64,
 }
 
 #[cfg(test)]

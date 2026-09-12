@@ -25,12 +25,12 @@ use crate::{
     hub::Hub,
 };
 
-pub struct Config {
-    pub file_id: String,
-    pub existing_file_action: ExistingFileAction,
-    pub follow_shortcuts: bool,
-    pub download_directories: bool,
-    pub destination: Destination,
+pub(crate) struct Config {
+    pub(crate) file_id: String,
+    pub(crate) existing_file_action: ExistingFileAction,
+    pub(crate) follow_shortcuts: bool,
+    pub(crate) download_directories: bool,
+    pub(crate) destination: Destination,
 }
 
 impl Config {
@@ -63,20 +63,20 @@ impl Config {
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
-pub enum Destination {
+pub(crate) enum Destination {
     CurrentDir,
     Path(PathBuf),
     Stdout,
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
-pub enum ExistingFileAction {
+pub(crate) enum ExistingFileAction {
     Abort,
     Overwrite,
 }
 
 #[async_recursion]
-pub async fn download(config: Config) -> Result<(), errors::Download> {
+pub(crate) async fn download(config: Config) -> Result<(), errors::Download> {
     use errors::Download as E;
 
     let hub = get_hub().await.map_err(E::Hub)?;
@@ -229,7 +229,7 @@ async fn download_file(hub: &Hub, file_id: &str) -> Result<hyper::Body, Box<goog
 }
 
 // TODO: move to common
-pub async fn save_body_to_file(
+pub(crate) async fn save_body_to_file(
     mut body: hyper::Body,
     file_path: &Path,
     expected_md5: Option<&Digest>,
@@ -267,7 +267,7 @@ pub async fn save_body_to_file(
 }
 
 // TODO: move to common
-pub async fn save_body_to_stdout(mut body: hyper::Body) -> Result<(), errors::SaveBodyToStdout> {
+async fn save_body_to_stdout(mut body: hyper::Body) -> Result<(), errors::SaveBodyToStdout> {
     let mut stdout = io::stdout();
 
     // Read chunks from stream and write to stdout

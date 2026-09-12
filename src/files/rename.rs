@@ -12,12 +12,12 @@ use crate::{
 };
 
 #[derive(Clone, Debug)]
-pub struct Config {
-    pub file_id: String,
-    pub name: String,
+pub(crate) struct Config {
+    pub(crate) file_id: String,
+    pub(crate) name: String,
 }
 
-pub async fn rename(config: Config) -> Result<(), Box<Error>> {
+pub(crate) async fn rename(config: Config) -> Result<(), Box<Error>> {
     let hub = get_hub().await.map_err(Error::Hub)?;
     let delegate_config = UploadDelegateConfig::default();
 
@@ -41,7 +41,7 @@ pub async fn rename(config: Config) -> Result<(), Box<Error>> {
 }
 
 #[derive(Debug)]
-pub enum Error {
+pub(crate) enum Error {
     Hub(GetHubError),
     GetFile(google_drive3::Error),
     Rename(google_drive3::Error),

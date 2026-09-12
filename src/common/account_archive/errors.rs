@@ -6,9 +6,10 @@ use std::{
 };
 
 #[derive(Debug)]
-pub enum Create {
+pub(crate) enum Create {
     SrcPathDoesNotExist,
     SrcPathNotDirectory,
+    #[expect(clippy::enum_variant_names)]
     CreateArchive(io::Error),
     AppendDir {
         dir_path: PathBuf,
@@ -48,10 +49,11 @@ impl Error for Create {
 }
 
 #[derive(Debug)]
-pub enum Unpack {
+pub(crate) enum Unpack {
     ArchivePathDoesNotExist,
     DstDoesNotExist,
     Open(io::Error),
+    #[expect(clippy::enum_variant_names)]
     Unpack(io::Error),
 }
 
@@ -78,7 +80,7 @@ impl Error for Unpack {
 }
 
 #[derive(Debug)]
-pub enum GetAccountName {
+pub(crate) enum GetAccountName {
     Open(io::Error),
     ReadEntries(io::Error),
     NoDirectories,

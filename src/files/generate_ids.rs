@@ -3,7 +3,7 @@ use crate::{
     hub::Hub,
 };
 
-pub async fn generate_ids(
+pub(crate) async fn generate_ids(
     hub: &Hub,
     count: i32,
     delegate_config: &UploadDelegateConfig,

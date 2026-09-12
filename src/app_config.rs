@@ -1,4 +1,4 @@
-pub mod errors;
+pub(crate) mod errors;
 
 use std::{
     fs, io,
@@ -16,16 +16,16 @@ const SECRET_CONFIG_NAME: &str = "secret.json";
 const TOKENS_CONFIG_NAME: &str = "tokens.json";
 
 #[derive(Debug, Clone)]
-pub struct AppConfig {
-    pub base_path: PathBuf,
-    pub account: Account,
+pub(crate) struct AppConfig {
+    pub(crate) base_path: PathBuf,
+    pub(crate) account: Account,
     account_config_path: OnceLock<PathBuf>,
     account_base_path: OnceLock<PathBuf>,
     secret_path: OnceLock<PathBuf>,
     tokens_path: OnceLock<PathBuf>,
 }
 
-pub fn add_account(
+pub(crate) fn add_account(
     account_name: &str,
     secret: &Secret,
     tokens_path: &Path,
@@ -38,11 +38,11 @@ pub fn add_account(
     Ok(config)
 }
 
-pub fn switch_account(config: &AppConfig) -> Result<(), errors::SaveAccountConfig> {
+pub(crate) fn switch_account(config: &AppConfig) -> Result<(), errors::SaveAccountConfig> {
     config.save_account_config()
 }
 
-pub fn list_accounts() -> Result<Vec<String>, errors::ListAccounts> {
+pub(crate) fn list_accounts() -> Result<Vec<String>, errors::ListAccounts> {
     let base_path =
         AppConfig::default_base_path().map_err(errors::ListAccounts::DefaultBasePath)?;
     if let Err(source) = fs::create_dir_all(&base_path) {
@@ -87,14 +87,14 @@ impl AppConfig {
     }
 
     #[must_use]
-    pub fn has_current_account() -> bool {
+    pub(crate) fn has_current_account() -> bool {
         AppConfig::default_base_path().is_ok_and(|base_path| {
             let account_config_path = base_path.join(ACCOUNT_CONFIG_NAME);
             account_config_path.exists()
         })
     }
 
-    pub fn load_current_account() -> Result<AppConfig, errors::LoadCurrentAccount> {
+    pub(crate) fn load_current_account() -> Result<AppConfig, errors::LoadCurrentAccount> {
         let base_path =
             AppConfig::default_base_path().map_err(errors::LoadCurrentAccount::DefaultBasePath)?;
         let account_config = AppConfig::load_account_config()
@@ -103,13 +103,13 @@ impl AppConfig {
         Ok(AppConfig::new(base_path, account))
     }
 
-    pub fn load_account(account_name: &str) -> Result<AppConfig, errors::LoadAccount> {
+    pub(crate) fn load_account(account_name: &str) -> Result<AppConfig, errors::LoadAccount> {
         let base_path = AppConfig::default_base_path().map_err(errors::LoadAccount)?;
         let account = Account::new(account_name);
         Ok(AppConfig::new(base_path, account))
     }
 
-    pub fn init_account(account_name: &str) -> Result<AppConfig, errors::InitAccount> {
+    pub(crate) fn init_account(account_name: &str) -> Result<AppConfig, errors::InitAccount> {
         let base_path = AppConfig::default_base_path()?;
         let account = Account::new(account_name);
 
@@ -119,7 +119,7 @@ impl AppConfig {
         Ok(config)
     }
 
-    pub fn remove_account(&self) -> Result<(), errors::RemoveAccount> {
+    pub(crate) fn remove_account(&self) -> Result<(), errors::RemoveAccount> {
         let path = self.account_base_path();
         if let Err(source) = fs::remove_dir_all(path) {
             return Err(errors::RemoveAccount::RemoveDirectory {
@@ -143,7 +143,7 @@ impl AppConfig {
         Ok(())
     }
 
-    pub fn save_secret(&self, secret: &Secret) -> Result<(), errors::SaveSecret> {
+    fn save_secret(&self, secret: &Secret) -> Result<(), errors::SaveSecret> {
         let content =
             serde_json::to_string_pretty(&secret).map_err(errors::SaveSecret::Serialize)?;
         let path = self.secret_path();
@@ -161,7 +161,7 @@ impl AppConfig {
         Ok(())
     }
 
-    pub fn load_secret(&self) -> Result<Secret, errors::LoadSecret> {
+    pub(crate) fn load_secret(&self) -> Result<Secret, errors::LoadSecret> {
         let path = self.secret_path();
         let content = match fs::read_to_string(path) {
             Ok(content) => content,
@@ -178,7 +178,7 @@ impl AppConfig {
         }
     }
 
-    pub fn load_account_config() -> Result<AccountConfig, errors::LoadAccountConfig> {
+    fn load_account_config() -> Result<AccountConfig, errors::LoadAccountConfig> {
         let base_path =
             AppConfig::default_base_path().map_err(errors::LoadAccountConfig::DefaultBasePath)?;
         let account_config_path = base_path.join(ACCOUNT_CONFIG_NAME);
@@ -200,7 +200,7 @@ impl AppConfig {
         }
     }
 
-    pub fn save_account_config(&self) -> Result<(), errors::SaveAccountConfig> {
+    fn save_account_config(&self) -> Result<(), errors::SaveAccountConfig> {
         let account_config = AccountConfig {
             current: self.account.name.clone(),
         };
@@ -218,30 +218,30 @@ impl AppConfig {
     }
 
     #[must_use]
-    pub fn account_config_path(&self) -> &Path {
+    fn account_config_path(&self) -> &Path {
         self.account_config_path
             .get_or_init(|| self.base_path.join(ACCOUNT_CONFIG_NAME))
     }
 
     #[must_use]
-    pub fn account_base_path(&self) -> &Path {
+    pub(crate) fn account_base_path(&self) -> &Path {
         self.account_base_path
             .get_or_init(|| self.base_path.join(&self.account.name))
     }
 
     #[must_use]
-    pub fn secret_path(&self) -> &Path {
+    fn secret_path(&self) -> &Path {
         self.secret_path
             .get_or_init(|| self.account_base_path().join(SECRET_CONFIG_NAME))
     }
 
     #[must_use]
-    pub fn tokens_path(&self) -> &Path {
+    pub(crate) fn tokens_path(&self) -> &Path {
         self.tokens_path
             .get_or_init(|| self.account_base_path().join(TOKENS_CONFIG_NAME))
     }
 
-    pub fn default_base_path() -> Result<PathBuf, errors::DefaultBasePath> {
+    pub(crate) fn default_base_path() -> Result<PathBuf, errors::DefaultBasePath> {
         let home_path = home::home_dir().ok_or(errors::DefaultBasePath)?;
         let base_path = home_path
             .join(SYSTEM_CONFIG_DIR_NAME)
@@ -257,18 +257,18 @@ impl AppConfig {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct AccountConfig {
-    pub current: String,
+struct AccountConfig {
+    pub(crate) current: String,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct Account {
-    pub name: String,
+pub(crate) struct Account {
+    pub(crate) name: String,
 }
 
 impl Account {
     #[must_use]
-    pub fn new(name: &str) -> Account {
+    fn new(name: &str) -> Account {
         Account {
             name: name.to_string(),
         }
@@ -276,13 +276,13 @@ impl Account {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Secret {
-    pub client_id: String,
+pub(crate) struct Secret {
+    pub(crate) client_id: String,
     // TODO: zeroize this string on Drop
-    pub client_secret: String,
+    pub(crate) client_secret: String,
 }
 
-pub fn set_file_permissions(path: &Path) -> Result<(), io::Error> {
+pub(crate) fn set_file_permissions(path: &Path) -> Result<(), io::Error> {
     #[cfg(unix)]
     {
         use std::os::unix::fs::PermissionsExt;

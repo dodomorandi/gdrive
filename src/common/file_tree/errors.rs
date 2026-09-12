@@ -8,7 +8,7 @@ use std::{
 use crate::common::id_gen;
 
 #[derive(Debug)]
-pub enum FileTree {
+pub(crate) enum FileTree {
     Canonicalize(io::Error),
     Folder(Folder),
 }
@@ -34,7 +34,7 @@ impl Error for FileTree {
 }
 
 #[derive(Debug)]
-pub enum Folder {
+pub(crate) enum Folder {
     InvalidPath,
     GenerateId(id_gen::NextError),
     ReadDir(io::Error),
@@ -85,9 +85,9 @@ impl Error for Folder {
 }
 
 #[derive(Debug)]
-pub enum File {
+pub(crate) enum File {
     InvalidPath,
-    OpenFile(io::Error),
+    Open(io::Error),
     GenerateId(id_gen::NextError),
 }
 
@@ -95,7 +95,7 @@ impl Display for File {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match self {
             File::InvalidPath => "file path is invalid",
-            File::OpenFile(_) => "unable to open file",
+            File::Open(_) => "unable to open file",
             File::GenerateId(_) => "unable to generate google drive id",
         };
 
@@ -107,7 +107,7 @@ impl Error for File {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
             File::InvalidPath => None,
-            File::OpenFile(source) => Some(source),
+            File::Open(source) => Some(source),
             File::GenerateId(source) => Some(source),
         }
     }

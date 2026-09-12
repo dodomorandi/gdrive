@@ -5,15 +5,15 @@ use std::{
 
 use tabwriter::TabWriter;
 
-pub struct Table<H: Display, V: Display, const COLUMNS: usize> {
-    pub header: [H; COLUMNS],
-    pub values: Vec<[V; COLUMNS]>,
+pub(crate) struct Table<H: Display, V: Display, const COLUMNS: usize> {
+    pub(crate) header: [H; COLUMNS],
+    pub(crate) values: Vec<[V; COLUMNS]>,
 }
 
 #[derive(Debug, Clone)]
-pub struct DisplayConfig<'a> {
-    pub skip_header: bool,
-    pub separator: &'a str,
+pub(crate) struct DisplayConfig<'a> {
+    pub(crate) skip_header: bool,
+    pub(crate) separator: &'a str,
 }
 
 impl DisplayConfig<'_> {
@@ -34,7 +34,7 @@ impl Default for DisplayConfig<'static> {
     }
 }
 
-pub fn write<W: Write, H: Display, V: Display, const COLUMNS: usize>(
+pub(crate) fn write<W: Write, H: Display, V: Display, const COLUMNS: usize>(
     writer: W,
     table: Table<H, V, COLUMNS>,
     config: &DisplayConfig,
@@ -53,7 +53,7 @@ pub fn write<W: Write, H: Display, V: Display, const COLUMNS: usize>(
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct DisplayRow<'a, T>(&'a DisplayConfig<'a>, &'a [T]);
+pub(crate) struct DisplayRow<'a, T>(&'a DisplayConfig<'a>, &'a [T]);
 
 impl<T> Display for DisplayRow<'_, T>
 where

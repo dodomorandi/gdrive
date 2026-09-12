@@ -9,7 +9,7 @@ macro_rules! create_mime_from_str {
         ),+ $(,)?
     ) => {
         $(
-            pub static $mime: LazyLock<Mime> = LazyLock::new(|| {
+            pub(crate) static $mime: LazyLock<Mime> = LazyLock::new(|| {
                 $value
                     .parse()
                     .expect(concat!($mime_name, " should be a valid mime type"))
@@ -18,11 +18,11 @@ macro_rules! create_mime_from_str {
     };
 }
 
-pub const MIME_TYPE_DRIVE_FOLDER: &str = "application/vnd.google-apps.folder";
-pub const MIME_TYPE_DRIVE_DOCUMENT: &str = "application/vnd.google-apps.document";
-pub const MIME_TYPE_DRIVE_SHORTCUT: &str = "application/vnd.google-apps.shortcut";
-pub const MIME_TYPE_DRIVE_SPREADSHEET: &str = "application/vnd.google-apps.spreadsheet";
-pub const MIME_TYPE_DRIVE_PRESENTATION: &str = "application/vnd.google-apps.presentation";
+pub(crate) const MIME_TYPE_DRIVE_FOLDER: &str = "application/vnd.google-apps.folder";
+pub(crate) const MIME_TYPE_DRIVE_DOCUMENT: &str = "application/vnd.google-apps.document";
+pub(crate) const MIME_TYPE_DRIVE_SHORTCUT: &str = "application/vnd.google-apps.shortcut";
+pub(crate) const MIME_TYPE_DRIVE_SPREADSHEET: &str = "application/vnd.google-apps.spreadsheet";
+pub(crate) const MIME_TYPE_DRIVE_PRESENTATION: &str = "application/vnd.google-apps.presentation";
 
 create_mime_from_str!(
     MIME_TYPE_DRIVE_DOCUMENT => MIME_TYPE_DRIVE_DOCUMENT_MIME: "drive document" ,
@@ -30,50 +30,50 @@ create_mime_from_str!(
     MIME_TYPE_DRIVE_PRESENTATION => MIME_TYPE_DRIVE_PRESENTATION_MIME: "drive presentation",
 );
 
-pub const EXTENSION_DOC: &str = "doc";
-pub const EXTENSION_DOCX: &str = "docx";
-pub const EXTENSION_ODT: &str = "odt";
-pub const EXTENSION_JPG: &str = "jpg";
-pub const EXTENSION_JPEG: &str = "jpeg";
-pub const EXTENSION_GIF: &str = "gif";
-pub const EXTENSION_PNG: &str = "png";
-pub const EXTENSION_RTF: &str = "rtf";
-pub const EXTENSION_PDF: &str = "pdf";
-pub const EXTENSION_HTML: &str = "html";
-pub const EXTENSION_XLS: &str = "xls";
-pub const EXTENSION_XLSX: &str = "xlsx";
-pub const EXTENSION_CSV: &str = "csv";
-pub const EXTENSION_TSV: &str = "tsv";
-pub const EXTENSION_ODS: &str = "ods";
-pub const EXTENSION_PPT: &str = "ppt";
-pub const EXTENSION_PPTX: &str = "pptx";
-pub const EXTENSION_ODP: &str = "odp";
-pub const EXTENSION_EPUB: &str = "epub";
-pub const EXTENSION_TXT: &str = "txt";
+pub(crate) const EXTENSION_DOC: &str = "doc";
+pub(crate) const EXTENSION_DOCX: &str = "docx";
+pub(crate) const EXTENSION_ODT: &str = "odt";
+pub(crate) const EXTENSION_JPG: &str = "jpg";
+pub(crate) const EXTENSION_JPEG: &str = "jpeg";
+pub(crate) const EXTENSION_GIF: &str = "gif";
+pub(crate) const EXTENSION_PNG: &str = "png";
+pub(crate) const EXTENSION_RTF: &str = "rtf";
+pub(crate) const EXTENSION_PDF: &str = "pdf";
+pub(crate) const EXTENSION_HTML: &str = "html";
+pub(crate) const EXTENSION_XLS: &str = "xls";
+pub(crate) const EXTENSION_XLSX: &str = "xlsx";
+pub(crate) const EXTENSION_CSV: &str = "csv";
+pub(crate) const EXTENSION_TSV: &str = "tsv";
+pub(crate) const EXTENSION_ODS: &str = "ods";
+pub(crate) const EXTENSION_PPT: &str = "ppt";
+pub(crate) const EXTENSION_PPTX: &str = "pptx";
+pub(crate) const EXTENSION_ODP: &str = "odp";
+pub(crate) const EXTENSION_EPUB: &str = "epub";
+pub(crate) const EXTENSION_TXT: &str = "txt";
 
-pub const MIME_TYPE_DOC: &str = "application/msword";
-pub const MIME_TYPE_DOCX: &str =
+pub(crate) const MIME_TYPE_DOC: &str = "application/msword";
+pub(crate) const MIME_TYPE_DOCX: &str =
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-pub const MIME_TYPE_ODT: &str = "application/vnd.oasis.opendocument.text";
-pub const MIME_TYPE_JPG: &str = "image/jpeg";
-pub const MIME_TYPE_JPEG: &str = "image/jpeg";
-pub const MIME_TYPE_GIF: &str = "image/gif";
-pub const MIME_TYPE_PNG: &str = "image/png";
-pub const MIME_TYPE_RTF: &str = "application/rtf";
-pub const MIME_TYPE_PDF: &str = "application/pdf";
-pub const MIME_TYPE_HTML: &str = "text/html";
-pub const MIME_TYPE_XLS: &str = "application/vnd.ms-excel";
-pub const MIME_TYPE_XLSX: &str =
+pub(crate) const MIME_TYPE_ODT: &str = "application/vnd.oasis.opendocument.text";
+pub(crate) const MIME_TYPE_JPG: &str = "image/jpeg";
+pub(crate) const MIME_TYPE_JPEG: &str = "image/jpeg";
+pub(crate) const MIME_TYPE_GIF: &str = "image/gif";
+pub(crate) const MIME_TYPE_PNG: &str = "image/png";
+pub(crate) const MIME_TYPE_RTF: &str = "application/rtf";
+pub(crate) const MIME_TYPE_PDF: &str = "application/pdf";
+pub(crate) const MIME_TYPE_HTML: &str = "text/html";
+pub(crate) const MIME_TYPE_XLS: &str = "application/vnd.ms-excel";
+pub(crate) const MIME_TYPE_XLSX: &str =
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-pub const MIME_TYPE_CSV: &str = "text/csv";
-pub const MIME_TYPE_TSV: &str = "text/tab-separated-values";
-pub const MIME_TYPE_ODS: &str = "application/vnd.oasis.opendocument.spreadsheet";
-pub const MIME_TYPE_PPT: &str = "application/vnd.ms-powerpoint";
-pub const MIME_TYPE_PPTX: &str =
+pub(crate) const MIME_TYPE_CSV: &str = "text/csv";
+pub(crate) const MIME_TYPE_TSV: &str = "text/tab-separated-values";
+pub(crate) const MIME_TYPE_ODS: &str = "application/vnd.oasis.opendocument.spreadsheet";
+pub(crate) const MIME_TYPE_PPT: &str = "application/vnd.ms-powerpoint";
+pub(crate) const MIME_TYPE_PPTX: &str =
     "application/vnd.openxmlformats-officedocument.presentationml.presentation";
-pub const MIME_TYPE_ODP: &str = "application/vnd.oasis.opendocument.presentation";
-pub const MIME_TYPE_EPUB: &str = "application/epub+zip";
-pub const MIME_TYPE_TXT: &str = "text/plain";
+pub(crate) const MIME_TYPE_ODP: &str = "application/vnd.oasis.opendocument.presentation";
+pub(crate) const MIME_TYPE_EPUB: &str = "application/epub+zip";
+pub(crate) const MIME_TYPE_TXT: &str = "text/plain";
 
 create_mime_from_str!(
     MIME_TYPE_DOC => MIME_TYPE_DOC_MIME: "microsoft doc",
@@ -99,7 +99,7 @@ create_mime_from_str!(
 );
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum DocType {
+pub(crate) enum DocType {
     Document,
     Spreadsheet,
     Presentation,
@@ -127,7 +127,7 @@ impl DocType {
         (FileExtension::Odp, DocType::Presentation),
     ];
 
-    pub const SUPPORTED_INPUT_TYPES: [FileExtension; Self::IMPORT_EXTENSION_MAP.len()] = const {
+    pub(crate) const SUPPORTED_INPUT_TYPES: [FileExtension; Self::IMPORT_EXTENSION_MAP.len()] = const {
         let mut out = [FileExtension::Doc; Self::IMPORT_EXTENSION_MAP.len()];
         let mut index = 0;
         while index < Self::IMPORT_EXTENSION_MAP.len() {
@@ -138,7 +138,7 @@ impl DocType {
     };
 
     #[must_use]
-    pub fn from_file_path(path: &Path) -> Option<DocType> {
+    pub(crate) fn from_file_path(path: &Path) -> Option<DocType> {
         let extension = FileExtension::from_path(path)?;
 
         Self::IMPORT_EXTENSION_MAP
@@ -153,7 +153,7 @@ impl DocType {
     }
 
     #[must_use]
-    pub fn from_mime_type(mime: &str) -> Option<DocType> {
+    pub(crate) fn from_mime_type(mime: &str) -> Option<DocType> {
         match mime {
             MIME_TYPE_DRIVE_DOCUMENT => Some(DocType::Document),
             MIME_TYPE_DRIVE_SPREADSHEET => Some(DocType::Spreadsheet),
@@ -163,20 +163,12 @@ impl DocType {
     }
 
     #[must_use]
-    pub fn default_export_type(&self) -> FileExtension {
-        match self {
-            DocType::Spreadsheet => FileExtension::Csv,
-            DocType::Presentation | DocType::Document => FileExtension::Pdf,
-        }
-    }
-
-    #[must_use]
-    pub fn can_export_to(&self, extension: FileExtension) -> bool {
+    pub(crate) fn can_export_to(self, extension: FileExtension) -> bool {
         self.supported_export_types().contains(&extension)
     }
 
     #[must_use]
-    pub fn supported_export_types(&self) -> &'static [FileExtension] {
+    pub(crate) fn supported_export_types(self) -> &'static [FileExtension] {
         match self {
             DocType::Document => &[
                 FileExtension::Pdf,
@@ -206,7 +198,7 @@ impl DocType {
     }
 
     #[must_use]
-    pub fn mime(&self) -> &'static Mime {
+    pub(crate) fn mime(self) -> &'static Mime {
         match self {
             DocType::Document => &MIME_TYPE_DRIVE_DOCUMENT_MIME,
             DocType::Spreadsheet => &MIME_TYPE_DRIVE_SPREADSHEET_MIME,
@@ -246,7 +238,7 @@ impl fmt::Display for DocType {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum FileExtension {
+pub(crate) enum FileExtension {
     Doc,
     Docx,
     Odt,
@@ -328,7 +320,7 @@ impl fmt::Display for FileExtension {
 
 impl FileExtension {
     #[must_use]
-    pub fn from_path(path: &Path) -> Option<FileExtension> {
+    pub(crate) fn from_path(path: &Path) -> Option<FileExtension> {
         let extension = path.extension()?.to_str()?;
 
         match extension {
@@ -357,7 +349,7 @@ impl FileExtension {
     }
 
     #[must_use]
-    pub fn get_export_mime(&self) -> &'static Mime {
+    pub(crate) fn get_export_mime(self) -> &'static Mime {
         match self {
             FileExtension::Doc => &MIME_TYPE_DOC_MIME,
             FileExtension::Docx => &MIME_TYPE_DOCX_MIME,
@@ -384,16 +376,16 @@ impl FileExtension {
 }
 
 #[must_use]
-pub fn is_directory(file: &google_drive3::api::File) -> bool {
+pub(crate) fn is_directory(file: &google_drive3::api::File) -> bool {
     file.mime_type.as_deref() == Some(MIME_TYPE_DRIVE_FOLDER)
 }
 
 #[must_use]
-pub fn is_binary(file: &google_drive3::api::File) -> bool {
+pub(crate) fn is_binary(file: &google_drive3::api::File) -> bool {
     file.md5_checksum.is_some()
 }
 
 #[must_use]
-pub fn is_shortcut(file: &google_drive3::api::File) -> bool {
+pub(crate) fn is_shortcut(file: &google_drive3::api::File) -> bool {
     file.mime_type.as_deref() == Some(MIME_TYPE_DRIVE_SHORTCUT)
 }

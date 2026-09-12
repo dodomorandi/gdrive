@@ -8,7 +8,7 @@ use crate::common::{
 };
 
 #[derive(Debug)]
-pub enum Download {
+pub(crate) enum Download {
     Hub(GetHubError),
     GetFile(Box<google_drive3::Error>),
     #[expect(
@@ -20,8 +20,6 @@ pub enum Download {
     FileExists(FileIdentifier),
     IsDirectory(FileIdentifier),
     CreateDirectory(PathBuf, io::Error),
-    CopyFile(io::Error),
-    RenameFile(io::Error),
     CreateFileTree(file_tree_drive::errors::FileTreeDrive),
     DestinationPathDoesNotExist(PathBuf),
     DestinationPathNotADirectory(PathBuf),
@@ -58,8 +56,6 @@ impl Display for Download {
             Download::CreateDirectory(path, _) => {
                 write!(f, "unable to create directory '{}'", path.display())
             }
-            Download::CopyFile(_) => f.write_str("unable to copy file"),
-            Download::RenameFile(_) => f.write_str("unable to rename file"),
             Download::CreateFileTree(_) => f.write_str("unable to create file tree"),
             Download::DestinationPathDoesNotExist(path) => {
                 write!(f, "destination path '{}' does not exist", path.display())
@@ -98,10 +94,10 @@ impl Error for Download {
         match self {
             Download::Hub(get_hub_error) => Some(get_hub_error),
             Download::GetFile(error) | Download::DownloadFile(error) => Some(error),
+            Download::CreateFileTree(error) => Some(error),
             Download::MissingFileName(_)
             | Download::FileExists(_)
             | Download::IsDirectory(_)
-            | Download::CreateFileTree(_)
             | Download::DestinationPathDoesNotExist(_)
             | Download::DestinationPathNotADirectory(_)
             | Download::MissingShortcutTarget(_)
@@ -109,7 +105,6 @@ impl Error for Download {
             | Download::StdoutNotValidDestination => None,
             Download::CreateDirectory(_, source)
             | Download::CanonicalizeDestinationPath(_, source) => Some(source),
-            Download::CopyFile(error) | Download::RenameFile(error) => Some(error),
             Download::SaveBodyToStdout(save_body_to_stdout) => Some(save_body_to_stdout),
             Download::SaveBodyToFile { source, .. } => Some(source),
         }
@@ -123,7 +118,7 @@ impl From<SaveBodyToStdout> for Download {
 }
 
 #[derive(Debug)]
-pub enum SaveBodyToStdout {
+pub(crate) enum SaveBodyToStdout {
     ReadChunk(hyper::Error),
     WriteChunk(io::Error),
 }
@@ -149,7 +144,7 @@ impl Error for SaveBodyToStdout {
 }
 
 #[derive(Debug)]
-pub enum SaveBodyToFile {
+pub(crate) enum SaveBodyToFile {
     CreateFile(io::Error),
     ReadChunk(hyper::Error),
     WriteChunk(io::Error),

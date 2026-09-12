@@ -8,7 +8,7 @@ use pin_project_lite::pin_project;
 use tokio::io::AsyncWrite;
 
 pin_project! {
-    pub struct Md5Writer<T> {
+    pub(crate) struct Md5Writer<T> {
         #[pin]
         writer: T,
         context: md5::Context,
@@ -16,14 +16,14 @@ pin_project! {
 }
 
 impl<T> Md5Writer<T> {
-    pub fn new(writer: T) -> Self {
+    pub(crate) fn new(writer: T) -> Self {
         Self {
             writer,
             context: md5::Context::new(),
         }
     }
 
-    pub fn md5(self) -> md5::Digest {
+    pub(crate) fn md5(self) -> md5::Digest {
         self.context.compute()
     }
 }

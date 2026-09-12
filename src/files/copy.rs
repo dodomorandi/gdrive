@@ -15,12 +15,12 @@ use crate::{
 };
 
 #[derive(Clone, Debug)]
-pub struct Config {
-    pub file_id: String,
-    pub to_folder_id: String,
+pub(crate) struct Config {
+    pub(crate) file_id: String,
+    pub(crate) to_folder_id: String,
 }
 
-pub async fn copy(config: Config) -> Result<(), Error> {
+pub(crate) async fn copy(config: Config) -> Result<(), Error> {
     let hub = get_hub().await.map_err(Error::Hub)?;
     let delegate_config = UploadDelegateConfig::default();
 
@@ -60,16 +60,16 @@ pub async fn copy(config: Config) -> Result<(), Error> {
     Ok(())
 }
 
-pub struct CopyConfig {
-    pub file_id: String,
-    pub to_folder_id: String,
+struct CopyConfig {
+    pub(crate) file_id: String,
+    pub(crate) to_folder_id: String,
 }
 
 #[expect(
     clippy::result_large_err,
     reason = "Ok variant is bigger, see test next to FileResult"
 )]
-pub async fn copy_file(
+async fn copy_file(
     hub: &Hub,
     delegate_config: &UploadDelegateConfig,
     config: &CopyConfig,
@@ -94,7 +94,7 @@ pub async fn copy_file(
 }
 
 #[derive(Debug)]
-pub enum Error {
+pub(crate) enum Error {
     Hub(GetHubError),
     GetFile(Box<google_drive3::Error>),
     GetDestinationFolder(Box<google_drive3::Error>),

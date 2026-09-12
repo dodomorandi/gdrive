@@ -15,13 +15,13 @@ use crate::{
 };
 
 #[derive(Clone, Debug)]
-pub struct Config {
-    pub file_id: String,
-    pub skip_header: bool,
-    pub field_separator: String,
+pub(crate) struct Config {
+    pub(crate) file_id: String,
+    pub(crate) skip_header: bool,
+    pub(crate) field_separator: String,
 }
 
-pub async fn list(config: Config) -> Result<(), Error> {
+pub(crate) async fn list(config: Config) -> Result<(), Error> {
     let hub = get_hub().await.map_err(Error::Hub)?;
     let delegate_config = UploadDelegateConfig::default();
 
@@ -68,7 +68,7 @@ fn print_permissions_table(config: &Config, permissions: Vec<google_drive3::api:
     );
 }
 
-pub async fn list_permissions(
+pub(crate) async fn list_permissions(
     hub: &Hub,
     delegate_config: &UploadDelegateConfig,
     file_id: &str,
@@ -92,7 +92,7 @@ pub async fn list_permissions(
 }
 
 #[derive(Debug)]
-pub enum Error {
+pub(crate) enum Error {
     Hub(GetHubError),
     GetFile(Box<google_drive3::Error>),
     ListPermissions(Box<google_drive3::Error>),

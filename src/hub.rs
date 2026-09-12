@@ -9,7 +9,7 @@ use google_drive3::{
 
 use crate::app_config;
 
-pub struct Hub(DriveHub<HttpsConnector<HttpConnector>>);
+pub(crate) struct Hub(DriveHub<HttpsConnector<HttpConnector>>);
 
 impl Deref for Hub {
     type Target = DriveHub<HttpsConnector<HttpConnector>>;
@@ -20,7 +20,7 @@ impl Deref for Hub {
 }
 
 impl Hub {
-    pub fn new(auth: Auth) -> io::Result<Hub> {
+    pub(crate) fn new(auth: Auth) -> io::Result<Hub> {
         let connector = HttpsConnectorBuilder::new()
             .with_native_roots()?
             .https_or_http()
@@ -34,7 +34,7 @@ impl Hub {
     }
 }
 
-pub struct Auth(pub Authenticator<HttpsConnector<HttpConnector>>);
+pub(crate) struct Auth(pub(crate) Authenticator<HttpsConnector<HttpConnector>>);
 
 impl Deref for Auth {
     type Target = Authenticator<HttpsConnector<HttpConnector>>;
@@ -45,7 +45,10 @@ impl Deref for Auth {
 }
 
 impl Auth {
-    pub async fn new(config: &app_config::Secret, tokens_path: &Path) -> Result<Auth, io::Error> {
+    pub(crate) async fn new(
+        config: &app_config::Secret,
+        tokens_path: &Path,
+    ) -> Result<Auth, io::Error> {
         let secret = oauth2_secret(config);
         let delegate = Box::new(AuthDelegate);
 

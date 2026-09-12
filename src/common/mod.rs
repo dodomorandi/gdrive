@@ -1,17 +1,17 @@
-pub mod account_archive;
-pub mod delegate;
-pub mod drive_file;
-pub mod empty_file;
-pub mod file_helper;
-pub mod file_info;
-pub mod file_tree;
-pub mod file_tree_drive;
-mod file_tree_like;
-pub mod hub_helper;
-pub mod id_gen;
-pub mod md5_writer;
-pub mod permission;
-pub mod table;
+pub(crate) mod account_archive;
+pub(crate) mod delegate;
+pub(crate) mod drive_file;
+pub(crate) mod empty_file;
+pub(crate) mod file_helper;
+pub(crate) mod file_info;
+pub(crate) mod file_tree;
+pub(crate) mod file_tree_drive;
+pub(crate) mod file_tree_like;
+pub(crate) mod hub_helper;
+pub(crate) mod id_gen;
+pub(crate) mod md5_writer;
+pub(crate) mod permission;
+pub(crate) mod table;
 
 pub(crate) use file_tree_like::{FileLike, FileTreeLike, FolderInfoLike, FolderLike};
 

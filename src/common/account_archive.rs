@@ -1,4 +1,4 @@
-pub mod errors;
+pub(crate) mod errors;
 
 use std::{
     fs::File,
@@ -11,7 +11,7 @@ use std::{
 /// # Panics
 ///
 /// The function panics if `src_path` terminates with a `..`.
-pub fn create(src_path: &Path, archive_path: &Path) -> Result<(), errors::Create> {
+pub(crate) fn create(src_path: &Path, archive_path: &Path) -> Result<(), errors::Create> {
     if src_path.exists().not() {
         return Err(errors::Create::SrcPathDoesNotExist);
     }
@@ -39,7 +39,7 @@ pub fn create(src_path: &Path, archive_path: &Path) -> Result<(), errors::Create
     Ok(())
 }
 
-pub fn unpack(archive_path: &Path, dst_path: &Path) -> Result<(), errors::Unpack> {
+pub(crate) fn unpack(archive_path: &Path, dst_path: &Path) -> Result<(), errors::Unpack> {
     if archive_path.exists().not() {
         return Err(errors::Unpack::ArchivePathDoesNotExist);
     }
@@ -53,7 +53,7 @@ pub fn unpack(archive_path: &Path, dst_path: &Path) -> Result<(), errors::Unpack
     archive.unpack(dst_path).map_err(errors::Unpack::Unpack)
 }
 
-pub fn get_account_name(archive_path: &Path) -> Result<String, errors::GetAccountName> {
+pub(crate) fn get_account_name(archive_path: &Path) -> Result<String, errors::GetAccountName> {
     let archive_file = File::open(archive_path).map_err(errors::GetAccountName::Open)?;
     let mut archive = tar::Archive::new(archive_file);
     let entries = archive

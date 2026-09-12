@@ -1,12 +1,12 @@
-pub mod about;
-pub mod account;
-pub mod app_config;
-pub mod common;
-pub mod drives;
-pub mod files;
-pub mod hub;
-pub mod permissions;
-pub mod version;
+mod about;
+mod account;
+mod app_config;
+mod common;
+mod drives;
+mod files;
+mod hub;
+mod permissions;
+mod version;
 
 use std::{path::PathBuf, process::ExitCode};
 

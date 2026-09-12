@@ -5,7 +5,7 @@ use std::{
 
 use crate::app_config::{self, AppConfig};
 
-pub fn current() -> Result<(), Error> {
+pub(crate) fn current() -> Result<(), Error> {
     let accounts = app_config::list_accounts().map_err(Error::List)?;
     if accounts.is_empty() {
         return Err(Error::NoAccounts);
@@ -18,7 +18,7 @@ pub fn current() -> Result<(), Error> {
 }
 
 #[derive(Debug)]
-pub enum Error {
+pub(crate) enum Error {
     List(app_config::errors::ListAccounts),
     LoadCurrent(app_config::errors::LoadCurrentAccount),
     NoAccounts,

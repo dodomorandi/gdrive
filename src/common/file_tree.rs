@@ -1,4 +1,4 @@
-pub mod errors;
+pub(crate) mod errors;
 
 use std::{
     borrow::Cow,
@@ -13,12 +13,15 @@ use super::{FileLike, FileTreeLike, FolderInfoLike, FolderLike};
 use crate::common::{file_info::FileInfo, file_tree_like, id_gen::IdGen};
 
 #[derive(Debug, Clone)]
-pub struct FileTree {
-    pub root: Folder,
+pub(crate) struct FileTree {
+    pub(crate) root: Folder,
 }
 
 impl FileTree {
-    pub async fn from_path(path: &Path, ids: &mut IdGen<'_>) -> Result<FileTree, errors::FileTree> {
+    pub(crate) async fn from_path(
+        path: &Path,
+        ids: &mut IdGen<'_>,
+    ) -> Result<FileTree, errors::FileTree> {
         let canonical_path = path
             .canonicalize()
             .map_err(errors::FileTree::Canonicalize)?;
@@ -41,22 +44,22 @@ impl FileTreeLike for FileTree {
 type Node = file_tree_like::Node<Folder>;
 
 #[derive(Debug, Clone)]
-pub struct FolderInfo {
-    pub name: String,
-    pub path: PathBuf,
-    pub parent: Option<Arc<FolderInfo>>,
-    pub drive_id: String,
+pub(crate) struct FolderInfo {
+    pub(crate) name: String,
+    pub(crate) path: PathBuf,
+    pub(crate) parent: Option<Arc<FolderInfo>>,
+    pub(crate) drive_id: String,
 }
 
 #[derive(Debug, Clone)]
-pub struct Folder {
-    pub info: Arc<FolderInfo>,
-    pub children: Vec<Node>,
+pub(crate) struct Folder {
+    pub(crate) info: Arc<FolderInfo>,
+    pub(crate) children: Vec<Node>,
 }
 
 impl Folder {
     #[async_recursion]
-    pub async fn from_path(
+    async fn from_path(
         path: &Path,
         parent: Option<&'async_recursion Folder>,
         ids: &mut IdGen<'_>,
@@ -121,7 +124,7 @@ impl Folder {
     }
 
     #[must_use]
-    pub fn relative_path(&self) -> &Path {
+    pub(crate) fn relative_path(&self) -> &Path {
         get_relative_path(&self.info.path, &self.info)
     }
 }
@@ -160,17 +163,17 @@ impl FolderInfoLike for FolderInfo {
 }
 
 #[derive(Debug, Clone)]
-pub struct File {
-    pub name: String,
-    pub path: PathBuf,
-    pub size: u64,
-    pub mime_type: mime::Mime,
-    pub parent: Arc<FolderInfo>,
-    pub drive_id: String,
+pub(crate) struct File {
+    pub(crate) name: String,
+    pub(crate) path: PathBuf,
+    pub(crate) size: u64,
+    pub(crate) mime_type: mime::Mime,
+    pub(crate) parent: Arc<FolderInfo>,
+    pub(crate) drive_id: String,
 }
 
 impl File {
-    pub async fn from_path(
+    async fn from_path(
         path: &Path,
         parent: &Folder,
         ids: &mut IdGen<'_>,
@@ -182,7 +185,7 @@ impl File {
             .map(|s| s.to_string_lossy().into_owned())
             .ok_or(E::InvalidPath)?;
 
-        let os_file = fs::File::open(path).map_err(E::OpenFile)?;
+        let os_file = fs::File::open(path).map_err(E::Open)?;
         let size = os_file.metadata().map_or(0, |m| m.len());
         let mime_type = mime_guess::from_path(path)
             .first()
@@ -202,12 +205,12 @@ impl File {
     }
 
     #[must_use]
-    pub fn relative_path(&self) -> &Path {
+    pub(crate) fn relative_path(&self) -> &Path {
         get_relative_path(&self.path, &self.parent)
     }
 
     #[must_use]
-    pub fn info(&self, parents: Option<Vec<String>>) -> FileInfo<'_> {
+    pub(crate) fn info(&self, parents: Option<Vec<String>>) -> FileInfo<'_> {
         FileInfo {
             name: Cow::Borrowed(&self.name),
             size: self.size,

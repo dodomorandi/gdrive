@@ -15,12 +15,12 @@ use crate::{
 };
 
 #[derive(Clone, Debug)]
-pub struct Config {
-    pub file_id: String,
-    pub to_folder_id: String,
+pub(crate) struct Config {
+    pub(crate) file_id: String,
+    pub(crate) to_folder_id: String,
 }
 
-pub async fn mv(config: Config) -> Result<(), Error> {
+pub(crate) async fn mv(config: Config) -> Result<(), Error> {
     let hub = get_hub().await.map_err(Error::Hub)?;
     let delegate_config = UploadDelegateConfig::default();
 
@@ -49,33 +49,33 @@ pub async fn mv(config: Config) -> Result<(), Error> {
         new_parent.name.unwrap_or_default()
     );
 
-    let change_parent_config = ChangeParentConfig {
-        file_id: &config.file_id,
-        old_parent_id,
-        new_parent_id: &config.to_folder_id,
+    let change_parent_ids = ChangeParentIds {
+        file: &config.file_id,
+        old_parent: old_parent_id,
+        new_parent: &config.to_folder_id,
     };
 
-    change_parent(&hub, &delegate_config, change_parent_config)
+    change_parent(&hub, &delegate_config, change_parent_ids)
         .await
         .map_err(|err| Error::Move(Box::new(err)))?;
 
     Ok(())
 }
 
-pub struct ChangeParentConfig<'a> {
-    pub file_id: &'a str,
-    pub old_parent_id: &'a str,
-    pub new_parent_id: &'a str,
+struct ChangeParentIds<'a> {
+    pub(crate) file: &'a str,
+    pub(crate) old_parent: &'a str,
+    pub(crate) new_parent: &'a str,
 }
 
 #[expect(
     clippy::result_large_err,
     reason = "Ok variant is bigger, see test next to FileResult"
 )]
-pub async fn change_parent(
+async fn change_parent(
     hub: &Hub,
     delegate_config: &UploadDelegateConfig,
-    config: ChangeParentConfig<'_>,
+    ids: ChangeParentIds<'_>,
 ) -> FileResult {
     let mut delegate = UploadDelegate::new(delegate_config);
 
@@ -83,9 +83,9 @@ pub async fn change_parent(
 
     let (_, file) = hub
         .files()
-        .update(empty_file, config.file_id)
-        .remove_parents(config.old_parent_id)
-        .add_parents(config.new_parent_id)
+        .update(empty_file, ids.file)
+        .remove_parents(ids.old_parent)
+        .add_parents(ids.new_parent)
         .param("fields", "id,name,size,createdTime,modifiedTime,md5Checksum,mimeType,parents,shared,description,webContentLink,webViewLink")
         .add_scope(google_drive3::api::Scope::Full)
         .delegate(&mut delegate)
@@ -96,7 +96,7 @@ pub async fn change_parent(
 }
 
 #[derive(Debug)]
-pub enum Error {
+pub(crate) enum Error {
     Hub(GetHubError),
     GetFile(Box<google_drive3::Error>),
     GetOldParent(String, Box<google_drive3::Error>),

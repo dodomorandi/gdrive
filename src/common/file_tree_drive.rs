@@ -1,4 +1,4 @@
-pub mod errors;
+pub(crate) mod errors;
 
 use std::{iter, ops::Not, path::PathBuf, sync::Arc};
 
@@ -12,12 +12,12 @@ use crate::{
 };
 
 #[derive(Debug, Clone)]
-pub struct FileTreeDrive {
-    pub root: Folder,
+pub(crate) struct FileTreeDrive {
+    pub(crate) root: Folder,
 }
 
 impl FileTreeDrive {
-    pub async fn from_file(
+    pub(crate) async fn from_file(
         hub: &Hub,
         file: google_drive3::api::File,
     ) -> Result<FileTreeDrive, errors::FileTreeDrive> {
@@ -39,21 +39,20 @@ impl FileTreeLike for FileTreeDrive {
 type Node = file_tree_like::Node<Folder>;
 
 #[derive(Debug, Clone)]
-pub struct Folder {
-    pub info: Arc<FolderInfo>,
-    pub children: Vec<Node>,
+pub(crate) struct Folder {
+    pub(crate) info: Arc<FolderInfo>,
+    pub(crate) children: Vec<Node>,
 }
 
 #[derive(Debug, Clone)]
-pub struct FolderInfo {
-    pub name: String,
-    pub parent: Option<Arc<Self>>,
-    pub drive_id: String,
+pub(crate) struct FolderInfo {
+    pub(crate) name: String,
+    pub(crate) parent: Option<Arc<Self>>,
 }
 
 impl Folder {
     #[async_recursion]
-    pub async fn from_file(
+    async fn from_file(
         hub: &Hub,
         file: google_drive3::api::File,
         parent: Option<&'async_recursion Arc<FolderInfo>>,
@@ -69,7 +68,6 @@ impl Folder {
             info: Arc::new(FolderInfo {
                 name,
                 parent: parent.map(Arc::clone),
-                drive_id: file_id.clone(),
             }),
             children: Vec::new(),
         };
@@ -124,7 +122,7 @@ impl FolderLike for Folder {
 
 impl FolderInfo {
     #[must_use]
-    pub fn relative_path(&self) -> PathBuf {
+    pub(crate) fn relative_path(&self) -> PathBuf {
         let mut path = PathBuf::new();
 
         for folder in self.ancestors() {
@@ -157,16 +155,16 @@ impl FolderInfoLike for FolderInfo {
 }
 
 #[derive(Debug, Clone)]
-pub struct File {
-    pub name: String,
-    pub size: u64,
-    pub parent: Arc<FolderInfo>,
-    pub drive_id: String,
-    pub md5: Option<md5::Digest>,
+pub(crate) struct File {
+    pub(crate) name: String,
+    pub(crate) size: u64,
+    pub(crate) parent: Arc<FolderInfo>,
+    pub(crate) drive_id: String,
+    pub(crate) md5: Option<md5::Digest>,
 }
 
 impl File {
-    pub fn from_file(
+    fn from_file(
         file: google_drive3::api::File,
         parent: &Folder,
     ) -> Result<File, (errors::File, FileIdentifier)> {
@@ -202,7 +200,7 @@ impl File {
     }
 
     #[must_use]
-    pub fn relative_path(&self) -> PathBuf {
+    pub(crate) fn relative_path(&self) -> PathBuf {
         self.parent.relative_path().join(&self.name)
     }
 }
@@ -228,22 +226,18 @@ mod tests {
         let folder_a = Arc::new(FolderInfo {
             name: "a".to_string(),
             parent: None,
-            drive_id: "a".to_string(),
         });
         let folder_b = Arc::new(FolderInfo {
             name: "b".to_string(),
             parent: Some(Arc::clone(&folder_a)),
-            drive_id: "b".to_string(),
         });
         let folder_c = Arc::new(FolderInfo {
             name: "c".to_string(),
             parent: Some(Arc::clone(&folder_b)),
-            drive_id: "c".to_string(),
         });
         let folder_d = Arc::new(FolderInfo {
             name: "d".to_string(),
             parent: Some(Arc::clone(&folder_c)),
-            drive_id: "d".to_string(),
         });
 
         let ancestors = folder_d.ancestors();

@@ -9,12 +9,12 @@ use crate::{
     hub::Hub,
 };
 
-pub struct Config {
-    pub skip_header: bool,
-    pub field_separator: String,
+pub(crate) struct Config {
+    pub(crate) skip_header: bool,
+    pub(crate) field_separator: String,
 }
 
-pub async fn list(config: Config) -> Result<(), Box<Error>> {
+pub(crate) async fn list(config: Config) -> Result<(), Box<Error>> {
     let hub = get_hub().await.map_err(Error::Hub)?;
     let delegate_config = UploadDelegateConfig::default();
 
@@ -49,7 +49,7 @@ fn print_drives_table(config: &Config, drives: Vec<google_drive3::api::Drive>) {
     );
 }
 
-pub async fn list_drives(
+async fn list_drives(
     hub: &Hub,
     delegate_config: &UploadDelegateConfig,
 ) -> Result<Vec<google_drive3::api::Drive>, Box<google_drive3::Error>> {
@@ -67,7 +67,7 @@ pub async fn list_drives(
 }
 
 #[derive(Debug)]
-pub enum Error {
+pub(crate) enum Error {
     Hub(GetHubError),
     ListDrives(Box<google_drive3::Error>),
 }

@@ -1,7 +1,7 @@
 use std::io::{self, Read, Seek, SeekFrom};
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
-pub struct EmptyFile;
+pub(crate) struct EmptyFile;
 
 impl Read for EmptyFile {
     fn read(&mut self, _buf: &mut [u8]) -> io::Result<usize> {

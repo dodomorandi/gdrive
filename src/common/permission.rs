@@ -5,7 +5,7 @@ use std::{
 };
 
 #[derive(Debug, Clone, Copy, Default, Eq, PartialEq)]
-pub enum Role {
+pub(crate) enum Role {
     Owner,
     Organizer,
     FileOrganizer,
@@ -54,7 +54,7 @@ impl FromStr for Role {
 }
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
-pub struct InvalidRole;
+pub(crate) struct InvalidRole;
 
 impl Display for InvalidRole {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -72,7 +72,7 @@ impl Display for InvalidRole {
 impl Error for InvalidRole {}
 
 #[derive(Debug, Clone, Copy, Default, Eq, PartialEq)]
-pub enum Type {
+pub(crate) enum Type {
     User,
     Group,
     Domain,
@@ -84,7 +84,7 @@ const TYPES: [Type; 4] = [Type::User, Type::Group, Type::Domain, Type::Anyone];
 
 impl Type {
     #[must_use]
-    pub fn requires_email(&self) -> bool {
+    pub(crate) fn requires_email(self) -> bool {
         match self {
             Type::Group | Type::User => true,
             Type::Domain | Type::Anyone => false,
@@ -92,7 +92,7 @@ impl Type {
     }
 
     #[must_use]
-    pub fn requires_domain(&self) -> bool {
+    pub(crate) fn requires_domain(self) -> bool {
         match self {
             Type::Domain => true,
             Type::Anyone | Type::Group | Type::User => false,
@@ -100,7 +100,7 @@ impl Type {
     }
 
     #[must_use]
-    pub fn supports_file_discovery(&self) -> bool {
+    pub(crate) fn supports_file_discovery(self) -> bool {
         match self {
             Type::Group | Type::User => false,
             Type::Domain | Type::Anyone => true,
@@ -134,7 +134,7 @@ impl FromStr for Type {
 }
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
-pub struct InvalidType;
+pub(crate) struct InvalidType;
 
 impl Display for InvalidType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

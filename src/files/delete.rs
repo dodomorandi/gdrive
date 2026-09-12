@@ -12,12 +12,12 @@ use crate::{
     files,
 };
 
-pub struct Config {
-    pub file_id: String,
-    pub delete_directories: bool,
+pub(crate) struct Config {
+    pub(crate) file_id: String,
+    pub(crate) delete_directories: bool,
 }
 
-pub async fn delete(config: Config) -> Result<(), Error> {
+pub(crate) async fn delete(config: Config) -> Result<(), Error> {
     let hub = get_hub().await.map_err(Error::Hub)?;
 
     let file = files::info::get_file(&hub, &config.file_id)
@@ -42,7 +42,7 @@ pub async fn delete(config: Config) -> Result<(), Error> {
 }
 
 #[derive(Debug)]
-pub enum Error {
+pub(crate) enum Error {
     Hub(GetHubError),
     GetFile(Box<google_drive3::Error>),
     DeleteFile(Box<google_drive3::Error>),

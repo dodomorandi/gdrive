@@ -9,7 +9,7 @@ use crate::{
     hub::{Auth, Hub},
 };
 
-pub async fn get_hub() -> Result<Hub, GetHubError> {
+pub(crate) async fn get_hub() -> Result<Hub, GetHubError> {
     let app_cfg = AppConfig::load_current_account().map_err(GetHubError::LoadCurrentAccount)?;
     let secret = app_cfg.load_secret().map_err(GetHubError::LoadSecret)?;
     let auth = Auth::new(&secret, app_cfg.tokens_path())
@@ -22,7 +22,7 @@ pub async fn get_hub() -> Result<Hub, GetHubError> {
 }
 
 #[derive(Debug)]
-pub enum GetHubError {
+pub(crate) enum GetHubError {
     LoadCurrentAccount(app_config::errors::LoadCurrentAccount),
     LoadSecret(app_config::errors::LoadSecret),
     Auth(io::Error),

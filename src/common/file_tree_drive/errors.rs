@@ -7,7 +7,7 @@ use std::{
 use crate::files;
 
 #[derive(Debug)]
-pub struct FileTreeDrive(pub Folder);
+pub(crate) struct FileTreeDrive(pub(crate) Folder);
 
 impl Display for FileTreeDrive {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -22,7 +22,7 @@ impl Error for FileTreeDrive {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub enum FileIdentifier {
+pub(crate) enum FileIdentifier {
     Name(String),
     Id(String),
     None,
@@ -30,7 +30,7 @@ pub enum FileIdentifier {
 
 impl FileIdentifier {
     #[must_use]
-    pub fn new(name: Option<String>, id: Option<String>) -> Self {
+    pub(crate) fn new(name: Option<String>, id: Option<String>) -> Self {
         if let Some(name) = name {
             Self::Name(name)
         } else if let Some(id) = id {
@@ -41,7 +41,7 @@ impl FileIdentifier {
     }
 
     #[must_use]
-    pub fn display(&self) -> FileIdentifierDisplay<'_> {
+    pub(crate) fn display(&self) -> FileIdentifierDisplay<'_> {
         FileIdentifierDisplay(self)
     }
 }
@@ -65,7 +65,7 @@ impl From<&google_drive3::api::File> for FileIdentifier {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct FileIdentifierDisplay<'a>(&'a FileIdentifier);
+pub(crate) struct FileIdentifierDisplay<'a>(&'a FileIdentifier);
 
 impl Display for FileIdentifierDisplay<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -78,15 +78,11 @@ impl Display for FileIdentifierDisplay<'_> {
 }
 
 #[derive(Debug)]
-pub enum Folder {
+pub(crate) enum Folder {
     MissingFileName,
     NotDirectory,
     MissingFileId,
     ListFiles(files::list::Error),
-    Nested {
-        identifier: FileIdentifier,
-        source: Box<Folder>,
-    },
     File {
         identifier: FileIdentifier,
         source: File,
@@ -100,16 +96,6 @@ impl Display for Folder {
             Folder::NotDirectory => f.write_str("file is not a directory"),
             Folder::MissingFileId => f.write_str("file id is missing"),
             Folder::ListFiles(_) => f.write_str("unable to list directory files"),
-            Folder::Nested {
-                identifier,
-                source: _,
-            } => {
-                write!(
-                    f,
-                    "unable to process nested directory{}",
-                    identifier.display()
-                )
-            }
             Folder::File {
                 identifier,
                 source: _,
@@ -125,14 +111,13 @@ impl Error for Folder {
         match self {
             Folder::MissingFileName | Folder::NotDirectory | Folder::MissingFileId => None,
             Folder::ListFiles(error) => Some(error),
-            Folder::Nested { source, .. } => Some(source),
             Folder::File { source, .. } => Some(source),
         }
     }
 }
 
 #[derive(Debug)]
-pub enum File {
+pub(crate) enum File {
     MissingFileName,
     MissingFileSize,
     InvalidFileSize(TryFromIntError),

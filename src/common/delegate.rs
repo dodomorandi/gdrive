@@ -9,14 +9,14 @@ use error_trace::ErrorTrace;
 use google_drive3::hyper::{self, http};
 
 #[derive(Debug, Clone, Default)]
-pub struct UploadDelegateConfig {
-    pub chunk_size: ChunkSize,
-    pub backoff_config: BackoffConfig,
-    pub print_chunk_errors: bool,
-    pub print_chunk_info: bool,
+pub(crate) struct UploadDelegateConfig {
+    pub(crate) chunk_size: ChunkSize,
+    pub(crate) backoff_config: BackoffConfig,
+    pub(crate) print_chunk_errors: bool,
+    pub(crate) print_chunk_info: bool,
 }
 
-pub struct UploadDelegate<'a> {
+pub(crate) struct UploadDelegate<'a> {
     config: &'a UploadDelegateConfig,
     backoff: Backoff,
     resumable_upload_url: Option<String>,
@@ -25,7 +25,7 @@ pub struct UploadDelegate<'a> {
 
 impl<'a> UploadDelegate<'a> {
     #[must_use]
-    pub fn new(config: &'a UploadDelegateConfig) -> Self {
+    pub(crate) fn new(config: &'a UploadDelegateConfig) -> Self {
         let backoff = Backoff::new(&config.backoff_config);
 
         UploadDelegate {
@@ -118,10 +118,10 @@ fn should_retry(status: http::StatusCode) -> bool {
 }
 
 #[derive(Debug, Clone)]
-pub struct BackoffConfig {
-    pub max_retries: u32,
-    pub min_sleep: Duration,
-    pub max_sleep: Duration,
+pub(crate) struct BackoffConfig {
+    pub(crate) max_retries: u32,
+    pub(crate) min_sleep: Duration,
+    pub(crate) max_sleep: Duration,
 }
 
 impl Default for BackoffConfig {
@@ -134,14 +134,14 @@ impl Default for BackoffConfig {
     }
 }
 
-pub struct Backoff {
+pub(crate) struct Backoff {
     attempts: u32,
     backoff: exponential_backoff::Backoff,
 }
 
 impl Backoff {
     #[must_use]
-    pub fn new(config: &BackoffConfig) -> Backoff {
+    pub(crate) fn new(config: &BackoffConfig) -> Backoff {
         Backoff {
             attempts: 0,
             backoff: exponential_backoff::Backoff::new(
@@ -162,7 +162,7 @@ impl Backoff {
 }
 
 #[derive(Debug, Clone, Default)]
-pub enum ChunkSize {
+pub(crate) enum ChunkSize {
     Approx1,
     Approx2,
     Approx4,
@@ -182,7 +182,7 @@ pub enum ChunkSize {
 
 impl ChunkSize {
     #[must_use]
-    pub fn in_bytes(&self) -> u64 {
+    pub(crate) fn in_bytes(&self) -> u64 {
         let exponent = match self {
             ChunkSize::Approx1 => 20,
             ChunkSize::Approx2 => 21,
@@ -252,7 +252,7 @@ impl Display for ChunkSize {
 }
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
-pub struct InvalidChunkSize;
+pub(crate) struct InvalidChunkSize;
 
 impl Display for InvalidChunkSize {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

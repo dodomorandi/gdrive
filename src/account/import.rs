@@ -10,11 +10,11 @@ use crate::{
 };
 
 #[derive(Debug, Clone)]
-pub struct Config {
-    pub archive_path: PathBuf,
+pub(crate) struct Config {
+    pub(crate) archive_path: PathBuf,
 }
 
-pub fn import(config: &Config) -> Result<(), Error> {
+pub(crate) fn import(config: &Config) -> Result<(), Error> {
     let account_name =
         account_archive::get_account_name(&config.archive_path).map_err(Error::ReadAccountName)?;
 
@@ -38,7 +38,7 @@ pub fn import(config: &Config) -> Result<(), Error> {
 }
 
 #[derive(Debug)]
-pub enum Error {
+pub(crate) enum Error {
     ReadAccountName(account_archive::errors::GetAccountName),
     ListAccounts(app_config::errors::ListAccounts),
     AccountExists(String),

@@ -8,7 +8,7 @@ use std::{
 
 use mktemp::Temp;
 
-pub fn stdin_to_file() -> Result<Temp, StdinToFileError> {
+pub(crate) fn stdin_to_file() -> Result<Temp, StdinToFileError> {
     let tmp_file = Temp::new_file().map_err(StdinToFileError::NewTempFile)?;
     let mut file = fs::File::create(&tmp_file).map_err(StdinToFileError::CreateTempFile)?;
     io::copy(&mut io::stdin(), &mut file).map_err(StdinToFileError::CopyStdin)?;
@@ -16,7 +16,7 @@ pub fn stdin_to_file() -> Result<Temp, StdinToFileError> {
 }
 
 #[derive(Debug)]
-pub enum StdinToFileError {
+pub(crate) enum StdinToFileError {
     NewTempFile(io::Error),
     CreateTempFile(io::Error),
     CopyStdin(io::Error),
@@ -46,10 +46,10 @@ impl Error for StdinToFileError {
     }
 }
 
-pub fn open_file(path: &Option<PathBuf>) -> Result<File<'_>, OpenFileError> {
+pub(crate) fn open_file(path: Option<&Path>) -> Result<File<'_>, OpenFileError> {
     let (file, kind) = if let Some(path) = path {
         let file = fs::File::open(path).map_err(|source| OpenFileError::Open {
-            path: path.clone(),
+            path: path.to_owned(),
             source,
         })?;
         (file, FileKind::File(path))
@@ -72,7 +72,7 @@ pub fn open_file(path: &Option<PathBuf>) -> Result<File<'_>, OpenFileError> {
 }
 
 #[derive(Debug)]
-pub struct File<'a> {
+pub(crate) struct File<'a> {
     inner: fs::File,
     kind: FileKind<'a>,
 }
@@ -85,12 +85,7 @@ enum FileKind<'a> {
 
 impl File<'_> {
     #[must_use]
-    pub fn path(&self) -> &Path {
-        self.kind.path()
-    }
-
-    #[must_use]
-    pub fn into_path_buf(self) -> PathBuf {
+    pub(crate) fn into_path_buf(self) -> PathBuf {
         match self.kind {
             FileKind::Temp(temp) => temp.release(),
             FileKind::File(path) => path.to_path_buf(),
@@ -98,7 +93,7 @@ impl File<'_> {
     }
 
     #[must_use]
-    pub fn file_mut_and_path(&mut self) -> (&mut fs::File, &Path) {
+    pub(crate) fn file_mut_and_path(&mut self) -> (&mut fs::File, &Path) {
         (&mut self.inner, self.kind.path())
     }
 }
@@ -159,7 +154,7 @@ impl FileKind<'_> {
 }
 
 #[derive(Debug)]
-pub enum OpenFileError {
+pub(crate) enum OpenFileError {
     Open { path: PathBuf, source: io::Error },
     StdinToFile(StdinToFileError),
 }
