@@ -106,16 +106,20 @@ impl Type {
             Type::Domain | Type::Anyone => true,
         }
     }
+
+    pub(crate) const fn as_str(self) -> &'static str {
+        match self {
+            Type::User => "user",
+            Type::Group => "group",
+            Type::Domain => "domain",
+            Type::Anyone => "anyone",
+        }
+    }
 }
 
 impl fmt::Display for Type {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            Type::User => write!(f, "user"),
-            Type::Group => write!(f, "group"),
-            Type::Domain => write!(f, "domain"),
-            Type::Anyone => write!(f, "anyone"),
-        }
+        f.write_str(self.as_str())
     }
 }
 
