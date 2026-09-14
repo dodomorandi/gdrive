@@ -92,33 +92,40 @@ pub(crate) enum Error {
     UnknownPermissionRole(String),
 }
 
-impl error::Error for Error {}
+impl error::Error for Error {
+    fn source(&self) -> Option<&(dyn error::Error + 'static)> {
+        match self {
+            Error::Hub(source) => Some(source),
+            Error::GetFile(source)
+            | Error::ListPermissions(source)
+            | Error::DeletePermission(_, source) => Some(source),
+            Error::PermissionNotFound(_)
+            | Error::UnknownPermissionType(_)
+            | Error::UnknownPermissionRole(_) => None,
+        }
+    }
+}
 
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         match self {
-            Error::Hub(err) => write!(f, "{err}"),
-            Error::GetFile(err) => {
-                write!(f, "Failed to get file: {err}")
-            }
-            Error::ListPermissions(err) => {
-                write!(f, "Failed to list permissions: {err}")
-            }
-            Error::DeletePermission(permission, err) => {
+            Error::Hub(_) => f.write_str("unable to get drive hub"),
+            Error::GetFile(_) => f.write_str("unable to get file"),
+            Error::ListPermissions(_) => f.write_str("unable to list permissions"),
+            Error::DeletePermission(permission, _) => {
                 write!(
                     f,
-                    "Failed to delete permission '{}': {}",
+                    "unable to delete permission '{}'",
                     permission.id.as_deref().unwrap_or_default(),
-                    err
                 )
             }
             Error::PermissionNotFound(id) => {
-                write!(f, "Permission '{id}' not found")
+                write!(f, "permission '{id}' not found")
             }
             Error::UnknownPermissionType(type_) => {
-                write!(f, "Unknown permission type: '{type_}'")
+                write!(f, "unknown permission type: '{type_}'")
             }
-            Error::UnknownPermissionRole(role) => write!(f, "Unknown permission role: '{role}'"),
+            Error::UnknownPermissionRole(role) => write!(f, "unknown permission role: '{role}'"),
         }
     }
 }
