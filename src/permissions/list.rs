@@ -33,25 +33,25 @@ pub(crate) async fn list(config: Config) -> Result<(), Error> {
         .await
         .map_err(Error::ListPermissions)?;
 
-    print_permissions_table(&config, permissions);
+    print_permissions_table(&config, &permissions);
 
     Ok(())
 }
 
-fn print_permissions_table(config: &Config, permissions: Vec<google_drive3::api::Permission>) {
-    let mut values: Vec<[String; 6]> = vec![];
-
-    for permission in permissions {
-        values.push([
-            permission.id.unwrap_or_default(),
-            permission.type_.unwrap_or_default(),
-            permission.role.unwrap_or_default(),
-            permission.email_address.unwrap_or_default(),
-            permission.domain.unwrap_or_default(),
-            files::info::format_bool(permission.allow_file_discovery.unwrap_or_default())
-                .to_string(),
-        ]);
-    }
+fn print_permissions_table(config: &Config, permissions: &[google_drive3::api::Permission]) {
+    let values = permissions
+        .iter()
+        .map(|permission| {
+            [
+                permission.id.as_deref().unwrap_or_default(),
+                permission.type_.as_deref().unwrap_or_default(),
+                permission.role.as_deref().unwrap_or_default(),
+                permission.email_address.as_deref().unwrap_or_default(),
+                permission.domain.as_deref().unwrap_or_default(),
+                files::info::format_bool(permission.allow_file_discovery.unwrap_or_default()),
+            ]
+        })
+        .collect();
 
     let table = Table {
         header: ["Id", "Type", "Role", "Email", "Domain", "Discoverable"],
