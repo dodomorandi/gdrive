@@ -38,7 +38,7 @@ pub(crate) async fn revoke(config: Config) -> Result<(), Error> {
         if print_revoke_details(&file, &permission).is_err() {
             println!(
                 "Revoking permission with id: '{}'",
-                permission.id.clone().unwrap_or_default()
+                permission.id.as_deref().unwrap_or_default()
             );
         }
 
@@ -46,10 +46,10 @@ pub(crate) async fn revoke(config: Config) -> Result<(), Error> {
             &hub,
             &delegate_config,
             &config.file_id,
-            &permission.id.clone().unwrap_or_default(),
+            permission.id.as_deref().unwrap_or_default(),
         )
         .await
-        .map_err(|err| Error::DeletePermission(Box::new(permission.clone()), err))?;
+        .map_err(|err| Error::DeletePermission(Box::new(permission), err))?;
     }
 
     Ok(())
