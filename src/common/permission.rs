@@ -24,16 +24,22 @@ const ROLES: [Role; 6] = [
     Role::Reader,
 ];
 
+impl Role {
+    pub(crate) const fn as_str(self) -> &'static str {
+        match self {
+            Role::Owner => "owner",
+            Role::Organizer => "organizer",
+            Role::FileOrganizer => "fileOrganizer",
+            Role::Writer => "writer",
+            Role::Commenter => "commenter",
+            Role::Reader => "reader",
+        }
+    }
+}
+
 impl fmt::Display for Role {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            Role::Owner => write!(f, "owner"),
-            Role::Organizer => write!(f, "organizer"),
-            Role::FileOrganizer => write!(f, "fileOrganizer"),
-            Role::Writer => write!(f, "writer"),
-            Role::Commenter => write!(f, "commenter"),
-            Role::Reader => write!(f, "reader"),
-        }
+        f.write_str(self.as_str())
     }
 }
 
