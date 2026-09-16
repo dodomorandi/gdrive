@@ -394,4 +394,50 @@ mod tests {
             "invalid permissions: {permissions:?}"
         );
     }
+
+    #[test]
+    fn get_matching_permissions_id_size_hint() {
+        let permissions = vec![
+            Permission {
+                display_name: Some("test1".to_string()),
+                id: Some("id2".to_string()),
+                ..Permission::default()
+            },
+            Permission {
+                display_name: Some("test2".to_string()),
+                id: Some("id2".to_string()),
+                ..Permission::default()
+            },
+            Permission {
+                display_name: Some("test3".to_string()),
+                id: Some("id1".to_string()),
+                ..Permission::default()
+            },
+            Permission {
+                display_name: Some("test4".to_string()),
+                id: Some("id2".to_string()),
+                ..Permission::default()
+            },
+            Permission {
+                display_name: Some("test5".to_string()),
+                id: Some("id1".to_string()),
+                ..Permission::default()
+            },
+        ];
+
+        let action = RevokeAction::Id("id1".to_string());
+        let mut iter = action.get_matching_permissions(permissions);
+
+        assert_eq!(iter.size_hint(), (1, Some(1)));
+        assert!(iter.next().unwrap().is_ok());
+        assert_eq!(iter.size_hint(), (0, Some(0)));
+        assert!(iter.next().is_none());
+
+        let mut iter = action.get_matching_permissions(vec![]);
+
+        assert_eq!(iter.size_hint(), (1, Some(1)));
+        assert!(iter.next().unwrap().is_err());
+        assert_eq!(iter.size_hint(), (0, Some(0)));
+        assert!(iter.next().is_none());
+    }
 }
