@@ -235,3 +235,120 @@ fn print_revoke_details(
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use google_drive3::api::Permission;
+
+    use crate::common::permission;
+
+    use super::RevokeAction;
+
+    #[test]
+    fn get_matching_permissions_anyone() {
+        let permissions = vec![
+            Permission {
+                display_name: Some("test1".to_string()),
+                type_: Some(permission::Type::Anyone.as_str().to_owned()),
+                ..Permission::default()
+            },
+            Permission {
+                display_name: Some("test2".to_string()),
+                type_: Some(permission::Type::Group.as_str().to_owned()),
+                ..Permission::default()
+            },
+            Permission {
+                display_name: Some("test3".to_string()),
+                type_: Some(permission::Type::Anyone.as_str().to_owned()),
+                ..Permission::default()
+            },
+        ];
+
+        let permissions = RevokeAction::Anyone
+            .get_matching_permissions(permissions)
+            .unwrap();
+        assert!(permissions
+            .iter()
+            .map(|permission| permission.display_name.as_ref().unwrap())
+            .eq(["test1", "test3"]));
+    }
+
+    #[test]
+    fn get_matching_permissions_all_except_owner() {
+        let permissions = vec![
+            Permission {
+                display_name: Some("test1".to_string()),
+                role: Some(permission::Role::Owner.as_str().to_owned()),
+                ..Permission::default()
+            },
+            Permission {
+                display_name: Some("test2".to_string()),
+                role: Some(permission::Role::Organizer.as_str().to_owned()),
+                ..Permission::default()
+            },
+            Permission {
+                display_name: Some("test3".to_string()),
+                role: Some(permission::Role::Owner.as_str().to_owned()),
+                ..Permission::default()
+            },
+            Permission {
+                display_name: Some("test4".to_string()),
+                role: Some(permission::Role::FileOrganizer.as_str().to_owned()),
+                ..Permission::default()
+            },
+        ];
+
+        let permissions = RevokeAction::AllExceptOwner
+            .get_matching_permissions(permissions)
+            .unwrap();
+        assert!(
+            permissions
+                .iter()
+                .map(|permission| permission.display_name.as_ref().unwrap())
+                .eq(["test2", "test4"]),
+            "invalid permissions: {permissions:?}"
+        );
+    }
+
+    #[test]
+    fn get_matching_permissions_id() {
+        let permissions = vec![
+            Permission {
+                display_name: Some("test1".to_string()),
+                id: Some("id2".to_string()),
+                ..Permission::default()
+            },
+            Permission {
+                display_name: Some("test2".to_string()),
+                id: Some("id2".to_string()),
+                ..Permission::default()
+            },
+            Permission {
+                display_name: Some("test3".to_string()),
+                id: Some("id1".to_string()),
+                ..Permission::default()
+            },
+            Permission {
+                display_name: Some("test4".to_string()),
+                id: Some("id2".to_string()),
+                ..Permission::default()
+            },
+            Permission {
+                display_name: Some("test5".to_string()),
+                id: Some("id1".to_string()),
+                ..Permission::default()
+            },
+        ];
+
+        let permissions = RevokeAction::Id("id1".to_string())
+            .get_matching_permissions(permissions)
+            .unwrap();
+        assert!(
+            permissions
+                .iter()
+                .map(|permission| permission.display_name.as_ref().unwrap())
+                .eq(["test3"]),
+            "invalid permissions: {permissions:?}"
+        );
+    }
+}
