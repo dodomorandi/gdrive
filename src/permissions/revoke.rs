@@ -32,9 +32,8 @@ pub(crate) async fn revoke(config: Config) -> Result<(), Error> {
         .await
         .map_err(Error::ListPermissions)?;
 
-    let delete_list = config.action.get_matching_permissions(permissions)?;
-
-    for permission in delete_list {
+    for permission in config.action.get_matching_permissions(permissions) {
+        let permission = permission?;
         if print_revoke_details(&file, &permission).is_err() {
             println!(
                 "Revoking permission with id: '{}'",
@@ -142,51 +141,92 @@ impl RevokeAction {
     fn get_matching_permissions(
         &self,
         permissions: Vec<google_drive3::api::Permission>,
-    ) -> Result<Vec<google_drive3::api::Permission>, Error> {
-        match self {
-            RevokeAction::Anyone => Ok(Self::get_permissions_by_type(
-                permissions,
-                permission::Type::Anyone,
-            )),
+    ) -> matching_permissions::Iter<'_> {
+        matching_permissions::Iter::new(self, permissions)
+    }
+}
 
-            RevokeAction::AllExceptOwner => Ok(Self::get_permissions_except_role(
-                permissions,
-                permission::Role::Owner,
-            )),
+mod matching_permissions {
+    use std::{iter, vec};
 
-            RevokeAction::Id(id) => Self::find_permission_by_id(permissions, id)
-                .map(|p| vec![p])
-                .ok_or_else(|| Error::PermissionNotFound(id.clone())),
+    use crate::{
+        common::permission,
+        permissions::revoke::{Error, RevokeAction},
+    };
+
+    pub(super) struct Iter<'a>(Inner<'a>);
+
+    enum Inner<'a> {
+        Anyone(
+            iter::Filter<
+                vec::IntoIter<google_drive3::api::Permission>,
+                for<'b> fn(&'b google_drive3::api::Permission) -> bool,
+            >,
+        ),
+        NotOwner(
+            iter::Filter<
+                vec::IntoIter<google_drive3::api::Permission>,
+                for<'b> fn(&'b google_drive3::api::Permission) -> bool,
+            >,
+        ),
+        ById {
+            permissions: Option<vec::IntoIter<google_drive3::api::Permission>>,
+            id: &'a str,
+        },
+    }
+
+    impl<'a> Iter<'a> {
+        pub(super) fn new(
+            action: &'a RevokeAction,
+            permissions: Vec<google_drive3::api::Permission>,
+        ) -> Self {
+            Self(match action {
+                RevokeAction::Anyone => {
+                    Inner::Anyone(permissions.into_iter().filter(|permission| {
+                        permission.type_.as_deref() == Some(permission::Type::Anyone.as_str())
+                    }))
+                }
+                RevokeAction::AllExceptOwner => {
+                    Inner::NotOwner(permissions.into_iter().filter(|permission| {
+                        permission.role.as_deref() != Some(permission::Role::Owner.as_str())
+                    }))
+                }
+                RevokeAction::Id(id) => Inner::ById {
+                    permissions: Some(permissions.into_iter()),
+                    id: id.as_str(),
+                },
+            })
         }
     }
 
-    fn get_permissions_by_type(
-        permissions: Vec<google_drive3::api::Permission>,
-        type_: permission::Type,
-    ) -> Vec<google_drive3::api::Permission> {
-        permissions
-            .into_iter()
-            .filter(|p| p.type_ == Some(type_.to_string()))
-            .collect()
-    }
+    impl Iterator for Iter<'_> {
+        type Item = Result<google_drive3::api::Permission, Error>;
 
-    fn get_permissions_except_role(
-        permissions: Vec<google_drive3::api::Permission>,
-        role: permission::Role,
-    ) -> Vec<google_drive3::api::Permission> {
-        permissions
-            .into_iter()
-            .filter(|p| p.role != Some(role.to_string()))
-            .collect()
-    }
+        fn next(&mut self) -> Option<Self::Item> {
+            match &mut self.0 {
+                Inner::Anyone(iter) | Inner::NotOwner(iter) => iter.next().map(Ok),
+                &mut Inner::ById {
+                    ref mut permissions,
+                    id,
+                } => {
+                    let permission = permissions
+                        .take()?
+                        .into_iter()
+                        .find(|permission| permission.id.as_deref() == Some(&*id));
+                    Some(permission.ok_or(Error::PermissionNotFound(id.to_owned())))
+                }
+            }
+        }
 
-    fn find_permission_by_id(
-        permissions: Vec<google_drive3::api::Permission>,
-        id: &str,
-    ) -> Option<google_drive3::api::Permission> {
-        permissions
-            .into_iter()
-            .find(|p| p.id == Some(id.to_string()))
+        fn size_hint(&self) -> (usize, Option<usize>) {
+            match &self.0 {
+                Inner::Anyone(iter) | Inner::NotOwner(iter) => iter.size_hint(),
+                Inner::ById { permissions, .. } => {
+                    let len = usize::from(permissions.is_some());
+                    (len, Some(len))
+                }
+            }
+        }
     }
 }
 
@@ -266,6 +306,7 @@ mod tests {
 
         let permissions = RevokeAction::Anyone
             .get_matching_permissions(permissions)
+            .collect::<Result<Vec<_>, _>>()
             .unwrap();
         assert!(permissions
             .iter()
@@ -300,6 +341,7 @@ mod tests {
 
         let permissions = RevokeAction::AllExceptOwner
             .get_matching_permissions(permissions)
+            .collect::<Result<Vec<_>, _>>()
             .unwrap();
         assert!(
             permissions
@@ -342,6 +384,7 @@ mod tests {
 
         let permissions = RevokeAction::Id("id1".to_string())
             .get_matching_permissions(permissions)
+            .collect::<Result<Vec<_>, _>>()
             .unwrap();
         assert!(
             permissions
