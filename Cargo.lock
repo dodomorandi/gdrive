@@ -491,13 +491,16 @@ dependencies = [
  "async-recursion",
  "bytes",
  "bytesize",
+ "chrono",
  "clap",
  "error-trace",
  "exponential-backoff",
  "futures",
+ "google-apis-common",
  "google-drive3",
  "home",
  "hyper",
+ "hyper-rustls",
  "md5",
  "mime",
  "mime_guess",
@@ -510,6 +513,7 @@ dependencies = [
  "tar",
  "tempfile",
  "tokio",
+ "yup-oauth2",
 ]
 
 [[package]]
