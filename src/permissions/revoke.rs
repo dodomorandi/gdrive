@@ -211,7 +211,6 @@ mod matching_permissions {
                 } => {
                     let permission = permissions
                         .take()?
-                        .into_iter()
                         .find(|permission| permission.id.as_deref() == Some(&*id));
                     Some(permission.ok_or(Error::PermissionNotFound(id.to_owned())))
                 }
