@@ -111,28 +111,32 @@ pub(crate) enum Error {
     MissingDomain(permission::Type),
 }
 
-impl error::Error for Error {}
+impl error::Error for Error {
+    fn source(&self) -> Option<&(dyn error::Error + 'static)> {
+        match self {
+            Error::Hub(source) => Some(source),
+            Error::GetFile(source) | Error::CreatePermission(source) => Some(source),
+            Error::MissingEmail(_) | Error::MissingDomain(_) => None,
+        }
+    }
+}
 
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         match self {
-            Error::Hub(err) => write!(f, "{err}"),
-            Error::GetFile(err) => {
-                write!(f, "Failed to get file: {err}")
-            }
-            Error::CreatePermission(err) => {
-                write!(f, "Failed to share file: {err}")
-            }
+            Error::Hub(_) => f.write_str("unable to get drive hub"),
+            Error::GetFile(_) => f.write_str("unable to get file"),
+            Error::CreatePermission(_) => f.write_str("unable to share file"),
             Error::MissingEmail(type_) => {
                 write!(
                     f,
-                    "Email is required for permission type '{type_}'. Use the --email option"
+                    "email is required for permission type '{type_}'. Use the --email option"
                 )
             }
             Error::MissingDomain(type_) => {
                 write!(
                     f,
-                    "Domain is required for permission type '{type_}'. Use the --domain option"
+                    "domain is required for permission type '{type_}'. Use the --domain option"
                 )
             }
         }
