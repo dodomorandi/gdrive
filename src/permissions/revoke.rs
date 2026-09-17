@@ -236,14 +236,14 @@ fn print_revoke_details(
 ) -> Result<(), Error> {
     let type_ = permission
         .type_
-        .clone()
+        .as_deref()
         .unwrap_or_default()
         .parse::<permission::Type>()
         .map_err(|_| Error::UnknownPermissionType(permission.type_.clone().unwrap_or_default()))?;
 
     let role = permission
         .role
-        .clone()
+        .as_deref()
         .unwrap_or_default()
         .parse::<permission::Role>()
         .map_err(|_| Error::UnknownPermissionRole(permission.role.clone().unwrap_or_default()))?;
@@ -253,23 +253,23 @@ fn print_revoke_details(
             "Revoking '{}' permission to {} '{}' for '{}'",
             role,
             type_,
-            permission.domain.clone().unwrap_or_default(),
-            file.name.clone().unwrap_or_default()
+            permission.domain.as_deref().unwrap_or_default(),
+            file.name.as_deref().unwrap_or_default()
         );
     } else if type_.requires_email() {
         println!(
             "Revoking '{}' permission to '{}' with email '{}' for '{}'",
             role,
             type_,
-            permission.email_address.clone().unwrap_or_default(),
-            file.name.clone().unwrap_or_default()
+            permission.email_address.as_deref().unwrap_or_default(),
+            file.name.as_deref().unwrap_or_default()
         );
     } else {
         println!(
             "Revoking '{}' permission to '{}' for '{}'",
             role,
             type_,
-            file.name.clone().unwrap_or_default()
+            file.name.as_deref().unwrap_or_default()
         );
     }
 
