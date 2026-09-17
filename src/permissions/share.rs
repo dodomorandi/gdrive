@@ -153,23 +153,23 @@ fn print_grant_details(file: &google_drive3::api::File, config: &Config) {
             "Granting '{}' permission to {} '{}' for '{}'",
             config.role,
             config.type_,
-            config.domain.clone().unwrap_or_default(),
-            file.name.clone().unwrap_or_default()
+            config.domain.as_deref().unwrap_or_default(),
+            file.name.as_deref().unwrap_or_default()
         );
     } else if config.type_.requires_email() {
         println!(
             "Granting '{}' permission to '{}' with email '{}' for '{}'",
             config.role,
             config.type_,
-            config.email.clone().unwrap_or_default(),
-            file.name.clone().unwrap_or_default()
+            config.email.as_deref().unwrap_or_default(),
+            file.name.as_deref().unwrap_or_default()
         );
     } else {
         println!(
             "Granting '{}' permission to '{}' for '{}'",
             config.role,
             config.type_,
-            file.name.clone().unwrap_or_default()
+            file.name.as_deref().unwrap_or_default()
         );
     }
 }
