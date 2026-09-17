@@ -34,12 +34,7 @@ pub(crate) async fn revoke(config: Config) -> Result<(), Error> {
 
     for permission in config.action.get_matching_permissions(permissions) {
         let permission = permission?;
-        if print_revoke_details(&file, &permission).is_err() {
-            println!(
-                "Revoking permission with id: '{}'",
-                permission.id.as_deref().unwrap_or_default()
-            );
-        }
+        print_revoke_details(&file, &permission);
 
         delete_permission(
             &hub,
@@ -87,8 +82,6 @@ pub(crate) enum Error {
         Box<google_drive3::Error>,
     ),
     PermissionNotFound(String),
-    UnknownPermissionType(String),
-    UnknownPermissionRole(String),
 }
 
 impl error::Error for Error {
@@ -98,9 +91,7 @@ impl error::Error for Error {
             Error::GetFile(source)
             | Error::ListPermissions(source)
             | Error::DeletePermission(_, source) => Some(source),
-            Error::PermissionNotFound(_)
-            | Error::UnknownPermissionType(_)
-            | Error::UnknownPermissionRole(_) => None,
+            Error::PermissionNotFound(_) => None,
         }
     }
 }
@@ -121,10 +112,6 @@ impl Display for Error {
             Error::PermissionNotFound(id) => {
                 write!(f, "permission '{id}' not found")
             }
-            Error::UnknownPermissionType(type_) => {
-                write!(f, "unknown permission type: '{type_}'")
-            }
-            Error::UnknownPermissionRole(role) => write!(f, "unknown permission role: '{role}'"),
         }
     }
 }
@@ -232,47 +219,76 @@ mod matching_permissions {
 fn print_revoke_details(
     file: &google_drive3::api::File,
     permission: &google_drive3::api::Permission,
-) -> Result<(), Error> {
-    let type_ = permission
-        .type_
-        .as_deref()
-        .unwrap_or_default()
-        .parse::<permission::Type>()
-        .map_err(|_| Error::UnknownPermissionType(permission.type_.clone().unwrap_or_default()))?;
-
-    let role = permission
-        .role
-        .as_deref()
-        .unwrap_or_default()
-        .parse::<permission::Role>()
-        .map_err(|_| Error::UnknownPermissionRole(permission.role.clone().unwrap_or_default()))?;
-
-    if type_.requires_domain() {
-        println!(
-            "Revoking '{}' permission to {} '{}' for '{}'",
-            role,
-            type_,
-            permission.domain.as_deref().unwrap_or_default(),
-            file.name.as_deref().unwrap_or_default()
-        );
-    } else if type_.requires_email() {
-        println!(
-            "Revoking '{}' permission to '{}' with email '{}' for '{}'",
-            role,
-            type_,
-            permission.email_address.as_deref().unwrap_or_default(),
-            file.name.as_deref().unwrap_or_default()
-        );
-    } else {
-        println!(
-            "Revoking '{}' permission to '{}' for '{}'",
-            role,
-            type_,
-            file.name.as_deref().unwrap_or_default()
-        );
+) {
+    struct TypeFmt<'a> {
+        ty: Result<permission::Type, permission::InvalidType>,
+        raw_type: &'a str,
+        permission: &'a google_drive3::api::Permission,
     }
 
-    Ok(())
+    impl Display for TypeFmt<'_> {
+        fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+            match self.ty {
+                Ok(ty) => {
+                    if ty.requires_domain() {
+                        write!(
+                            f,
+                            "{} '{}'",
+                            ty,
+                            self.permission.domain.as_deref().unwrap_or_default()
+                        )
+                    } else if ty.requires_email() {
+                        write!(
+                            f,
+                            "{} with email '{}'",
+                            ty,
+                            self.permission.email_address.as_deref().unwrap_or_default()
+                        )
+                    } else {
+                        write!(f, "{ty}")
+                    }
+                }
+                Err(_) => {
+                    write!(f, "unknown type '{}'", self.raw_type)
+                }
+            }
+        }
+    }
+
+    struct RoleFmt<'a> {
+        role: Result<permission::Role, permission::InvalidRole>,
+        raw_role: &'a str,
+    }
+
+    impl Display for RoleFmt<'_> {
+        fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+            match self.role {
+                Ok(role) => {
+                    write!(f, "'{role}' permission")
+                }
+                Err(_) => write!(f, "unknown '{}' permission", self.raw_role),
+            }
+        }
+    }
+
+    let raw_type = permission.type_.as_deref().unwrap_or_default();
+    let type_ = raw_type.parse::<permission::Type>();
+
+    let type_fmt = TypeFmt {
+        ty: type_,
+        permission,
+        raw_type,
+    };
+
+    let raw_role = permission.role.as_deref().unwrap_or_default();
+    let role = raw_role.parse::<permission::Role>();
+
+    let role_fmt = RoleFmt { role, raw_role };
+
+    println!(
+        "Revoking {role_fmt} to {type_fmt} for '{}'",
+        file.name.as_deref().unwrap_or_default()
+    );
 }
 
 #[cfg(test)]
