@@ -234,18 +234,18 @@ fn print_revoke_details(
     file: &google_drive3::api::File,
     permission: &google_drive3::api::Permission,
 ) -> Result<(), Error> {
-    let type_: permission::Type = permission
+    let type_ = permission
         .type_
         .clone()
         .unwrap_or_default()
-        .parse()
+        .parse::<permission::Type>()
         .map_err(|_| Error::UnknownPermissionType(permission.type_.clone().unwrap_or_default()))?;
 
-    let role: permission::Role = permission
+    let role = permission
         .role
         .clone()
         .unwrap_or_default()
-        .parse()
+        .parse::<permission::Role>()
         .map_err(|_| Error::UnknownPermissionRole(permission.role.clone().unwrap_or_default()))?;
 
     if type_.requires_domain() {
