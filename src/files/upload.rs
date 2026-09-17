@@ -328,7 +328,7 @@ pub(crate) async fn upload_file<RS>(
     delegate_config: &UploadDelegateConfig,
 ) -> FileResult
 where
-    RS: google_drive3::client::ReadSeek,
+    RS: google_apis_common::ReadSeek,
 {
     let dst_file = google_drive3::api::File {
         id: file_id,

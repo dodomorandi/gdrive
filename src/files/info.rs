@@ -4,7 +4,7 @@ use std::{
 };
 
 use bytesize::ByteSize;
-use google_drive3::chrono::{
+use chrono::{
     self,
     format::{DelayedFormat, StrftimeItems},
     DateTime,

@@ -1,10 +1,10 @@
 use std::{future::Future, io, ops::Deref, path::Path, pin::Pin};
 
-use google_drive3::{
-    hyper::{self, client::HttpConnector},
-    hyper_rustls::{HttpsConnector, HttpsConnectorBuilder},
-    oauth2::{self, authenticator::Authenticator, authenticator_delegate::InstalledFlowDelegate},
-    DriveHub,
+use google_drive3::DriveHub;
+use hyper::{self, client::HttpConnector};
+use hyper_rustls::{HttpsConnector, HttpsConnectorBuilder};
+use yup_oauth2::{
+    self, authenticator::Authenticator, authenticator_delegate::InstalledFlowDelegate,
 };
 
 use crate::app_config;
@@ -52,9 +52,9 @@ impl Auth {
         let secret = oauth2_secret(config);
         let delegate = Box::new(AuthDelegate);
 
-        let auth = oauth2::InstalledFlowAuthenticator::builder(
+        let auth = yup_oauth2::InstalledFlowAuthenticator::builder(
             secret,
-            oauth2::InstalledFlowReturnMethod::HTTPPortRedirect(8085),
+            yup_oauth2::InstalledFlowReturnMethod::HTTPPortRedirect(8085),
         )
         .persist_tokens_to_disk(tokens_path)
         .flow_delegate(delegate)
@@ -65,8 +65,8 @@ impl Auth {
     }
 }
 
-fn oauth2_secret(config: &app_config::Secret) -> oauth2::ApplicationSecret {
-    oauth2::ApplicationSecret {
+fn oauth2_secret(config: &app_config::Secret) -> yup_oauth2::ApplicationSecret {
+    yup_oauth2::ApplicationSecret {
         client_id: config.client_id.clone(),
         client_secret: config.client_secret.clone(),
         token_uri: String::from("https://oauth2.googleapis.com/token"),

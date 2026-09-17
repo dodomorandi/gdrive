@@ -6,7 +6,6 @@ use async_recursion::async_recursion;
 use bytesize::ByteSize;
 use error_trace::ErrorTrace;
 use futures::stream::StreamExt;
-use google_drive3::hyper;
 use md5::Digest;
 use tokio::{
     fs::{self, File},

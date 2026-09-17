@@ -6,7 +6,7 @@ use std::{
 
 use bytesize::ByteSize;
 use error_trace::ErrorTrace;
-use google_drive3::hyper::{self, http};
+use hyper::{self, http};
 
 #[derive(Debug, Clone, Default)]
 pub(crate) struct UploadDelegateConfig {
@@ -20,7 +20,7 @@ pub(crate) struct UploadDelegate<'a> {
     config: &'a UploadDelegateConfig,
     backoff: Backoff,
     resumable_upload_url: Option<String>,
-    previous_chunk: Option<google_drive3::client::ContentRange>,
+    previous_chunk: Option<google_apis_common::ContentRange>,
 }
 
 impl<'a> UploadDelegate<'a> {
@@ -36,7 +36,7 @@ impl<'a> UploadDelegate<'a> {
         }
     }
 
-    fn print_chunk_info(&self, chunk: &google_drive3::client::ContentRange) {
+    fn print_chunk_info(&self, chunk: &google_apis_common::ContentRange) {
         if self.config.print_chunk_info {
             if let Some(range) = &chunk.range {
                 let chunk_size = if range.last < u64::MAX {
@@ -64,12 +64,12 @@ impl<'a> UploadDelegate<'a> {
     }
 }
 
-impl google_drive3::client::Delegate for UploadDelegate<'_> {
+impl google_apis_common::Delegate for UploadDelegate<'_> {
     fn chunk_size(&mut self) -> u64 {
         self.config.chunk_size.in_bytes()
     }
 
-    fn cancel_chunk_upload(&mut self, chunk: &google_drive3::client::ContentRange) -> bool {
+    fn cancel_chunk_upload(&mut self, chunk: &google_apis_common::ContentRange) -> bool {
         self.print_chunk_info(chunk);
         self.previous_chunk = Some(chunk.clone());
 
@@ -84,7 +84,7 @@ impl google_drive3::client::Delegate for UploadDelegate<'_> {
         self.resumable_upload_url.clone()
     }
 
-    fn http_error(&mut self, err: &hyper::Error) -> google_drive3::client::Retry {
+    fn http_error(&mut self, err: &hyper::Error) -> google_apis_common::Retry {
         if self.config.print_chunk_errors {
             eprintln!("Warning: Failed attempt to upload chunk: {}", err.trace());
         }
@@ -95,7 +95,7 @@ impl google_drive3::client::Delegate for UploadDelegate<'_> {
         &mut self,
         res: &http::response::Response<hyper::body::Body>,
         _err: Option<serde_json::Value>,
-    ) -> google_drive3::client::Retry {
+    ) -> google_apis_common::Retry {
         let status = res.status();
 
         if should_retry(status) {
@@ -108,7 +108,7 @@ impl google_drive3::client::Delegate for UploadDelegate<'_> {
             }
             self.backoff.retry()
         } else {
-            google_drive3::client::Retry::Abort
+            google_apis_common::Retry::Abort
         }
     }
 }
@@ -152,11 +152,11 @@ impl Backoff {
         }
     }
 
-    fn retry(&mut self) -> google_drive3::client::Retry {
+    fn retry(&mut self) -> google_apis_common::Retry {
         self.attempts += 1;
         self.backoff.next(self.attempts).map_or(
-            google_drive3::client::Retry::Abort,
-            google_drive3::client::Retry::After,
+            google_apis_common::Retry::Abort,
+            google_apis_common::Retry::After,
         )
     }
 }

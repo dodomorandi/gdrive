@@ -78,7 +78,7 @@ pub(crate) enum Error {
     Auth(io::Error),
     AddAccount(app_config::errors::AddAccount),
     SwitchAccount(app_config::errors::SaveAccountConfig),
-    AccessToken(google_drive3::oauth2::Error),
+    AccessToken(yup_oauth2::Error),
     About(google_drive3::Error),
 }
 
