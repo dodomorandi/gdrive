@@ -135,26 +135,24 @@ impl Default for BackoffConfig {
 }
 
 pub(crate) struct Backoff {
-    attempts: u32,
-    backoff: exponential_backoff::Backoff,
+    backoff: exponential_backoff::IntoIter,
 }
 
 impl Backoff {
     #[must_use]
     pub(crate) fn new(config: &BackoffConfig) -> Backoff {
         Backoff {
-            attempts: 0,
             backoff: exponential_backoff::Backoff::new(
                 config.max_retries,
                 config.min_sleep,
                 config.max_sleep,
-            ),
+            )
+            .into_iter(),
         }
     }
 
     fn retry(&mut self) -> google_apis_common::Retry {
-        self.attempts += 1;
-        self.backoff.next(self.attempts).map_or(
+        self.backoff.next().flatten().map_or(
             google_apis_common::Retry::Abort,
             google_apis_common::Retry::After,
         )
