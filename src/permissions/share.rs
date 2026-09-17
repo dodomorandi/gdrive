@@ -54,7 +54,7 @@ pub(crate) async fn share(config: Config) -> Result<(), Error> {
 
     print_grant_details(&file, &config);
 
-    create_permission(&hub, &delegate_config, &config)
+    create_permission(&hub, &delegate_config, config)
         .await
         .map_err(|err| Error::CreatePermission(Box::new(err)))?;
 
@@ -76,16 +76,17 @@ const _: () = {
 async fn create_permission(
     hub: &Hub,
     delegate_config: &UploadDelegateConfig,
-    config: &Config,
+    config: Config,
 ) -> Result<google_drive3::api::Permission, google_drive3::Error> {
     let mut delegate = UploadDelegate::new(delegate_config);
 
+    let requires_ownership_transfer = config.requires_ownership_transfer();
     let new_permission = google_drive3::api::Permission {
         role: Some(config.role.to_string()),
         type_: Some(config.type_.to_string()),
         allow_file_discovery: config.allow_file_discovery(),
-        email_address: config.email.clone(),
-        domain: config.domain.clone(),
+        email_address: config.email,
+        domain: config.domain,
         ..google_drive3::api::Permission::default()
     };
 
@@ -96,7 +97,7 @@ async fn create_permission(
             "fields",
             "id,role,type,domain,emailAddress,allowFileDiscovery",
         )
-        .transfer_ownership(config.requires_ownership_transfer())
+        .transfer_ownership(requires_ownership_transfer)
         .add_scope(google_drive3::api::Scope::Full)
         .delegate(&mut delegate)
         .supports_all_drives(true)
