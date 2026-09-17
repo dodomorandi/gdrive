@@ -38,8 +38,12 @@ impl Config {
 }
 
 pub(crate) async fn share(config: Config) -> Result<(), Error> {
-    err_if_missing_email(&config)?;
-    err_if_missing_domain(&config)?;
+    if config.type_.requires_email() && config.email.is_none() {
+        return Err(Error::MissingEmail(config.type_));
+    }
+    if config.type_.requires_domain() && config.domain.is_none() {
+        return Err(Error::MissingDomain(config.type_));
+    }
 
     let hub = get_hub().await.map_err(Error::Hub)?;
     let delegate_config = UploadDelegateConfig::default();
@@ -141,22 +145,6 @@ impl Display for Error {
             }
         }
     }
-}
-
-fn err_if_missing_email(config: &Config) -> Result<(), Error> {
-    if config.type_.requires_email() && config.email.is_none() {
-        return Err(Error::MissingEmail(config.type_));
-    }
-
-    Ok(())
-}
-
-fn err_if_missing_domain(config: &Config) -> Result<(), Error> {
-    if config.type_.requires_domain() && config.domain.is_none() {
-        return Err(Error::MissingDomain(config.type_));
-    }
-
-    Ok(())
 }
 
 fn print_grant_details(file: &google_drive3::api::File, config: &Config) {
