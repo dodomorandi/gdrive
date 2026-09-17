@@ -1,8 +1,8 @@
 use std::{future::Future, io, ops::Deref, path::Path, pin::Pin};
 
 use google_drive3::DriveHub;
-use hyper::{self, client::HttpConnector};
 use hyper_rustls::{HttpsConnector, HttpsConnectorBuilder};
+use hyper_util::client::legacy::connect::HttpConnector;
 use yup_oauth2::{
     self, authenticator::Authenticator, authenticator_delegate::InstalledFlowDelegate,
 };
@@ -19,16 +19,21 @@ impl Deref for Hub {
     }
 }
 
+fn create_connector() -> io::Result<HttpsConnector<HttpConnector>> {
+    let connector = HttpsConnectorBuilder::new()
+        .with_native_roots()?
+        .https_or_http()
+        .enable_http1()
+        .enable_http2()
+        .build();
+    Ok(connector)
+}
+
 impl Hub {
     pub(crate) fn new(auth: Auth) -> io::Result<Hub> {
-        let connector = HttpsConnectorBuilder::new()
-            .with_native_roots()?
-            .https_or_http()
-            .enable_http1()
-            .enable_http2()
-            .build();
-
-        let http_client = hyper::Client::builder().build(connector);
+        let http_client =
+            hyper_util::client::legacy::Client::builder(hyper_util::rt::TokioExecutor::new())
+                .build(create_connector()?);
 
         Ok(Hub(google_drive3::DriveHub::new(http_client, auth.0)))
     }
@@ -52,9 +57,13 @@ impl Auth {
         let secret = oauth2_secret(config);
         let delegate = Box::new(AuthDelegate);
 
-        let auth = yup_oauth2::InstalledFlowAuthenticator::builder(
+        let auth = yup_oauth2::InstalledFlowAuthenticator::with_client(
             secret,
             yup_oauth2::InstalledFlowReturnMethod::HTTPPortRedirect(8085),
+            yup_oauth2::client::CustomHyperClientBuilder::from(
+                hyper_util::client::legacy::Client::builder(hyper_util::rt::TokioExecutor::new())
+                    .build(create_connector()?),
+            ),
         )
         .persist_tokens_to_disk(tokens_path)
         .flow_delegate(delegate)

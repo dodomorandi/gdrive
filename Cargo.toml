@@ -13,11 +13,13 @@ clap = { version = "4.5.41", features = ["derive"] }
 error-trace = { version = "4.0.0", default-features = false }
 exponential-backoff = "1.1.0"
 futures = "0.3.25"
-google-apis-common = { version = "6.0.4", default-features = false }
-google-drive3 = "5.0.5"
+google-apis-common = { version = "8.0.0", default-features = false }
+google-drive3 = "7.0.0"
 home = "0.5.4"
-hyper = { version = "0.14.23", features = ["stream"] }
-hyper-rustls = { version = "0.25.0", default-features = false }
+http-body-util = "0.1.5"
+hyper = "1.5.2"
+hyper-rustls = { version = "0.27.9", default-features = false, features = ["http1"] }
+hyper-util = { version = "0.1.20", features = ["client", "client-legacy", "http1", "http2", "tokio"] }
 md5 = "0.7.0"
 mime = "0.3.16"
 mime_guess = "2.0.4"
@@ -30,7 +32,7 @@ tabwriter = "1.2.1"
 tar = "0.4.38"
 tempfile = "3.3.0"
 tokio = { version = "1.23.0", features = ["full"] }
-yup-oauth2 = { version = "9.0.0", default-features = false }
+yup-oauth2 = { version = "12.1.2", default-features = false }
 
 [lints.rust]
 unreachable_pub = "warn"

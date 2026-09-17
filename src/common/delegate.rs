@@ -84,7 +84,7 @@ impl google_apis_common::Delegate for UploadDelegate<'_> {
         self.resumable_upload_url.clone()
     }
 
-    fn http_error(&mut self, err: &hyper::Error) -> google_apis_common::Retry {
+    fn http_error(&mut self, err: &hyper_util::client::legacy::Error) -> google_apis_common::Retry {
         if self.config.print_chunk_errors {
             eprintln!("Warning: Failed attempt to upload chunk: {}", err.trace());
         }
@@ -93,8 +93,8 @@ impl google_apis_common::Delegate for UploadDelegate<'_> {
 
     fn http_failure(
         &mut self,
-        res: &http::response::Response<hyper::body::Body>,
-        _err: Option<serde_json::Value>,
+        res: &google_apis_common::Response,
+        _err: Option<&serde_json::Value>,
     ) -> google_apis_common::Retry {
         let status = res.status();
 

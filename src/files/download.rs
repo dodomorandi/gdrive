@@ -6,6 +6,8 @@ use async_recursion::async_recursion;
 use bytesize::ByteSize;
 use error_trace::ErrorTrace;
 use futures::stream::StreamExt;
+use google_apis_common::Body;
+use http_body_util::BodyExt;
 use md5::Digest;
 use tokio::{
     fs::{self, File},
@@ -214,7 +216,7 @@ async fn download_directory(
     Ok(())
 }
 
-async fn download_file(hub: &Hub, file_id: &str) -> Result<hyper::Body, Box<google_drive3::Error>> {
+async fn download_file(hub: &Hub, file_id: &str) -> Result<Body, Box<google_drive3::Error>> {
     let (response, _) = hub
         .files()
         .get(file_id)
@@ -229,7 +231,7 @@ async fn download_file(hub: &Hub, file_id: &str) -> Result<hyper::Body, Box<goog
 
 // TODO: move to common
 pub(crate) async fn save_body_to_file(
-    mut body: hyper::Body,
+    body: Body,
     file_path: &Path,
     expected_md5: Option<&Digest>,
 ) -> Result<(), errors::SaveBodyToFile> {
@@ -242,10 +244,14 @@ pub(crate) async fn save_body_to_file(
     // Wrap file in writer that calculates md5
     let mut writer = Md5Writer::new(file);
 
+    let mut body = body.into_stream();
+
     // Read chunks from stream and write to file
     while let Some(chunk_result) = body.next().await {
         let chunk = chunk_result.map_err(E::ReadChunk)?;
-        writer.write_all(&chunk).await.map_err(E::WriteChunk)?;
+        if let Some(data) = chunk.data_ref() {
+            writer.write_all(data).await.map_err(E::WriteChunk)?;
+        }
     }
 
     // Check md5
@@ -266,16 +272,19 @@ pub(crate) async fn save_body_to_file(
 }
 
 // TODO: move to common
-async fn save_body_to_stdout(mut body: hyper::Body) -> Result<(), errors::SaveBodyToStdout> {
+async fn save_body_to_stdout(body: Body) -> Result<(), errors::SaveBodyToStdout> {
     let mut stdout = io::stdout();
+    let mut body = body.into_stream();
 
     // Read chunks from stream and write to stdout
     while let Some(chunk_result) = body.next().await {
         let chunk = chunk_result.map_err(errors::SaveBodyToStdout::ReadChunk)?;
-        stdout
-            .write_all(&chunk)
-            .await
-            .map_err(errors::SaveBodyToStdout::WriteChunk)?;
+        if let Some(data) = chunk.data_ref() {
+            stdout
+                .write_all(data)
+                .await
+                .map_err(errors::SaveBodyToStdout::WriteChunk)?;
+        }
     }
 
     Ok(())
