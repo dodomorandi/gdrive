@@ -1,5 +1,9 @@
 [workspace]
-members = ["crates/google-api-codegen", "crates/google-api-discovery"]
+members = [
+    "crates/google-api-codegen",
+    "crates/google-api-discovery",
+    "crates/google-drive3-generated",
+]
 resolver = "2"
 
 [workspace.package]
@@ -8,11 +12,14 @@ license = "MIT"
 rust-version = "1.88"
 
 [workspace.dependencies]
+google-api-codegen = { path = "crates/google-api-codegen" }
 google-api-discovery = { path = "crates/google-api-discovery" }
+prettyplease = "0.3.0"
 proc-macro2 = "1.0"
 quote = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+syn = { version = "3.0", features = ["full"] }
 
 [workspace.lints.rust]
 unreachable_pub = "warn"

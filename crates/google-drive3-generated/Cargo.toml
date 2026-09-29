@@ -1,0 +1,23 @@
+[package]
+name = "google-drive3-generated"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+description = "Generated parser-first types for the Google Drive v3 API"
+license.workspace = true
+build = "build.rs"
+
+[lints]
+workspace = true
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+
+[build-dependencies]
+google-api-codegen.workspace = true
+google-api-discovery.workspace = true
+prettyplease.workspace = true
+quote.workspace = true
+serde_json.workspace = true
+syn.workspace = true
