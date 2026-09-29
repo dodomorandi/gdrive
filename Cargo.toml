@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/google-api-discovery"]
+members = ["crates/google-api-codegen", "crates/google-api-discovery"]
 resolver = "2"
 
 [workspace.package]
@@ -8,6 +8,9 @@ license = "MIT"
 rust-version = "1.88"
 
 [workspace.dependencies]
+google-api-discovery = { path = "crates/google-api-discovery" }
+proc-macro2 = "1.0"
+quote = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 

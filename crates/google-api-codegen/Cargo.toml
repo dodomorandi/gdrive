@@ -1,0 +1,18 @@
+[package]
+name = "google-api-codegen"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+description = "TokenStream generator for parser-first Google API crates"
+license.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+google-api-discovery.workspace = true
+proc-macro2.workspace = true
+quote.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true

@@ -565,6 +565,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "google-api-codegen"
+version = "0.1.0"
+dependencies = [
+ "google-api-discovery",
+ "proc-macro2",
+ "quote",
+ "serde_json",
+]
+
+[[package]]
 name = "google-api-discovery"
 version = "0.1.0"
 dependencies = [
