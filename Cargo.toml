@@ -1,8 +1,34 @@
+[workspace]
+members = ["crates/google-api-discovery"]
+resolver = "2"
+
+[workspace.package]
+edition = "2021"
+license = "MIT"
+rust-version = "1.88"
+
+[workspace.dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+[workspace.lints.rust]
+unreachable_pub = "warn"
+
+[workspace.lints.clippy]
+pedantic = { level = "warn", priority = -1 }
+
 [package]
 name = "gdrive"
 version = "3.9.1"
-edition = "2021"
-rust-version = "1.88"
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[lints.rust]
+unreachable_pub = "warn"
+
+[lints.clippy]
+pedantic = { level = "warn", priority = -1 }
 
 [dependencies]
 async-recursion = "1.0.2"
@@ -26,19 +52,11 @@ mime_guess = "2.0.4"
 mktemp = "0.5.0"
 pin-project-lite = "0.2.16"
 rustc_version_runtime = "0.2.1"
-serde = { version = "1.0.151", features = ["derive"] }
-serde_json = "1.0.89"
+serde.workspace = true
+serde_json.workspace = true
 tabwriter = "1.2.1"
 tar = "0.4.38"
 tempfile = "3.3.0"
 tokio = { version = "1.23.0", features = ["full"] }
 yup-oauth2 = { version = "12.1.2", default-features = false }
 
-[lints.rust]
-unreachable_pub = "warn"
-dead_code_pub_in_binary = "warn"
-
-[lints.clippy]
-pedantic = { level = "warn", priority = -1 }
-missing_errors_doc = "allow"
-missing_panics_doc = "allow"

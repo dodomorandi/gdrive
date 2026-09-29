@@ -1,3 +1,6 @@
+#![warn(dead_code_pub_in_binary)]
+#![allow(clippy::missing_errors_doc, clippy::missing_panics_doc)]
+
 mod about;
 mod account;
 mod app_config;
