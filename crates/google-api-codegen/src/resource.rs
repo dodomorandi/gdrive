@@ -47,54 +47,61 @@ fn generate_api_methods(
     description: &RestDescription,
     schemas: &mut SchemaGenerator<'_>,
 ) -> Result<GeneratedModule, GenerationError> {
-    let variants = match description.methods.as_ref() {
-        Some(methods) => generate_method_items(methods, description, schemas, "")?,
-        None => MethodVariants::default(),
+    let groups = match description.methods.as_ref() {
+        Some(methods) => generate_method_groups(methods, description, schemas, "")?,
+        None => Vec::new(),
     };
-    let MethodVariants {
-        default_items,
-        owned_items,
-        cow_items,
-        names,
-    } = variants;
     let mut module = GeneratedModule::new("api");
-    if default_items.is_empty().not() {
-        let mut methods_module = GeneratedModule::new("methods");
-        methods_module.set_documentation("Typed request values for API-level methods.");
-        methods_module.add_items(default_items);
-
-        let mut owned_module = GeneratedModule::new("owned");
-        owned_module.set_documentation("Owned request values for API-level methods.");
-        owned_module.add_item(quote! { use ::serde::{Deserialize, Serialize}; });
-        owned_module.add_items(owned_items);
-        methods_module.add_module(owned_module)?;
-
-        let mut cow_module = GeneratedModule::new("cow");
-        cow_module.set_documentation("Cow-backed request values for API-level methods.");
-        cow_module.add_items(cow_items);
-        methods_module.add_module(cow_module)?;
-        module.add_module(methods_module)?;
-    }
-
-    if names.is_empty().not() {
-        let method_descriptors = names
-            .iter()
-            .map(|name| quote! { methods::#name::DESCRIPTOR });
-        module.add_item(quote! {
-            #[doc = "Static metadata for API-level methods."]
-            pub const DESCRIPTOR: crate::protocol::Resource = crate::protocol::Resource {
-                name: "",
-                methods: &[#(#method_descriptors),*],
-                resources: &[],
-            };
-
-            #[doc = "Returns the API resource descriptor."]
-            pub const fn descriptor() -> crate::protocol::Resource {
-                DESCRIPTOR
-            }
-        });
+    for group in groups {
+        let (method_module, descriptor) = method_group_module(group)?;
+        module.add_module(method_module)?;
+        module.add_item(descriptor);
     }
     Ok(module)
+}
+
+/// Wraps one method's items in a module that groups the storage variants.
+///
+/// Returns the method module and the expression that reaches its borrowed request descriptor.
+fn method_group_module(
+    group: MethodGroup,
+) -> Result<(GeneratedModule, TokenStream), GenerationError> {
+    let mut module = GeneratedModule::new(&group.name);
+    module.set_documentation(format!(
+        "Request values for the `{}` method.",
+        group.method_id
+    ));
+    module.add_items(group.aliases);
+
+    let mut borrowed = GeneratedModule::new("borrowed");
+    borrowed.set_documentation(format!(
+        "Borrowed request values for the `{}` method.",
+        group.method_id
+    ));
+    borrowed.add_item(group.borrowed);
+    module.add_module(borrowed)?;
+
+    let mut owned = GeneratedModule::new("owned");
+    owned.set_documentation(format!(
+        "Owned request values for the `{}` method.",
+        group.method_id
+    ));
+    owned.add_item(quote! { use ::serde::{Deserialize, Serialize}; });
+    owned.add_item(group.owned);
+    module.add_module(owned)?;
+
+    let mut cow = GeneratedModule::new("cow");
+    cow.set_documentation(format!(
+        "Cow-backed request values for the `{}` method.",
+        group.method_id
+    ));
+    cow.add_item(group.cow);
+    module.add_module(cow)?;
+
+    let method = module.name_ident().clone();
+    let borrowed = identifier::IdentifierStyle::Field.ident("borrowed");
+    let ident = group.ident;
+    Ok((module, quote! { #method::#borrowed::#ident::DESCRIPTOR }))
 }
 
 fn generate_resource_set(
@@ -116,32 +123,13 @@ fn generate_resource_set(
         } else {
             Cow::Owned(format!("{parent_path}.{name}"))
         };
-        let MethodVariants {
-            default_items,
-            owned_items,
-            cow_items,
-            names,
-        } = generate_method_items(&resource.methods, description, schemas, path.as_ref())?;
-        if default_items.is_empty().not() {
-            let mut methods_module = GeneratedModule::new("methods");
-            methods_module
-                .set_documentation(format!("Typed request values for the `{path}` resource."));
-            methods_module.add_items(default_items);
-
-            let mut owned_module = GeneratedModule::new("owned");
-            owned_module
-                .set_documentation(format!("Owned request values for the `{path}` resource."));
-            owned_module.add_item(quote! { use ::serde::{Deserialize, Serialize}; });
-            owned_module.add_items(owned_items);
-            methods_module.add_module(owned_module)?;
-
-            let mut cow_module = GeneratedModule::new("cow");
-            cow_module.set_documentation(format!(
-                "Cow-backed request values for the `{path}` resource."
-            ));
-            cow_module.add_items(cow_items);
-            methods_module.add_module(cow_module)?;
-            resource_module.add_module(methods_module)?;
+        let groups =
+            generate_method_groups(&resource.methods, description, schemas, path.as_ref())?;
+        let mut method_descriptors = Vec::with_capacity(groups.len());
+        for group in groups {
+            let (method_module, descriptor) = method_group_module(group)?;
+            method_descriptors.push(descriptor);
+            resource_module.add_module(method_module)?;
         }
 
         let empty_resources = BTreeMap::new();
@@ -153,9 +141,6 @@ fn generate_resource_set(
             schemas,
             path.as_ref(),
         )?;
-        let method_descriptors = names
-            .iter()
-            .map(|method| quote! { methods::#method::DESCRIPTOR });
         let nested_descriptors = nested_names
             .iter()
             .map(|module| quote! { #module::DESCRIPTOR });
@@ -179,27 +164,29 @@ fn generate_resource_set(
     Ok(child_names)
 }
 
-#[derive(Default)]
-struct MethodVariants {
-    default_items: Vec<TokenStream>,
-    owned_items: Vec<TokenStream>,
-    cow_items: Vec<TokenStream>,
-    names: Vec<Ident>,
+/// The generated items for a single method, before they are placed in the module tree.
+struct MethodGroup {
+    /// The Discovery method name, used for the module name.
+    name: String,
+    /// The method's fully qualified identifier, used for documentation.
+    method_id: String,
+    /// The request struct name, which may differ from the method name after normalization.
+    ident: Ident,
+    /// The `RequestBody` and `Response` type aliases.
+    aliases: Vec<TokenStream>,
+    borrowed: TokenStream,
+    owned: TokenStream,
+    cow: TokenStream,
 }
 
-fn generate_method_items(
+fn generate_method_groups(
     methods: &BTreeMap<String, RestMethod>,
     description: &RestDescription,
     schemas: &mut SchemaGenerator<'_>,
     resource_path: &str,
-) -> Result<MethodVariants, GenerationError> {
+) -> Result<Vec<MethodGroup>, GenerationError> {
     let mut used_names = BTreeMap::new();
-    let mut variants = MethodVariants {
-        default_items: Vec::new(),
-        owned_items: Vec::new(),
-        cow_items: Vec::new(),
-        names: Vec::new(),
-    };
+    let mut groups = Vec::with_capacity(methods.len());
 
     for (method_name, method) in methods {
         let ident = unique_type_ident(method_name, &mut used_names, IdentifierKind::Method)?;
@@ -208,21 +195,20 @@ fn generate_method_items(
         } else {
             Cow::Owned(format!("{resource_path}.{method_name}"))
         };
-        let (default_item, owned_item, cow_item) = generate_method_item_variants(
-            method,
-            method_name,
-            &ident,
-            description,
-            schemas,
-            hint.as_ref(),
-        )?;
-        variants.default_items.push(default_item);
-        variants.owned_items.push(owned_item);
-        variants.cow_items.push(cow_item);
-        variants.names.push(ident);
+        let (borrowed, owned, cow, aliases) =
+            generate_method_item_variants(method, &ident, description, schemas, hint.as_ref())?;
+        groups.push(MethodGroup {
+            name: method_name.clone(),
+            method_id: method.id.clone(),
+            ident,
+            aliases,
+            borrowed,
+            owned,
+            cow,
+        });
     }
 
-    Ok(variants)
+    Ok(groups)
 }
 
 struct MethodShape {
@@ -234,28 +220,17 @@ struct MethodShape {
     uses_lifetime: bool,
 }
 
-struct VariantExtras {
-    documentation: Documentation,
-    aliases: TokenStream,
-}
-
 fn generate_method_item_variants(
     method: &RestMethod,
-    method_name: &str,
     ident: &Ident,
     description: &RestDescription,
     schemas: &mut SchemaGenerator<'_>,
     hint: &str,
-) -> Result<(TokenStream, TokenStream, TokenStream), GenerationError> {
+) -> Result<(TokenStream, TokenStream, TokenStream, Vec<TokenStream>), GenerationError> {
     let parameters = merged_parameters(description, method);
-    let no_aliases = TokenStream::new();
     let method_doc = documentation(Some(method.description.as_str()), || {
         format!("Request parameters for the `{}` method.", method.id)
     });
-    let owned_extras = VariantExtras {
-        documentation: method_doc.clone(),
-        aliases: no_aliases.clone(),
-    };
     let (owned_item, owned_shape) = generate_method_variant(
         method,
         ident,
@@ -263,7 +238,7 @@ fn generate_method_item_variants(
         hint,
         &parameters,
         RequestStorage::Owned,
-        &owned_extras,
+        &method_doc,
     )?;
     let mut alias_items = Vec::new();
     if let Some(body_type) = owned_shape.body_type.as_ref() {
@@ -276,7 +251,7 @@ fn generate_method_item_variants(
     if let Some(response_type) = method
         .response
         .as_ref()
-        .map(|response| schemas.reference_type(&response.schema_ref))
+        .map(|response| schemas.reference_type(RequestStorage::Owned, &response.schema_ref))
         .transpose()?
     {
         let doc = format!("Response body for the `{}` method.", method.id);
@@ -285,30 +260,14 @@ fn generate_method_item_variants(
             pub type Response = #response_type;
         });
     }
-    let aliases = if alias_items.is_empty() {
-        quote! {}
-    } else {
-        let alias_module = identifier::IdentifierStyle::Field.ident(method_name);
-        let doc = format!("Request and response types for the `{}` method.", method.id);
-        quote! {
-            #[doc = #doc]
-            pub mod #alias_module {
-                #(#alias_items)*
-            }
-        }
-    };
-    let borrowed_extras = VariantExtras {
-        documentation: method_doc,
-        aliases,
-    };
-    let (default_item, _) = generate_method_variant(
+    let (borrowed_item, _) = generate_method_variant(
         method,
         ident,
         schemas,
         hint,
         &parameters,
         RequestStorage::Borrowed,
-        &borrowed_extras,
+        &method_doc,
     )?;
     let (cow_item, _) = generate_method_variant(
         method,
@@ -317,9 +276,9 @@ fn generate_method_item_variants(
         hint,
         &parameters,
         RequestStorage::Cow,
-        &borrowed_extras,
+        &method_doc,
     )?;
-    Ok((default_item, owned_item, cow_item))
+    Ok((borrowed_item, owned_item, cow_item, alias_items))
 }
 
 fn generate_method_variant(
@@ -329,28 +288,20 @@ fn generate_method_variant(
     hint: &str,
     parameters: &[ParameterRef<'_>],
     storage: RequestStorage,
-    extras: &VariantExtras,
+    documentation: &Documentation,
 ) -> Result<(TokenStream, MethodShape), GenerationError> {
     let shape = generate_method_shape(method, parameters, schemas, hint, storage)?;
     let has_lifetime = shape.uses_lifetime;
     let impl_generics = lifetime_generics(has_lifetime);
     let type_generics = lifetime_generics(has_lifetime);
-    let struct_body = method_struct(
-        ident,
-        &shape.fields,
-        &extras.documentation,
-        has_lifetime,
-        storage,
-    );
+    let struct_body = method_struct(ident, &shape.fields, documentation, has_lifetime, storage);
     let new_function =
         method_new_function(&shape.required_arguments, &shape.initializers, &method.id);
     let setters = &shape.setters;
     let descriptor = method_descriptor(method, parameters);
     let request_impl = method_request_impl(ident, has_lifetime);
-    let aliases = &extras.aliases;
     let item = quote! {
         #struct_body
-        #aliases
 
         #request_impl
     };
@@ -503,9 +454,16 @@ fn generate_method_shape(
     shape.body_type = method
         .request
         .as_ref()
-        .map(|request| schemas.reference_type(&request.schema_ref))
+        .map(|request| schemas.reference_type(storage, &request.schema_ref))
         .transpose()?
-        .map(|body_type| storage.apply(body_type));
+        .map(|body_type| {
+            if matches!(storage, RequestStorage::Cow) {
+                // A smart reference is already a complete type.
+                body_type
+            } else {
+                storage.apply(body_type)
+            }
+        });
     if let Some(body_type) = shape.body_type.as_ref() {
         shape.uses_lifetime = shape.uses_lifetime || matches!(storage, RequestStorage::Owned).not();
         let body_field =

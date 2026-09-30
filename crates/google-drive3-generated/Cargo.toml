@@ -11,6 +11,7 @@ build = "build.rs"
 workspace = true
 
 [dependencies]
+borrowed-or-owned.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 

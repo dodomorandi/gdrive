@@ -9,6 +9,14 @@
     reason = "Discovery descriptions are copied verbatim into generated documentation"
 )]
 #![expect(
+    clippy::too_many_lines,
+    reason = "a generated conversion has one statement per schema field"
+)]
+#![expect(
+    clippy::type_complexity,
+    reason = "a nested map schema projects to a deeply nested `Cow` type"
+)]
+#![expect(
     rustdoc::bare_urls,
     reason = "Discovery descriptions may contain plain URLs"
 )]

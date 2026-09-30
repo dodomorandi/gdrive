@@ -115,7 +115,17 @@ fn generates_file_and_module_trees() {
             .children()
             .map(GeneratedModule::name)
             .collect::<Vec<_>>(),
-        ["comments", "methods"]
+        ["comments", "get"]
+    );
+    let get = files
+        .children()
+        .find(|module| module.name() == "get")
+        .unwrap();
+    assert_eq!(
+        get.children()
+            .map(GeneratedModule::name)
+            .collect::<Vec<_>>(),
+        ["borrowed", "cow", "owned"]
     );
 
     let output = quote!(#generated).to_string();
@@ -128,6 +138,7 @@ fn generates_file_and_module_trees() {
     assert!(output.contains("pub mod comments"));
     assert!(output.contains("http_method"));
     assert!(output.contains("pub type Response"));
+    assert!(output.contains("pub mod borrowed"));
     assert!(output.contains("pub mod owned"));
     assert!(output.contains("pub mod cow"));
     assert!(output.contains("pub trait MethodRequest"));
@@ -136,11 +147,57 @@ fn generates_file_and_module_trees() {
     assert!(output.contains("Ready state"));
     assert!(output.contains("Get a file"));
     assert!(output.contains("The file identifier."));
-    assert!(output.contains("Typed request values for the `files` resource."));
+    assert!(output.contains("Borrowed request values for the `files.get` method."));
 }
 
 #[test]
-fn omits_empty_api_and_method_modules() {
+fn generates_the_model_pair_for_each_object_schema() {
+    let generated = generate(&description()).unwrap();
+    let schemas = generated
+        .files
+        .iter()
+        .find(|file| file.path() == Path::new("schemas.rs"))
+        .unwrap()
+        .module();
+    let rendered = |name: &str| {
+        let module = schemas
+            .children()
+            .find(|module| module.name() == name)
+            .unwrap();
+        quote!(#module)
+            .to_string()
+            .split_whitespace()
+            .collect::<Vec<_>>()
+            .join(" ")
+    };
+
+    let borrowed = rendered("borrowed");
+    assert!(borrowed.contains("pub struct Item < 'a >"));
+    // A borrowed array is a `Cow`, because the model has to be able to own its collections.
+    assert!(borrowed.contains(
+        ":: std :: borrow :: Cow < 'a , [crate :: schemas :: borrowed :: Item < 'a >] >"
+    ));
+    // The copy direction lives next to the borrowed model.
+    assert!(borrowed.contains(
+        "impl :: borrowed_or_owned :: ToOwnedModel for crate :: schemas :: borrowed :: Item < '_ >"
+    ));
+    assert!(borrowed.contains("type Owned = crate :: schemas :: owned :: Item"));
+    assert!(borrowed.contains("< str as :: std :: borrow :: ToOwned > :: to_owned"));
+
+    let owned = rendered("owned");
+    assert!(owned.contains(
+        "impl :: borrowed_or_owned :: BorrowModel for crate :: schemas :: owned :: Item"
+    ));
+    assert!(owned.contains("type Borrowed < 'a > = crate :: schemas :: borrowed :: Item < 'a >"));
+    assert!(owned.contains("fn as_borrowed"));
+
+    let cow = rendered("cow");
+    assert!(cow.contains("pub type Item < 'a > = :: borrowed_or_owned :: MaybeOwned"));
+    assert!(cow.contains("crate :: schemas :: owned :: Item"));
+}
+
+#[test]
+fn omits_empty_api_and_resource_modules() {
     let mut document = description();
     document.methods = None;
     document.resources.clear();

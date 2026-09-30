@@ -3,8 +3,38 @@
 //! The generator consumes the parser models from `google-api-discovery` and emits a hierarchical
 //! [`Generated`] value. Its output types implement [`ToTokens`], so callers can render a complete
 //! crate with `quote!(#generated)` or write each [`GeneratedFile`] separately. Generated crates
-//! need `serde` with its `derive` feature and `serde_json` as dependencies. The generator never
-//! opens sockets, chooses an async runtime, or depends on an HTTP client.
+//! need `serde` with its `derive` feature, `serde_json`, and `borrowed-or-owned` as dependencies.
+//! The generator never opens sockets, chooses an async runtime, or depends on an HTTP client.
+//!
+//! # Generated layout
+//!
+//! A generated crate contains one module per top-level artifact. Every method becomes one module
+//! that holds its type aliases and one nested module per storage variant, so a method's types are
+//! never spread across the resource.
+//!
+//! - `metadata` exposes the document's identity, revision, and URLs as constants.
+//! - `protocol` exposes the `Resource`, `Method`, `Parameter`, and `MethodRequest` types that
+//!   describe requests without performing them.
+//! - `schemas::owned` holds `serde` models that own their data, and `schemas::borrowed` holds the
+//!   same models borrowing from a caller-provided `'a` lifetime. Only the owned variant
+//!   implements `Serialize` and `Deserialize` from `serde`.
+//! - The two halves are related by the model pair from `borrowed-or-owned`: every borrowed model
+//!   implements `ToOwnedModel`, which copies it into the owned model, and every owned model
+//!   implements `BorrowModel`, which builds a borrowed view that borrows its fields in place.
+//!   A borrowed model holds its nested models and collections in a `Cow`, so it can store the
+//!   values that view produces.
+//! - `schemas::cow` holds one alias per object schema, a `borrowed_or_owned::MaybeOwned` that is
+//!   either a borrowed model or an owned one. `Cow` covers the cases where one type is enough,
+//!   such as strings in request parameters and `Cow<'a, [schemas::cow::Item<'a>]>` collections.
+//! - Enums carry no data, so a single definition in `schemas::owned` is shared by every variant
+//!   and re-exported from the others.
+//! - `api` and `resources::<name>` expose `DESCRIPTOR` constants for the API and each resource,
+//!   and every method lives in `api::<method>` or `resources::<name>::<method>`. Such a module
+//!   aliases the method's `RequestBody` and `Response` types and holds `borrowed`, `owned`, and
+//!   `cow` submodules with the request struct for that storage.
+//!
+//! Types whose fields only contain `bool`, integer, number, and enum schemas are generated without
+//! a lifetime parameter, because they carry no borrowed data.
 
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
@@ -49,15 +79,17 @@ impl Generator {
     /// identifier.
     pub fn generate(&self, description: &RestDescription) -> Result<Generated, GenerationError> {
         let mut schemas = schema::SchemaGenerator::new(description)?;
-        let named_schema_items = schemas.prepare()?;
+        let named_schema_items = schemas.prepare_all()?;
         let (api, resources) = resource::generate_resources(description, &mut schemas)?;
-        let schemas = schemas.finish(named_schema_items);
+        let schemas = schemas.finish(&named_schema_items);
 
         let mut files = vec![
             GeneratedFile::new("metadata.rs", generate_metadata(description)),
             GeneratedFile::new("protocol.rs", generate_protocol()),
-            GeneratedFile::new("schemas.rs", schemas),
         ];
+        if schemas.is_empty().not() {
+            files.push(GeneratedFile::new("schemas.rs", schemas));
+        }
         if api.is_empty().not() {
             files.push(GeneratedFile::new("api.rs", api));
         }

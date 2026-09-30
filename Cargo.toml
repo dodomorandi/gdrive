@@ -1,5 +1,6 @@
 [workspace]
 members = [
+    "crates/borrowed-or-owned",
     "crates/google-api-codegen",
     "crates/google-api-discovery",
     "crates/google-drive3-generated",
@@ -12,6 +13,7 @@ license = "MIT"
 rust-version = "1.88"
 
 [workspace.dependencies]
+borrowed-or-owned = { path = "crates/borrowed-or-owned" }
 google-api-codegen = { path = "crates/google-api-codegen" }
 google-api-discovery = { path = "crates/google-api-discovery" }
 prettyplease = "0.3.0"
