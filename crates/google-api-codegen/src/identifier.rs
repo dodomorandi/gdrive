@@ -1,6 +1,11 @@
 //! Conversion of Discovery names into valid Rust identifiers.
 
-use std::{borrow::Cow, fmt::Write as _, ops::Not};
+use std::{
+    borrow::Cow,
+    convert::identity,
+    fmt::Write as _,
+    ops::{ControlFlow, Not},
+};
 
 use proc_macro2::{Ident, Span};
 
@@ -92,11 +97,10 @@ fn pascal_case(name: &str) -> Cow<'_, str> {
                 output.push(character);
             }
         } else {
-            start_of_word = true;
-            if character.is_ascii().not() {
+            start_of_word = character.is_ascii();
+            if start_of_word.not() {
                 write!(output, "u{:x}", u32::from(character))
                     .expect("writing to a String cannot fail");
-                start_of_word = false;
             }
         }
     }
@@ -105,44 +109,103 @@ fn pascal_case(name: &str) -> Cow<'_, str> {
 }
 
 fn snake_case(name: &str) -> Cow<'_, str> {
+    enum Separator {
+        PreviousAndPending,
+        Previous,
+        None,
+    }
+
+    struct CharacterHandler<F, G, H, I> {
+        uppercase: F,
+        alphanumeric: G,
+        not_ascii: H,
+        otherwise: I,
+    }
+
+    fn handle_character<F, FO, G, GO, H, HO, I, IO, T>(
+        character: char,
+        output: &mut String,
+        handler: CharacterHandler<F, G, H, I>,
+    ) -> T
+    where
+        for<'a> F: FnOnce(&'a mut String) -> FO,
+        for<'a> G: FnOnce(&'a mut String) -> GO,
+        for<'a> H: FnOnce(&'a mut String) -> HO,
+        I: FnOnce() -> IO,
+        FO: FnOnce(Separator) -> T,
+        GO: FnOnce(Separator) -> T,
+        HO: FnOnce(Separator) -> T,
+        IO: FnOnce(Separator) -> T,
+    {
+        if character.is_ascii_uppercase() {
+            let wrapper = (handler.uppercase)(&mut *output);
+            output.push(character.to_ascii_lowercase());
+            wrapper(Separator::None)
+        } else if character.is_ascii_alphanumeric() {
+            let wrapper = (handler.alphanumeric)(&mut *output);
+            output.push(character);
+            wrapper(Separator::None)
+        } else if character.is_ascii().not() {
+            let wrapper = (handler.not_ascii)(&mut *output);
+            write!(output, "u{:x}", u32::from(character)).expect("writing to a String cannot fail");
+            wrapper(Separator::Previous)
+        } else {
+            let wrapper = (handler.otherwise)();
+            wrapper(Separator::PreviousAndPending)
+        }
+    }
+
     if is_snake_case(name) {
         return Cow::Borrowed(name);
     }
 
     let mut output = String::with_capacity(name.len());
-    let mut previous_was_separator = true;
-    let mut pending_separator = false;
 
-    for character in name.chars() {
-        if character.is_ascii_uppercase() {
-            if output.is_empty().not() && (pending_separator || previous_was_separator.not()) {
-                output.push('_');
-            }
-            output.push(character.to_ascii_lowercase());
-            previous_was_separator = false;
-            pending_separator = false;
-        } else if character.is_ascii_alphanumeric() {
-            if output.is_empty().not() && pending_separator {
-                output.push('_');
-            }
-            output.push(character);
-            previous_was_separator = false;
-            pending_separator = false;
-        } else if character.is_ascii().not() {
-            if output.is_empty().not() && pending_separator {
-                output.push('_');
-            }
-            write!(output, "u{:x}", u32::from(character)).expect("writing to a String cannot fail");
-            previous_was_separator = true;
-            pending_separator = false;
-        } else {
-            previous_was_separator = true;
-            pending_separator = true;
-        }
+    let mut chars = name.chars();
+    if let ControlFlow::Break(separator) = chars.by_ref().try_for_each(|character| {
+        handle_character(
+            character,
+            &mut output,
+            CharacterHandler {
+                uppercase: |_: &mut String| ControlFlow::Break,
+                alphanumeric: |_: &mut String| ControlFlow::Break,
+                not_ascii: |_: &mut String| ControlFlow::Break,
+                otherwise: || |_| ControlFlow::Continue(()),
+            },
+        )
+    }) {
+        chars.fold(separator, |separator, character| {
+            handle_character(
+                character,
+                &mut output,
+                CharacterHandler {
+                    uppercase: |output: &mut String| {
+                        if matches!(separator, Separator::Previous).not() {
+                            output.push('_');
+                        }
+                        identity
+                    },
+                    alphanumeric: |output: &mut String| {
+                        if matches!(separator, Separator::PreviousAndPending) {
+                            output.push('_');
+                        }
+                        identity
+                    },
+                    not_ascii: |output: &mut String| {
+                        if matches!(separator, Separator::PreviousAndPending) {
+                            output.push('_');
+                        }
+                        identity
+                    },
+                    otherwise: || identity,
+                },
+            )
+        });
     }
 
     Cow::Owned(output)
 }
+
 fn is_pascal_case(name: &str) -> bool {
     let mut characters = name.chars();
     characters
@@ -237,5 +300,55 @@ mod tests {
             IdentifierStyle::Type.normalize(""),
             Cow::Borrowed(_)
         ));
+    }
+
+    #[test]
+    fn test_standard_cases() {
+        assert_eq!(snake_case("camelCase"), "camel_case");
+        assert_eq!(snake_case("PascalCase"), "pascal_case");
+        assert_eq!(snake_case("kebab-case"), "kebab_case");
+        assert_eq!(snake_case("space case"), "space_case");
+    }
+
+    #[test]
+    fn test_acronyms_and_consecutive_capitals() {
+        // Based on your specific logic, consecutive capitals are separated.
+        assert_eq!(snake_case("AB"), "a_b");
+        assert_eq!(snake_case("XMLParser"), "x_m_l_parser");
+    }
+
+    #[test]
+    fn test_leading_and_trailing_separators() {
+        assert_eq!(snake_case("  hello world  "), "hello_world");
+        assert_eq!(snake_case("___hello_world---"), "hello_world");
+    }
+
+    #[test]
+    fn test_consecutive_separators() {
+        assert_eq!(snake_case("hello   world"), "hello_world");
+        assert_eq!(snake_case("hello-_-world"), "hello_world");
+    }
+
+    #[test]
+    fn test_non_ascii_hex_escaping() {
+        // '世' is U+4E16
+        assert_eq!(snake_case("hello世"), "hellou4e16");
+        assert_eq!(snake_case("hello 世"), "hello_u4e16");
+        assert_eq!(snake_case("世world"), "u4e16world"); // Followed by lowercase
+        assert_eq!(snake_case("世World"), "u4e16world"); // Followed by uppercase
+    }
+
+    #[test]
+    fn test_empty_and_separators_only() {
+        assert_eq!(snake_case(""), "");
+        assert_eq!(snake_case("   "), "");
+        assert_eq!(snake_case("-_!"), "");
+    }
+
+    #[test]
+    fn test_numbers() {
+        assert_eq!(snake_case("version 2"), "version_2");
+        assert_eq!(snake_case("v2"), "v2");
+        assert_eq!(snake_case("123hello"), "123hello");
     }
 }
