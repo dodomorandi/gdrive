@@ -24,7 +24,7 @@ use crate::{
 pub(crate) fn generate_resources(
     description: &RestDescription,
     schemas: &mut SchemaGenerator<'_>,
-) -> Result<(GeneratedModule, GeneratedModule), GenerationError> {
+) -> Result<(GeneratedModule<'static>, GeneratedModule<'static>), GenerationError> {
     let mut api = generate_api_methods(description, schemas)?;
     let mut resources = GeneratedModule::new("resources");
     generate_resource_set(
@@ -46,7 +46,7 @@ pub(crate) fn generate_resources(
 fn generate_api_methods(
     description: &RestDescription,
     schemas: &mut SchemaGenerator<'_>,
-) -> Result<GeneratedModule, GenerationError> {
+) -> Result<GeneratedModule<'static>, GenerationError> {
     let groups = match description.methods.as_ref() {
         Some(methods) => generate_method_groups(methods, description, schemas, "")?,
         None => Vec::new(),
@@ -65,7 +65,7 @@ fn generate_api_methods(
 /// Returns the method module and the expression that reaches its borrowed request descriptor.
 fn method_group_module(
     group: MethodGroup,
-) -> Result<(GeneratedModule, TokenStream), GenerationError> {
+) -> Result<(GeneratedModule<'static>, TokenStream), GenerationError> {
     let mut module = GeneratedModule::new(&group.name);
     module.set_documentation(format!(
         "Request values for the `{}` method.",

@@ -259,7 +259,7 @@ impl<'a> SchemaGenerator<'a> {
     pub(crate) fn finish(
         mut self,
         named_items: &BTreeMap<RequestStorage, Vec<TokenStream>>,
-    ) -> GeneratedModule {
+    ) -> GeneratedModule<'static> {
         let mut root = GeneratedModule::new("schemas");
         root.set_documentation("Serde models generated from the Discovery document.");
 

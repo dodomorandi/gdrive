@@ -46,7 +46,7 @@ mod output;
 mod resource;
 mod schema;
 
-use std::ops::Not;
+use std::{borrow::Cow, ops::Not};
 
 use google_api_discovery::RestDescription;
 use quote::quote;
@@ -68,7 +68,7 @@ use crate::{resource::generate_resources, schema::SchemaGenerator};
 /// Returns [`GenerationError::UnknownSchema`] when a `$ref` does not name a schema in the
 /// document, or [`GenerationError::DuplicateIdentifier`] when two API names map to one Rust
 /// identifier.
-pub fn generate(description: &RestDescription) -> Result<Generated, GenerationError> {
+pub fn generate(description: &RestDescription) -> Result<Generated<'_>, GenerationError> {
     let mut schemas = SchemaGenerator::new(description)?;
     let named_schema_items = schemas.prepare_all()?;
     let (api, resources) = generate_resources(description, &mut schemas)?;
@@ -90,23 +90,26 @@ pub fn generate(description: &RestDescription) -> Result<Generated, GenerationEr
     Ok(Generated { files })
 }
 
-fn generate_metadata(description: &RestDescription) -> GeneratedModule {
+fn generate_metadata(description: &RestDescription) -> GeneratedModule<'_> {
     let mut module = GeneratedModule::new("metadata");
     let documentation = if description.description.trim().is_empty() {
-        format!("Metadata for the `{}` API.", description.id)
+        Cow::Owned(format!("Metadata for the `{}` API.", description.id))
     } else {
-        description.description.clone()
+        Cow::Borrowed(&*description.description)
     };
     module.set_documentation(documentation);
-    let id = &description.id;
-    let name = &description.name;
-    let version = &description.version;
-    let revision = &description.revision;
-    let title = &description.title;
-    let root_url = &description.root_url;
-    let service_path = &description.service_path;
-    let batch_path = &description.batch_path;
-    let base_url = &description.base_url;
+    let RestDescription {
+        id,
+        name,
+        version,
+        revision,
+        title,
+        base_url,
+        root_url,
+        service_path,
+        batch_path,
+        ..
+    } = &description;
 
     module.add_items([
         quote! {
@@ -149,7 +152,7 @@ fn generate_metadata(description: &RestDescription) -> GeneratedModule {
     module
 }
 
-fn generate_protocol() -> GeneratedModule {
+fn generate_protocol() -> GeneratedModule<'static> {
     let mut module = GeneratedModule::new("protocol");
     module.set_documentation(
         "Transport-independent protocol descriptors generated from the Discovery document.",

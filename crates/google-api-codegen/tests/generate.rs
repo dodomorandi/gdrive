@@ -80,7 +80,8 @@ fn description() -> RestDescription {
 
 #[test]
 fn generates_file_and_module_trees() {
-    let generated = generate(&description()).unwrap();
+    let description = description();
+    let generated = generate(&description).unwrap();
     let paths = generated
         .files
         .iter()
@@ -152,7 +153,8 @@ fn generates_file_and_module_trees() {
 
 #[test]
 fn generates_the_model_pair_for_each_object_schema() {
-    let generated = generate(&description()).unwrap();
+    let description = description();
+    let generated = generate(&description).unwrap();
     let schemas = generated
         .files
         .iter()
@@ -231,7 +233,8 @@ fn omits_empty_api_and_resource_modules() {
 
 #[test]
 fn file_modules_and_module_nodes_render_through_to_tokens() {
-    let generated = generate(&description()).unwrap();
+    let description = description();
+    let generated = generate(&description).unwrap();
     let schemas = generated
         .files
         .iter()
