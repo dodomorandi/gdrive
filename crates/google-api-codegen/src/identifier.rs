@@ -1,6 +1,10 @@
 //! Conversion of Discovery names into valid Rust identifiers.
 
-use std::{borrow::Cow, fmt::Write as _, ops::Not};
+use std::{
+    borrow::Cow,
+    fmt::Write as _,
+    ops::{ControlFlow, Not},
+};
 
 use proc_macro2::{Ident, Span};
 
@@ -92,11 +96,10 @@ fn pascal_case(name: &str) -> Cow<'_, str> {
                 output.push(character);
             }
         } else {
-            start_of_word = true;
-            if character.is_ascii().not() {
+            start_of_word = character.is_ascii();
+            if start_of_word.not() {
                 write!(output, "u{:x}", u32::from(character))
                     .expect("writing to a String cannot fail");
-                start_of_word = false;
             }
         }
     }
@@ -105,44 +108,61 @@ fn pascal_case(name: &str) -> Cow<'_, str> {
 }
 
 fn snake_case(name: &str) -> Cow<'_, str> {
+    enum Separator {
+        PreviousAndPending,
+        Previous,
+        None,
+    }
+
     if is_snake_case(name) {
         return Cow::Borrowed(name);
     }
 
     let mut output = String::with_capacity(name.len());
-    let mut previous_was_separator = true;
-    let mut pending_separator = false;
-
-    for character in name.chars() {
+    let mut chars = name.chars();
+    if let ControlFlow::Break(separator) = chars.by_ref().try_for_each(|character| {
         if character.is_ascii_uppercase() {
-            if output.is_empty().not() && (pending_separator || previous_was_separator.not()) {
-                output.push('_');
-            }
             output.push(character.to_ascii_lowercase());
-            previous_was_separator = false;
-            pending_separator = false;
+            ControlFlow::Break(Separator::None)
         } else if character.is_ascii_alphanumeric() {
-            if output.is_empty().not() && pending_separator {
-                output.push('_');
-            }
             output.push(character);
-            previous_was_separator = false;
-            pending_separator = false;
+            ControlFlow::Break(Separator::None)
         } else if character.is_ascii().not() {
-            if output.is_empty().not() && pending_separator {
-                output.push('_');
-            }
             write!(output, "u{:x}", u32::from(character)).expect("writing to a String cannot fail");
-            previous_was_separator = true;
-            pending_separator = false;
+            ControlFlow::Break(Separator::Previous)
         } else {
-            previous_was_separator = true;
-            pending_separator = true;
+            ControlFlow::Continue(())
         }
+    }) {
+        chars.fold(separator, |separator, character| {
+            if character.is_ascii_uppercase() {
+                if matches!(separator, Separator::Previous).not() {
+                    output.push('_');
+                }
+                output.push(character.to_ascii_lowercase());
+                Separator::None
+            } else if character.is_ascii_alphanumeric() {
+                if matches!(separator, Separator::PreviousAndPending) {
+                    output.push('_');
+                }
+                output.push(character);
+                Separator::None
+            } else if character.is_ascii().not() {
+                if matches!(separator, Separator::PreviousAndPending) {
+                    output.push('_');
+                }
+                write!(output, "u{:x}", u32::from(character))
+                    .expect("writing to a String cannot fail");
+                Separator::Previous
+            } else {
+                Separator::PreviousAndPending
+            }
+        });
     }
 
     Cow::Owned(output)
 }
+
 fn is_pascal_case(name: &str) -> bool {
     let mut characters = name.chars();
     characters
@@ -237,5 +257,55 @@ mod tests {
             IdentifierStyle::Type.normalize(""),
             Cow::Borrowed(_)
         ));
+    }
+
+    #[test]
+    fn test_standard_cases() {
+        assert_eq!(snake_case("camelCase"), "camel_case");
+        assert_eq!(snake_case("PascalCase"), "pascal_case");
+        assert_eq!(snake_case("kebab-case"), "kebab_case");
+        assert_eq!(snake_case("space case"), "space_case");
+    }
+
+    #[test]
+    fn test_acronyms_and_consecutive_capitals() {
+        // Based on your specific logic, consecutive capitals are separated.
+        assert_eq!(snake_case("AB"), "a_b");
+        assert_eq!(snake_case("XMLParser"), "x_m_l_parser");
+    }
+
+    #[test]
+    fn test_leading_and_trailing_separators() {
+        assert_eq!(snake_case("  hello world  "), "hello_world");
+        assert_eq!(snake_case("___hello_world---"), "hello_world");
+    }
+
+    #[test]
+    fn test_consecutive_separators() {
+        assert_eq!(snake_case("hello   world"), "hello_world");
+        assert_eq!(snake_case("hello-_-world"), "hello_world");
+    }
+
+    #[test]
+    fn test_non_ascii_hex_escaping() {
+        // '世' is U+4E16
+        assert_eq!(snake_case("hello世"), "hellou4e16");
+        assert_eq!(snake_case("hello 世"), "hello_u4e16");
+        assert_eq!(snake_case("世world"), "u4e16world"); // Followed by lowercase
+        assert_eq!(snake_case("世World"), "u4e16world"); // Followed by uppercase
+    }
+
+    #[test]
+    fn test_empty_and_separators_only() {
+        assert_eq!(snake_case(""), "");
+        assert_eq!(snake_case("   "), "");
+        assert_eq!(snake_case("-_!"), "");
+    }
+
+    #[test]
+    fn test_numbers() {
+        assert_eq!(snake_case("version 2"), "version_2");
+        assert_eq!(snake_case("v2"), "v2");
+        assert_eq!(snake_case("123hello"), "123hello");
     }
 }
