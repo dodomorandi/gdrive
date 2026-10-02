@@ -56,57 +56,38 @@ pub use output::{FileDeclarations, Generated, GeneratedFile, GeneratedModule};
 pub use proc_macro2::TokenStream;
 pub use quote::ToTokens;
 
-/// Generates code for a Discovery document with the default output layout.
-#[derive(Debug, Default, Clone, Copy)]
-pub struct Generator;
-
-impl Generator {
-    /// Creates a generator with the default output layout.
-    #[must_use]
-    pub const fn new() -> Self {
-        Self
-    }
-
-    /// Generates a hierarchical file and module tree for a Discovery document.
-    ///
-    /// The default paths are `metadata.rs`, `protocol.rs`, `schemas.rs`, `api.rs`, and
-    /// `resources.rs`, relative to the generated crate's `src` directory.
-    ///
-    /// # Errors
-    ///
-    /// Returns [`GenerationError::UnknownSchema`] when a `$ref` does not name a schema in the
-    /// document, or [`GenerationError::DuplicateIdentifier`] when two API names map to one Rust
-    /// identifier.
-    pub fn generate(&self, description: &RestDescription) -> Result<Generated, GenerationError> {
-        let mut schemas = schema::SchemaGenerator::new(description)?;
-        let named_schema_items = schemas.prepare_all()?;
-        let (api, resources) = resource::generate_resources(description, &mut schemas)?;
-        let schemas = schemas.finish(&named_schema_items);
-
-        let mut files = vec![
-            GeneratedFile::new("metadata.rs", generate_metadata(description)),
-            GeneratedFile::new("protocol.rs", generate_protocol()),
-        ];
-        if schemas.is_empty().not() {
-            files.push(GeneratedFile::new("schemas.rs", schemas));
-        }
-        if api.is_empty().not() {
-            files.push(GeneratedFile::new("api.rs", api));
-        }
-        if resources.is_empty().not() {
-            files.push(GeneratedFile::new("resources.rs", resources));
-        }
-        Ok(Generated { files })
-    }
-}
+use crate::{resource::generate_resources, schema::SchemaGenerator};
 
 /// Generates a hierarchical file and module tree for a Discovery document.
 ///
+/// The default paths are `metadata.rs`, `protocol.rs`, `schemas.rs`, `api.rs`, and
+/// `resources.rs`, relative to the generated crate's `src` directory.
+///
 /// # Errors
 ///
-/// Returns the same errors as [`Generator::generate`].
+/// Returns [`GenerationError::UnknownSchema`] when a `$ref` does not name a schema in the
+/// document, or [`GenerationError::DuplicateIdentifier`] when two API names map to one Rust
+/// identifier.
 pub fn generate(description: &RestDescription) -> Result<Generated, GenerationError> {
-    Generator::new().generate(description)
+    let mut schemas = SchemaGenerator::new(description)?;
+    let named_schema_items = schemas.prepare_all()?;
+    let (api, resources) = generate_resources(description, &mut schemas)?;
+    let schemas = schemas.finish(&named_schema_items);
+
+    let mut files = vec![
+        GeneratedFile::new("metadata.rs", generate_metadata(description)),
+        GeneratedFile::new("protocol.rs", generate_protocol()),
+    ];
+    if schemas.is_empty().not() {
+        files.push(GeneratedFile::new("schemas.rs", schemas));
+    }
+    if api.is_empty().not() {
+        files.push(GeneratedFile::new("api.rs", api));
+    }
+    if resources.is_empty().not() {
+        files.push(GeneratedFile::new("resources.rs", resources));
+    }
+    Ok(Generated { files })
 }
 
 fn generate_metadata(description: &RestDescription) -> GeneratedModule {
